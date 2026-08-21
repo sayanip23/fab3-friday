@@ -1,0 +1,160 @@
+# FRIDAY — KPI Semantic Contract
+# Single source of truth. No module in this codebase may hardcode a KPI
+# definition, threshold, driver, or access rule — if it is not here, the
+# engine does not know it.
+#
+# Team Fab3 · Accenture Innovation Challenge 2026 · Track 3, BusinessIntelligence.ai
+
+version: 1
+business:
+  name: "Meridian Distribution Pvt. Ltd. (illustrative)"
+  description: >
+    Mid-size B2B distributor selling four product lines through three
+    channels across four Indian regions. ~12 named corporate accounts plus
+    a long tail of smaller buyers. See ASSUMPTIONS.md for full rationale.
+  regions: [North, South, East, West]
+  product_lines: [Aurora, Vertex, Nova, Orion]
+  channels: [Direct, Distributor, Online]
+
+roles:
+  regional_sales_director:
+    description: "Sees their own region only, full account-level detail."
+    scope: own_region
+    masked_fields: []
+    decision_rights: ["contact_account", "approve_service_recovery"]
+  cfo:
+    description: "Sees all regions, full account and margin detail."
+    scope: all_regions
+    masked_fields: []
+    decision_rights: ["approve_pricing_action", "withdraw_pricing_action"]
+  junior_analyst:
+    description: "Sees all regions for reporting; account identity masked."
+    scope: all_regions
+    masked_fields: [account_name, account_id]
+    decision_rights: []
+
+sources:
+  sales_transactions:
+    grain: [date, region, product_line, channel, account_id]
+    refresh_cadence: "nightly_02:00_IST"
+    max_staleness_hours: 6
+    nature: structured
+  marketing_spend:
+    grain: [week_start, region, product_line, channel]
+    refresh_cadence: "weekly_monday_09:00_IST"
+    max_staleness_hours: 72
+    nature: structured_coarser_grain
+  service_events:
+    grain: [timestamp, region, account_id]
+    refresh_cadence: "every_15_min"
+    max_staleness_hours: 0.25
+    nature: semi_structured_free_text
+
+kpis:
+  units_sold:
+    description: "Total units sold, summed at the requested grain."
+    formula: "sum(sales_transactions.units)"
+    grain: [date, region, product_line, channel]
+    source: sales_transactions
+    unit: units
+    drivers: []
+    materiality:
+      method: robust_z_score
+      baseline_window_days: 90
+      threshold_z: 2.5
+    lineage:
+      source_tables: [sales_transactions]
+      max_staleness_hours: 6
+    access:
+      row_level: region_scope
+      column_level: none
+
+  avg_selling_price:
+    description: "Revenue-weighted average selling price per unit."
+    formula: "sum(units * unit_price) / sum(units)"
+    grain: [date, region, product_line, channel]
+    source: sales_transactions
+    unit: INR_per_unit
+    drivers: []
+    materiality:
+      method: robust_z_score
+      baseline_window_days: 90
+      threshold_z: 2.5
+    lineage:
+      source_tables: [sales_transactions]
+      max_staleness_hours: 6
+    access:
+      row_level: region_scope
+      column_level: none
+
+  net_revenue:
+    description: >
+      Net revenue. Exact identity with units_sold and avg_selling_price by
+      construction — this is what makes price/volume/mix decomposition
+      reconcile exactly rather than approximately.
+    formula: "units_sold * avg_selling_price"
+    grain: [date, region, product_line, channel]
+    source: sales_transactions
+    unit: INR
+    drivers: [units_sold, avg_selling_price, account_mix]
+    materiality:
+      method: robust_z_score
+      baseline_window_days: 90
+      threshold_z: 2.5
+      min_business_impact_inr: 100000
+    lineage:
+      source_tables: [sales_transactions]
+      max_staleness_hours: 6
+    access:
+      row_level: region_scope
+      column_level: {junior_analyst: [account_name, account_id]}
+
+  gross_margin_pct:
+    description: "Gross margin as a percentage of net revenue."
+    formula: "(net_revenue - sum(units * unit_cost)) / net_revenue"
+    grain: [date, region, product_line, channel]
+    source: sales_transactions
+    unit: percent
+    drivers: [net_revenue, unit_cost]
+    materiality:
+      method: robust_z_score
+      baseline_window_days: 90
+      threshold_z: 2.0
+    lineage:
+      source_tables: [sales_transactions]
+      max_staleness_hours: 6
+    access:
+      row_level: region_scope
+      column_level: {junior_analyst: [account_name, account_id]}
+
+  marketing_efficiency:
+    description: >
+      Weekly net revenue per rupee of weekly marketing spend. Deliberately
+      crosses a daily-grain source and a weekly-grain source — the engine
+      must reconcile grains before this KPI is computable at all, and must
+      treat marketing_spend as up to 72h stale.
+    formula: "weekly(net_revenue) / marketing_spend.spend_inr"
+    grain: [week_start, region, product_line, channel]
+    source: [sales_transactions, marketing_spend]
+    unit: ratio
+    drivers: [net_revenue, marketing_spend]
+    materiality:
+      method: robust_z_score
+      baseline_window_days: 90
+      threshold_z: 2.5
+    lineage:
+      source_tables: [sales_transactions, marketing_spend]
+      max_staleness_hours: 72
+    access:
+      row_level: region_scope
+      column_level: none
+
+policies:
+  sparse_history:
+    min_history_days: 60
+    action: "flag_low_confidence_and_state_reason"
+  low_confidence:
+    action: "abstain_and_report_reason"
+    required_criteria_for_causal_claim: [sequence, magnitude, mechanism]
+  data_freshness:
+    action: "reject_kpi_computation_if_source_older_than_max_staleness"
