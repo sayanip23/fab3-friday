@@ -1,8 +1,18 @@
+# Engine core. Required.
 pandas>=2.0
 numpy>=1.24
 pyyaml>=6.0
+
+# Streamlit demo UI. Required for `streamlit run app.py`.
 streamlit>=1.30
 altair>=5.0
+
+# REST layer, required only for the react front end in friday-web/.
+# python-multipart is not optional: friday/api.py takes an UploadFile on
+# /analyse, and fastapi raises at import time without it.
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
 
 # Only needed for scripts/visual_qa.py (automated browser screenshots).
 # Not required to run the app itself.

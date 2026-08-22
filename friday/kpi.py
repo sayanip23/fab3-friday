@@ -54,10 +54,22 @@ def week_start(s: pd.Series) -> pd.Series:
 class Warehouse:
     """Loads the declared sources and computes KPI values from the contract."""
 
-    def __init__(self, contract: Contract):
+    def __init__(self, contract: Contract, frames: dict[str, pd.DataFrame] | None = None):
+        """
+        `frames` injects already-loaded DataFrames instead of reading the paths
+        in the contract. That is what lets an uploaded CSV run through the exact
+        same pipeline as the bundled sources — the engine cannot tell the
+        difference, which is the point.
+        """
         self.c = contract
         self._frames: dict[str, pd.DataFrame] = {}
         for name, spec in contract.sources.items():
+            if frames and name in frames:
+                df = frames[name].copy()
+                if "_d" not in df.columns:
+                    raise ContractError(f"injected frame '{name}' has no parsed '_d' column")
+                self._frames[name] = df
+                continue
             path = os.path.join(ROOT, spec["file"])
             df = pd.read_csv(path)
             date_col = ("date" if "date" in df else
@@ -88,7 +100,8 @@ class Warehouse:
 
     def history_days(self, kpi: str, filters: Filters = None) -> int:
         """Observed history for this slice. Drives the sparse history policy."""
-        src = self.c.kpis[kpi].sources[0]
+        spec = self.c.kpis[kpi].spec
+        src = spec.get("source") or self.c.kpis[kpi].sources[0]
         df = self._slice(src, None, filters)
         return int(df["_d"].nunique())
 
@@ -96,6 +109,14 @@ class Warehouse:
     def value(self, kpi: str, period: Period, filters: Filters = None) -> float:
         if kpi not in self.c.kpis:
             raise ContractError(f"unknown kpi '{kpi}'")
+
+        spec = self.c.kpis[kpi].spec
+
+        # Generic path: any KPI that declares a column and an aggregation is
+        # computed without the engine knowing its name. Synthesised contracts
+        # from uploaded files always take this route.
+        if spec.get("column") and spec.get("agg"):
+            return self._generic(kpi, spec, period, filters)
 
         if kpi == "marketing_efficiency":
             return self._marketing_efficiency(period, filters)
@@ -117,6 +138,31 @@ class Warehouse:
 
         raise ContractError(f"no implementation for kpi '{kpi}'")
 
+    def _generic(self, kpi: str, spec: dict, period: Period,
+                 filters: Filters) -> float:
+        """Aggregate one declared column over the period. No hardcoded names."""
+        src = spec.get("source") or self.c.kpis[kpi].sources[0]
+        df = self._slice(src, period, filters)
+        if df.empty:
+            return float("nan")
+        col, agg = spec["column"], spec["agg"]
+        if col not in df.columns:
+            raise ContractError(f"column '{col}' not present in source '{src}'")
+        series = pd.to_numeric(df[col], errors="coerce")
+        return float(getattr(series, agg)())
+
+    def _generic_series(self, kpi: str, spec: dict, start: date, end: date,
+                        filters: Filters) -> pd.Series:
+        src = spec.get("source") or self.c.kpis[kpi].sources[0]
+        df = self._slice(src, Period(start, end), filters)
+        if df.empty:
+            return pd.Series(dtype=float)
+        col, agg = spec["column"], spec["agg"]
+        g = df.assign(**{col: pd.to_numeric(df[col], errors="coerce")}).groupby("_d")[col]
+        s = getattr(g, agg)()
+        idx = pd.date_range(start, end, freq="D").date
+        return s.reindex(idx).astype(float)
+
     def _marketing_efficiency(self, period: Period, filters: Filters) -> float:
         """Crosses two grains. Sales aggregate upward to the weekly marketing grain."""
         sales = self._slice("sales_transactions", period, filters)
@@ -130,6 +176,10 @@ class Warehouse:
     def daily_series(self, kpi: str, start: date, end: date,
                      filters: Filters = None) -> pd.Series:
         """Daily KPI values, used to build the materiality baseline."""
+        spec = self.c.kpis[kpi].spec
+        if spec.get("column") and spec.get("agg"):
+            return self._generic_series(kpi, spec, start, end, filters)
+
         df = self._slice("sales_transactions", Period(start, end), filters)
         if df.empty:
             return pd.Series(dtype=float)
@@ -184,6 +234,15 @@ class Warehouse:
         return self.daily_series(kpi, start, end, filters), "daily"
 
     # ------------------------------------------------------- segment tables
+    def generic_segments(self, source: str, column: str, agg: str, period: Period,
+                         by: str, filters: Filters = None) -> pd.Series:
+        """Aggregate one column per segment. Input to dimensional attribution."""
+        df = self._slice(source, period, filters)
+        if df.empty or by not in df.columns:
+            return pd.Series(dtype=float)
+        g = df.assign(**{column: pd.to_numeric(df[column], errors="coerce")}).groupby(by)[column]
+        return getattr(g, agg)().astype(float)
+
     def segments(self, period: Period, by: str, filters: Filters = None) -> pd.DataFrame:
         """Units, revenue and realised price per segment. Input to price volume mix."""
         df = self._slice("sales_transactions", period, filters)
