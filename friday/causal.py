@@ -281,8 +281,17 @@ def evidence_rate_ratio(wh: Warehouse, kind: str, period: Period,
 
 # --------------------------------------------------------------------- gates
 def screen(wh: Warehouse, movement: Movement, effects: list,
-           period: Period, filters: Filters = None) -> Assessment:
-    """Run the three gates over each candidate driver of a movement."""
+           period: Period, filters: Filters = None,
+           allow_causal_claims: bool = True) -> Assessment:
+    """
+    Run the three gates over each candidate driver of a movement.
+
+    `allow_causal_claims=False` is for data where the "drivers" are really
+    segments rather than levers — an uploaded file split by branch or product,
+    with no text corpus behind it. A segment accounting for 80% of a movement
+    tells you *where* it happened, never *why*, and letting that pass as a
+    cause would be exactly the overclaiming this engine exists to prevent.
+    """
     c: Contract = wh.c
     spec = c.kpis[movement.kpi]
     declared = {d["name"]: d for d in spec.spec["drivers"]}
@@ -336,7 +345,7 @@ def screen(wh: Warehouse, movement: Movement, effects: list,
     verdicts += _screen_evidential(wh, movement, declared, onset, period, filters)
 
     verdicts.sort(key=lambda v: (v.kind != "arithmetic", -abs(v.contribution)))
-    return _finalise(wh, movement, verdicts, min_share)
+    return _finalise(wh, movement, verdicts, min_share, allow_causal_claims)
 
 
 def _screen_evidential(wh: Warehouse, movement: Movement, declared: dict,
@@ -397,10 +406,15 @@ def _screen_evidential(wh: Warehouse, movement: Movement, declared: dict,
 
 
 def _finalise(wh: Warehouse, movement: Movement, verdicts: list[Verdict],
-              min_share: float) -> Assessment:
+              min_share: float, allow_causal_claims: bool = True) -> Assessment:
     """Apply the contract's abstention policy and score confidence."""
     reasons: list[str] = []
-    causes = [v for v in verdicts if v.is_cause]
+    if not allow_causal_claims:
+        reasons.append(
+            "no corroborating evidence source was supplied, so the segments "
+            "below are reported as associations and no cause is asserted"
+        )
+    causes = [v for v in verdicts if v.is_cause] if allow_causal_claims else []
     arithmetic = [v for v in verdicts if v.kind == "arithmetic"]
     root_causes = [v for v in causes if v.kind == "evidential"]
     # only arithmetic drivers carry a share of the movement, so only they can

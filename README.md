@@ -4,25 +4,49 @@ KPI intelligence to action engine. Team Fab3, Accenture Innovation Challenge 202
 Track 3 BusinessIntelligence.ai. Submission 30 August 2026.
 
 ```bash
-pip install pandas numpy pyyaml
+pip install -r requirements.txt
 python scripts/generate_data.py        # rebuild the three source systems
-python scripts/verify_phase1.py        # foundations gate, 14/14
-python scripts/verify_phase23.py       # analytics gate, 18/18
-python scripts/verify_lane_b.py        # narrative gate, 22/22
-python scripts/verify_lane_c.py        # governance gate, 23/23
+python scripts/verify_phase1.py        # foundations gate,   14/14
+python scripts/verify_phase23.py       # analytics gate,     18/18
+python scripts/verify_lane_b.py        # narrative gate,     22/22
+python scripts/verify_lane_c.py        # governance gate,    23/23
+python scripts/verify_byod.py          # unseen data gate,   15/15
+python scripts/verify_submission.py    # the brief, item by item, 18/18
 python scripts/calibrate_thresholds.py # false positive rate by threshold
 
 streamlit run app.py                   # the demo UI
 ```
+
+All six gates must pass: **110 checks**. Run them before you push.
+
+### The web front end
+
+Optional, and separate from the Streamlit demo above. The Streamlit app remains the
+reference UI and still runs standalone; the React site is a second surface onto the
+same engine, for the pitch.
+
+```bash
+uvicorn friday.api:app --port 8000    # REST layer over the same engine
+cd friday-web && npm install && npm run dev
+```
+
+The site needs the API running: `/` is the overview, `/console` reads live engine
+output, and the upload panel posts a CSV to `/analyse`. Node 18+.
 
 ## Layout
 
 ```
 contracts/kpis.yaml      the semantic contract. single source of truth
 friday/contracts.py      loader, validator, entitlement resolution
+friday/profile.py        infers a contract from an unseen csv
+friday/byod.py           runs the pipeline on uploaded data
+friday/api.py            fastapi layer, used only by the web front end
+pages/                   streamlit upload page
 scripts/generate_data.py builds the three simulated sources
 scripts/verify_phase1.py phase 1 gate
+scripts/verify_byod.py   proves the engine works on data it has not seen
 data/raw/                generated csv, reproducible from SEED
+friday-web/              react front end, overview and console
 ASSUMPTIONS.md           every assumption, stated as the brief requires
 ```
 

@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --violet: 124 58 237;
+    --cyan: 34 211 238;
+    --glass-border: rgba(255, 255, 255, 0.08);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* GSAP ScrollTrigger drives the scroll animation. Native smooth scrolling
+       fights it on some browsers, so it is disabled once JS takes over. */
+  }
+  html.js-scroll-driven { scroll-behavior: auto; }
+
+  body {
+    @apply bg-abyss text-white/85 font-sans antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  /* Accessibility priority 1: focus must always be visible. */
+  *:focus-visible {
+    outline: 2px solid rgb(var(--cyan));
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: rgb(var(--violet) / 0.4);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #05050A; }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--violet) / 0.5);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--violet) / 0.8); }
+}
+
+@layer components {
+  /* Glassmorphism: translucency + blur + a hairline top highlight so the panel
+     reads as a physical pane catching light, not just a grey box. */
+  /* backdrop-filter is the most expensive property on this page: the
+     compositor must re-sample and blur whatever sits beneath, every frame,
+     and beneath here is a live WebGL canvas. saturate() adds a second pass
+     for very little visual gain, so it is gone, and the radius is halved.
+     Integrated GPUs feel both of these immediately. */
+  .glass {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.07),
+      rgba(255, 255, 255, 0.02)
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  }
+
+  /* Large panels get the glass *look* with no blur at all. A quarter of a
+     million pixels of live backdrop blur costs far more than it conveys, and
+     a solid translucent fill is visually near-identical at that size. */
+  .glass-solid {
+    background: linear-gradient(
+      145deg,
+      rgba(24, 20, 40, 0.82),
+      rgba(12, 10, 22, 0.88)
+    );
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  /* Phones pay the most for blur and see it least. */
+  @media (max-width: 640px) {
+    .glass {
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+  }
+
+  .glass-strong {
+    background: rgba(10, 10, 20, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Neon edge used on the primary CTA and active nav item. */
+  .neon-violet {
+    box-shadow:
+      0 0 18px rgb(var(--violet) / 0.55),
+      0 0 42px rgb(var(--violet) / 0.28);
+  }
+  .neon-cyan {
+    box-shadow:
+      0 0 18px rgb(var(--cyan) / 0.5),
+      0 0 42px rgb(var(--cyan) / 0.25);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      110deg,
+      #ffffff 0%,
+      #c4b5fd 42%,
+      #22d3ee 100%
+    );
+  }
+
+  .hairline {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.14),
+      transparent
+    );
+  }
+}
+
+/* Reduced motion: strip every non-essential animation and let the page render
+   in its final readable state. Required by the Scroll-Triggered Storytelling
+   pattern — the narrative must survive without the effects. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
