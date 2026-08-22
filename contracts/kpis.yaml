@@ -1,160 +1,340 @@
-# FRIDAY — KPI Semantic Contract
-# Single source of truth. No module in this codebase may hardcode a KPI
-# definition, threshold, driver, or access rule — if it is not here, the
-# engine does not know it.
+# FRIDAY KPI Semantic Contract
+# ---------------------------------------------------------------------------
+# Single source of truth for what every KPI means, how it is calculated, what
+# may explain it, when a movement matters, where the numbers came from, and who
+# is allowed to see them.
 #
-# Team Fab3 · Accenture Innovation Challenge 2026 · Track 3, BusinessIntelligence.ai
+# Nothing in the engine may hardcode a KPI definition. If it is not in this
+# file, the engine does not know it.
+# ---------------------------------------------------------------------------
 
-version: 1
-business:
-  name: "Meridian Distribution Pvt. Ltd. (illustrative)"
-  description: >
-    Mid-size B2B distributor selling four product lines through three
-    channels across four Indian regions. ~12 named corporate accounts plus
-    a long tail of smaller buyers. See ASSUMPTIONS.md for full rationale.
-  regions: [North, South, East, West]
-  product_lines: [Aurora, Vertex, Nova, Orion]
-  channels: [Direct, Distributor, Online]
+contract_version: 1
+effective_from: 2026-08-21
+steward: Finance Systems, Fab3
+timezone: Asia/Kolkata
 
-roles:
-  regional_sales_director:
-    description: "Sees their own region only, full account-level detail."
-    scope: own_region
-    masked_fields: []
-    decision_rights: ["contact_account", "approve_service_recovery"]
-  cfo:
-    description: "Sees all regions, full account and margin detail."
-    scope: all_regions
-    masked_fields: []
-    decision_rights: ["approve_pricing_action", "withdraw_pricing_action"]
-  junior_analyst:
-    description: "Sees all regions for reporting; account identity masked."
-    scope: all_regions
-    masked_fields: [account_name, account_id]
-    decision_rights: []
-
+# ===========================================================================
+# SOURCES
+# ===========================================================================
 sources:
+
   sales_transactions:
-    grain: [date, region, product_line, channel, account_id]
-    refresh_cadence: "nightly_02:00_IST"
-    max_staleness_hours: 6
-    nature: structured
+    label: Sales transactions
+    system: ERP (simulated)
+    grain: order_line
+    time_grain: daily
+    refresh_cadence: daily
+    refresh_time: "02:00"
+    expected_lag_hours: 6
+    staleness_warning_hours: 30
+    file: data/raw/sales_transactions.csv
+    keys: [order_id, product_id]
+    contains_free_text: false
+
   marketing_spend:
-    grain: [week_start, region, product_line, channel]
-    refresh_cadence: "weekly_monday_09:00_IST"
-    max_staleness_hours: 72
-    nature: structured_coarser_grain
+    label: Marketing spend
+    system: Campaign manager (simulated)
+    grain: campaign_week
+    time_grain: weekly
+    refresh_cadence: weekly
+    refresh_day: monday
+    refresh_time: "09:00"
+    expected_lag_hours: 72
+    staleness_warning_hours: 216
+    file: data/raw/marketing_spend.csv
+    keys: [week_start, region, channel, campaign]
+    contains_free_text: false
+    # Coarser than sales. Any KPI joining the two must aggregate sales upward,
+    # never split marketing downward. Enforced in reconciliation.
+    grain_reconciliation: aggregate_finer_to_coarser
+
   service_events:
-    grain: [timestamp, region, account_id]
-    refresh_cadence: "every_15_min"
-    max_staleness_hours: 0.25
-    nature: semi_structured_free_text
+    label: Service and CRM events
+    system: Support desk and CRM (simulated)
+    grain: event
+    time_grain: continuous
+    refresh_cadence: continuous
+    expected_lag_hours: 0.25
+    staleness_warning_hours: 6
+    file: data/raw/service_events.csv
+    keys: [event_id]
+    contains_free_text: true
+    pii_handling: redact_person_names_on_ingest
+    # Used as evidence only. Never used to compute a quantitative KPI value.
+    role: evidence_only
 
+# ===========================================================================
+# DIMENSIONS
+# ===========================================================================
+dimensions:
+  region:       {values: [North, South, East, West], hierarchy: [country, region]}
+  category:     {values: [Aurora, Vertex, Halcyon, Nova]}
+  channel:      {values: [Direct, Partner, Online]}
+  account_name: {sensitive: true, cardinality: high}
+
+# ===========================================================================
+# KPIs
+# ===========================================================================
 kpis:
-  units_sold:
-    description: "Total units sold, summed at the requested grain."
-    formula: "sum(sales_transactions.units)"
-    grain: [date, region, product_line, channel]
-    source: sales_transactions
-    unit: units
-    drivers: []
-    materiality:
-      method: robust_z_score
-      baseline_window_days: 90
-      threshold_z: 2.5
-    lineage:
-      source_tables: [sales_transactions]
-      max_staleness_hours: 6
-    access:
-      row_level: region_scope
-      column_level: none
-
-  avg_selling_price:
-    description: "Revenue-weighted average selling price per unit."
-    formula: "sum(units * unit_price) / sum(units)"
-    grain: [date, region, product_line, channel]
-    source: sales_transactions
-    unit: INR_per_unit
-    drivers: []
-    materiality:
-      method: robust_z_score
-      baseline_window_days: 90
-      threshold_z: 2.5
-    lineage:
-      source_tables: [sales_transactions]
-      max_staleness_hours: 6
-    access:
-      row_level: region_scope
-      column_level: none
 
   net_revenue:
-    description: >
-      Net revenue. Exact identity with units_sold and avg_selling_price by
-      construction — this is what makes price/volume/mix decomposition
-      reconcile exactly rather than approximately.
-    formula: "units_sold * avg_selling_price"
-    grain: [date, region, product_line, channel]
+    label: Net Revenue
+    definition: >
+      Total invoiced value of goods sold, excluding tax and after discount.
+      Cancelled and returned lines are excluded.
+    formula: sum(units * unit_price)
+    calculation_method: deterministic_sql
     source: sales_transactions
+    time_grain: daily
     unit: INR
-    drivers: [units_sold, avg_selling_price, account_mix]
+    direction: higher_is_better
+    decomposable_by: [region, category, channel, account_name]
+    decomposition_method: price_volume_mix
+    identity: net_revenue == units_sold * avg_selling_price
+    drivers:
+      - {name: volume,             type: internal, controllable: true,  lever: account_management}
+      - {name: price,              type: internal, controllable: true,  lever: pricing}
+      - {name: mix,                type: internal, controllable: true,  lever: portfolio}
+      - {name: marketing_spend,    type: internal, controllable: true,  lever: marketing}
+      - {name: delivery_reliability, type: internal, controllable: true, lever: logistics}
+      - {name: seasonality,        type: external, controllable: false, lever: none}
+      - {name: competitor_action,  type: external, controllable: false, lever: none}
     materiality:
-      method: robust_z_score
-      baseline_window_days: 90
-      threshold_z: 2.5
-      min_business_impact_inr: 100000
+      statistical:
+        method: robust_z_score
+        baseline_window_days: 90
+        # Calibrated by scripts/calibrate_thresholds.py against 100 quiet historical
+        # periods. At 2.0 the measured false positive rate is 5.0%, which is our
+        # stated alert budget. Raising it to 3.0 only reaches 4.0%, so the extra
+        # strictness buys almost nothing and costs sensitivity.
+        threshold: 2.0
+        calibrated_false_positive_rate: 0.05
+      business:
+        min_abs_change: 400000       # INR 4 lakh, about 5% of a 28 day regional period
+        min_pct_change: 3.0
+      require_both: true             # statistical AND business, per the brief
+    min_history_days: 60
     lineage:
-      source_tables: [sales_transactions]
-      max_staleness_hours: 6
+      - ERP order lines
+      - filter status in (invoiced, delivered)
+      - exclude returns and cancellations
+      - sum(units * unit_price) grouped by day and dimensions
     access:
-      row_level: region_scope
-      column_level: {junior_analyst: [account_name, account_id]}
+      roles_allowed: [sales_director, cfo, analyst]
+      row_level_filter: {sales_director: own_region}
+      column_masking:  {analyst: [account_name]}
+
+  units_sold:
+    label: Units Sold
+    definition: Count of physical units invoiced, excluding returns.
+    formula: sum(units)
+    calculation_method: deterministic_sql
+    source: sales_transactions
+    time_grain: daily
+    unit: units
+    direction: higher_is_better
+    decomposable_by: [region, category, channel, account_name]
+    drivers:
+      - {name: account_activity, type: internal, controllable: true, lever: account_management}
+      - {name: demand,           type: external, controllable: false, lever: none}
+    materiality:
+      statistical: {method: robust_z_score, baseline_window_days: 90, threshold: 2.0, calibrated_false_positive_rate: 0.02}
+      business:    {min_abs_change: 250, min_pct_change: 4.0}
+      require_both: true
+    min_history_days: 60
+    lineage: [ERP order lines, exclude returns, sum(units) grouped by day and dimensions]
+    access:
+      roles_allowed: [sales_director, cfo, analyst]
+      row_level_filter: {sales_director: own_region}
+      column_masking:  {analyst: [account_name]}
+
+  avg_selling_price:
+    label: Average Selling Price
+    definition: Revenue realised per unit sold. Derived, never stored.
+    formula: net_revenue / units_sold
+    calculation_method: derived_ratio
+    depends_on: [net_revenue, units_sold]
+    source: sales_transactions
+    time_grain: daily
+    unit: INR_per_unit
+    direction: higher_is_better
+    decomposable_by: [region, category, channel]
+    drivers:
+      - {name: list_price,   type: internal, controllable: true, lever: pricing}
+      - {name: discounting,  type: internal, controllable: true, lever: pricing}
+      - {name: mix,          type: internal, controllable: true, lever: portfolio}
+    materiality:
+      statistical: {method: robust_z_score, baseline_window_days: 90, threshold: 2.0, calibrated_false_positive_rate: 0.04}
+      business:    {min_abs_change: 40, min_pct_change: 2.0}
+      require_both: true
+    min_history_days: 60
+    lineage: [derived from net_revenue and units_sold at identical grain]
+    access:
+      roles_allowed: [sales_director, cfo, analyst]
+      row_level_filter: {sales_director: own_region}
 
   gross_margin_pct:
-    description: "Gross margin as a percentage of net revenue."
-    formula: "(net_revenue - sum(units * unit_cost)) / net_revenue"
-    grain: [date, region, product_line, channel]
+    label: Gross Margin %
+    definition: Gross profit as a percentage of net revenue.
+    formula: (sum(units * unit_price) - sum(units * unit_cost)) / sum(units * unit_price)
+    calculation_method: deterministic_sql
     source: sales_transactions
+    time_grain: daily
     unit: percent
-    drivers: [net_revenue, unit_cost]
+    direction: higher_is_better
+    decomposable_by: [region, category, channel]
+    drivers:
+      - {name: discounting, type: internal, controllable: true,  lever: pricing}
+      - {name: mix,         type: internal, controllable: true,  lever: portfolio}
+      - {name: input_cost,  type: external, controllable: false, lever: procurement}
     materiality:
-      method: robust_z_score
-      baseline_window_days: 90
-      threshold_z: 2.0
+      statistical: {method: robust_z_score, baseline_window_days: 90, threshold: 2.0, calibrated_false_positive_rate: 0.04}
+      business:    {min_abs_change: 0.8, min_pct_change: 2.0}
+      require_both: true
+    min_history_days: 60
     lineage:
-      source_tables: [sales_transactions]
-      max_staleness_hours: 6
+      - ERP order lines
+      - unit_cost joined from product master at order date
+      - (revenue - cost) / revenue grouped by day and dimensions
     access:
-      row_level: region_scope
-      column_level: {junior_analyst: [account_name, account_id]}
+      roles_allowed: [cfo, analyst]           # sales_director deliberately excluded
+      column_masking: {analyst: [account_name]}
 
   marketing_efficiency:
-    description: >
-      Weekly net revenue per rupee of weekly marketing spend. Deliberately
-      crosses a daily-grain source and a weekly-grain source — the engine
-      must reconcile grains before this KPI is computable at all, and must
-      treat marketing_spend as up to 72h stale.
-    formula: "weekly(net_revenue) / marketing_spend.spend_inr"
-    grain: [week_start, region, product_line, channel]
-    source: [sales_transactions, marketing_spend]
+    label: Marketing Efficiency
+    definition: >
+      Net revenue generated per rupee of marketing spend, measured weekly because
+      spend is only available at weekly grain.
+    formula: weekly(net_revenue) / weekly(marketing_spend)
+    calculation_method: cross_source_ratio
+    depends_on: [net_revenue]
+    sources: [sales_transactions, marketing_spend]
+    time_grain: weekly
+    grain_reconciliation:
+      method: aggregate_finer_to_coarser
+      finer: sales_transactions
+      coarser: marketing_spend
+      join_keys: [week_start, region, channel]
+      note: >
+        Marketing spend lags sales by up to 72 hours. The engine must report the
+        freshness of the stale side and must not attribute a movement to marketing
+        when the spend figure for the period has not yet landed.
     unit: ratio
-    drivers: [net_revenue, marketing_spend]
+    direction: higher_is_better
+    decomposable_by: [region, channel]
+    drivers:
+      - {name: spend_level,   type: internal, controllable: true, lever: marketing}
+      - {name: campaign_mix,  type: internal, controllable: true, lever: marketing}
+      - {name: demand,        type: external, controllable: false, lever: none}
     materiality:
-      method: robust_z_score
-      baseline_window_days: 90
-      threshold_z: 2.5
+      statistical: {method: robust_z_score, baseline_window_days: 12, baseline_unit: weeks, threshold: 2.5}  # not yet calibrated, limited weekly history
+      business:    {min_abs_change: 0.2, min_pct_change: 5.0}
+      require_both: true
+    min_history_days: 84
     lineage:
-      source_tables: [sales_transactions, marketing_spend]
-      max_staleness_hours: 72
+      - sales_transactions aggregated day to week
+      - joined to marketing_spend on week_start, region, channel
+      - ratio computed at weekly grain only
     access:
-      row_level: region_scope
-      column_level: none
+      roles_allowed: [cfo, analyst]
 
-policies:
-  sparse_history:
-    min_history_days: 60
-    action: "flag_low_confidence_and_state_reason"
-  low_confidence:
-    action: "abstain_and_report_reason"
-    required_criteria_for_causal_claim: [sequence, magnitude, mechanism]
-  data_freshness:
-    action: "reject_kpi_computation_if_source_older_than_max_staleness"
+# ===========================================================================
+# SPARSE HISTORY POLICY
+# ===========================================================================
+# Applies to any KPI or any slice of a KPI whose observed history is shorter
+# than min_history_days. Required by the brief's sparse history scenario.
+sparse_history_policy:
+  trigger: observed_history_days < min_history_days
+  actions:
+    - widen_prediction_interval_by: 1.8
+    - cap_confidence_at: low
+    - suppress_causal_claims: true
+    - require_narrative_disclaimer: true
+  disclaimer: >
+    This slice has {observed_history_days} days of history against a {min_history_days}
+    day requirement. Movement is reported, but no cause is asserted.
+
+# ===========================================================================
+# ROLES AND ENTITLEMENTS
+# ===========================================================================
+roles:
+
+  sales_director:
+    label: Regional Sales Director
+    region_scope: West
+    can_see_account_names: true
+    kpis: [net_revenue, units_sold, avg_selling_price]
+    narrative_depth: operational
+    decision_rights: [contact_customer, approve_service_recovery, escalate_to_logistics]
+
+  cfo:
+    label: Chief Financial Officer
+    region_scope: all
+    can_see_account_names: true
+    kpis: [net_revenue, units_sold, avg_selling_price, gross_margin_pct, marketing_efficiency]
+    narrative_depth: financial
+    decision_rights: [approve_pricing_change, withdraw_discount, approve_investment]
+
+  analyst:
+    label: Junior Analyst
+    region_scope: all
+    can_see_account_names: false      # drives the masking scenario
+    kpis: [net_revenue, units_sold, avg_selling_price, gross_margin_pct, marketing_efficiency]
+    narrative_depth: detailed
+    decision_rights: []
+
+# ===========================================================================
+# ACTION SCHEMA
+# ===========================================================================
+# The brief specifies this shape exactly. Every recommendation must fill it.
+action_schema:
+  required_fields:
+    - driver
+    - controllable_lever
+    - action
+    - expected_impact
+    - owner
+    - confidence
+    - monitoring_plan
+  rule: >
+    An action may only be proposed where the driver is marked controllable: true
+    in the KPI contract, and the owner must hold the matching decision right.
+
+  # which decision right a lever requires. The owner of an action is resolved by
+  # finding the role that holds this right, so ownership is never hardcoded.
+  lever_rights:
+    account_management: contact_customer
+    logistics: escalate_to_logistics
+    pricing: withdraw_discount
+    portfolio: approve_pricing_change
+    marketing: approve_investment
+    procurement: approve_investment
+
+  # phrasing per lever. Text only; every number is injected from the fact pack.
+  lever_actions:
+    account_management: >
+      Contact {account} before renewal and put a written service recovery plan in place.
+    logistics: >
+      Audit the new logistics provider's delivery punctuality across all {region}
+      accounts, and hold the next tranche of volume until it recovers.
+    pricing: >
+      Review the {segment} discount in {region} and decide whether to withdraw it or
+      convert it into a volume commitment.
+    portfolio: >
+      Reweight the {region} product mix back toward the higher margin lines.
+    marketing: >
+      Rebalance {region} campaign spend toward the segments still converting.
+
+# ===========================================================================
+# ABSTENTION POLICY
+# ===========================================================================
+abstention:
+  abstain_when:
+    - evidence_sources_agreeing < 2
+    - top_driver_contribution_share < 0.35
+    - competing_hypotheses_within: 0.10
+    - required_source_stale: true
+    - sparse_history_triggered: true
+  behaviour: >
+    State the movement and its size, present the competing hypotheses, name the
+    single check that would separate them, and assert no cause.

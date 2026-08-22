@@ -1,172 +1,153 @@
-"""Lane A — attribution.
+"""
+Phase 3a. Contribution analysis.
 
-Decomposes a material KPI movement into ranked, reconciling drivers, using
-only raw sales_transactions — this module has no knowledge of what was
-planted. It must independently discover that one account explains most of
-the West net_revenue drop, and separate that from the smaller price/mix
-effect riding on top of it.
+Answers Round 2 objective 3: "Identifies and ranks explanatory drivers using
+appropriate analytical methods."
 
-Method: an account-level split (does one account's departure explain the
-move?) combined with a price/volume/mix decomposition of everyone else, by
-product line. This mirrors standard PVM analysis, generalized to rank
-*any* segment (account, product, channel) by contribution share rather
-than assuming in advance which dimension matters.
+Two complementary decompositions, both pure arithmetic:
+
+  price_volume_mix   why revenue moved, in terms of the levers a business pulls
+  by_dimension       where it moved, in terms of accounts, categories, channels
+
+Both reconcile to the total movement exactly. That exactness is the point: it is
+what lets us say the LLM is not the source of quantitative truth and mean it. If a
+decomposition does not sum to the movement, the engine refuses to publish it.
 """
 from __future__ import annotations
 
-import dataclasses
+from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
-COMPARISON_PERIOD = None  # set by caller; kept here only for type clarity
+from .kpi import Filters, Period, Warehouse
+
+RECONCILE_TOLERANCE = 1e-6
 
 
-@dataclasses.dataclass(frozen=True)
-class SegmentContribution:
-    dimension: str          # "account", "product_line", "channel"
-    segment: str
-    revenue_comparison: float
-    revenue_current: float
-    contribution_inr: float
-    contribution_share: float   # of total |change|
+@dataclass(frozen=True)
+class Effect:
+    name: str
+    driver: str
+    value: float
+    share: float          # signed share of the total movement
+
+    def __str__(self) -> str:
+        return f"{self.name} {self.value:+,.0f} ({self.share:+.1%})"
 
 
-@dataclasses.dataclass(frozen=True)
-class PriceVolumeMix:
-    revenue_comparison: float
-    revenue_current: float
-    total_change_inr: float
-    volume_effect_inr: float
-    mix_effect_inr: float
-    price_effect_inr: float
-    reconciled_sum_inr: float
-    reconciles_exactly: bool
+@dataclass
+class Decomposition:
+    method: str
+    total_movement: float
+    effects: list[Effect]
+    residual: float
+    reconciled: bool
+    segment_dimension: str | None = None
+
+    def top(self, n: int = 3) -> list[Effect]:
+        return sorted(self.effects, key=lambda e: abs(e.value), reverse=True)[:n]
+
+    def as_frame(self) -> pd.DataFrame:
+        return pd.DataFrame([{
+            "effect": e.name, "driver": e.driver,
+            "value": round(e.value, 2), "share_of_movement": round(e.share, 4),
+        } for e in sorted(self.effects, key=lambda e: abs(e.value), reverse=True)])
 
 
-@dataclasses.dataclass(frozen=True)
-class AttributionResult:
-    region: str
-    total_change_inr: float
-    top_segments: list[SegmentContribution]
-    pvm: PriceVolumeMix
-    dominant_segment: SegmentContribution | None
-
-
-def _slice(sales: pd.DataFrame, region: str) -> pd.DataFrame:
-    df = sales[sales["region"] == region].copy()
-    df["date"] = pd.to_datetime(df["date"])
-    df["revenue"] = df["units"] * df["unit_price"]
-    return df
-
-
-def _period_revenue(df: pd.DataFrame, col: str, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
-    p = df[(df["date"] >= start) & (df["date"] <= end)]
-    return p.groupby(col)["revenue"].sum()
-
-
-def rank_segments(sales: pd.DataFrame, region: str, dimension: str,
-                   comparison_period: tuple[pd.Timestamp, pd.Timestamp],
-                   current_period: tuple[pd.Timestamp, pd.Timestamp]) -> list[SegmentContribution]:
-    """Rank every value of `dimension` (e.g. account_name) by how much of
-    the total revenue change it accounts for. This is a generic driver
-    search — it doesn't know in advance that 'account_name' will be the
-    answer for this scenario; the caller tries multiple dimensions and lets
-    the ranking speak for itself.
+def price_volume_mix(wh: Warehouse, period: Period, filters: Filters = None,
+                     segment_by: str = "category") -> Decomposition:
     """
-    df = _slice(sales, region)
-    rev0 = _period_revenue(df, dimension, *comparison_period)
-    rev1 = _period_revenue(df, dimension, *current_period)
-    all_segments = sorted(set(rev0.index) | set(rev1.index))
-    rev0 = rev0.reindex(all_segments, fill_value=0.0)
-    rev1 = rev1.reindex(all_segments, fill_value=0.0)
+    Three way decomposition of a revenue movement.
 
-    # Share is relative to the *net* total change (what we're actually
-    # trying to explain), not the gross sum of |changes| across every
-    # segment — with many small accounts, gross churn can dwarf the net
-    # movement even when one segment clearly dominates the real story.
-    total_net_change = float((rev1 - rev0).sum())
-    out = []
-    for seg in all_segments:
-        change = float(rev1[seg] - rev0[seg])
-        share = (change / total_net_change) if total_net_change else 0.0
-        out.append(SegmentContribution(
-            dimension=dimension, segment=seg,
-            revenue_comparison=round(float(rev0[seg]), 2),
-            revenue_current=round(float(rev1[seg]), 2),
-            contribution_inr=round(change, 2),
-            contribution_share=round(share, 4),
-        ))
-    return sorted(out, key=lambda s: abs(s.contribution_inr), reverse=True)
+        volume = (U1 - U0) * P0bar
+        mix    = sum over segments of (u1_i - U1 * s0_i) * (p0_i - P0bar)
+        price  = sum over segments of u1_i * (p1_i - p0_i)
 
+    where U is total units, P0bar is the prior blended price, s0_i is the prior
+    unit share of segment i. These three sum to (R1 - R0) identically, so the
+    residual below is a guard against data problems, not an approximation error.
+    """
+    prior = period.shifted(period.days)
+    cur = wh.segments(period, segment_by, filters).set_index(segment_by)
+    pri = wh.segments(prior, segment_by, filters).set_index(segment_by)
 
-def _pvm_by_product(df: pd.DataFrame, comparison_period, current_period) -> PriceVolumeMix:
-    g0 = df[(df["date"] >= comparison_period[0]) & (df["date"] <= comparison_period[1])] \
-        .groupby("product_line").agg(units=("units", "sum"), revenue=("revenue", "sum"))
-    g1 = df[(df["date"] >= current_period[0]) & (df["date"] <= current_period[1])] \
-        .groupby("product_line").agg(units=("units", "sum"), revenue=("revenue", "sum"))
-    g0["price"] = g0["revenue"] / g0["units"]
-    g1["price"] = g1["revenue"] / g1["units"]
-    all_products = sorted(set(g0.index) | set(g1.index))
-    g0 = g0.reindex(all_products, fill_value=0.0)
-    g1 = g1.reindex(all_products, fill_value=0.0)
+    seg = sorted(set(cur.index) | set(pri.index))
+    cur = cur.reindex(seg).fillna(0.0).astype(float)
+    pri = pri.reindex(seg).fillna(0.0).astype(float)
 
-    total_units0, total_units1 = g0["units"].sum(), g1["units"].sum()
-    avg_price0 = (g0["revenue"].sum() / total_units0) if total_units0 else 0.0
-    rev0, rev1 = g0["revenue"].sum(), g1["revenue"].sum()
-    share0 = (g0["units"] / total_units0) if total_units0 else g0["units"] * 0
-    share1 = (g1["units"] / total_units1) if total_units1 else g1["units"] * 0
+    u1, u0 = cur.units, pri.units
+    r1, r0 = float(cur.revenue.sum()), float(pri.revenue.sum())
+    U1, U0 = float(u1.sum()), float(u0.sum())
 
-    volume_effect = (total_units1 - total_units0) * avg_price0
-    mix_effect = ((share1 - share0) * g0["price"].fillna(0)).sum() * total_units1
-    price_effect = (g1["units"] * (g1["price"].fillna(0) - g0["price"].fillna(0))).sum()
-    total_change = rev1 - rev0
-    reconciled = volume_effect + mix_effect + price_effect
+    if U0 == 0 or U1 == 0:
+        return Decomposition("price_volume_mix", r1 - r0, [], r1 - r0, False, segment_by)
 
-    return PriceVolumeMix(
-        revenue_comparison=round(float(rev0), 2),
-        revenue_current=round(float(rev1), 2),
-        total_change_inr=round(float(total_change), 2),
-        volume_effect_inr=round(float(volume_effect), 2),
-        mix_effect_inr=round(float(mix_effect), 2),
-        price_effect_inr=round(float(price_effect), 2),
-        reconciled_sum_inr=round(float(reconciled), 2),
-        reconciles_exactly=bool(abs(reconciled - total_change) < 1.0),
+    P0bar = r0 / U0
+    # a segment with no prior units has no prior price; use the blended price so it
+    # lands in volume and mix rather than creating a false price effect
+    p0 = (pri.revenue / u0.replace(0.0, np.nan)).fillna(P0bar)
+    p1 = (cur.revenue / u1.replace(0.0, np.nan)).fillna(p0)
+    s0 = u0 / U0
+
+    volume = (U1 - U0) * P0bar
+    mix = float(((u1 - U1 * s0) * (p0 - P0bar)).sum())
+    price = float((u1 * (p1 - p0)).sum())
+
+    total = r1 - r0
+    residual = total - (volume + mix + price)
+    denom = abs(total) if abs(total) > 1e-9 else 1.0
+
+    effects = [
+        Effect("Volume", "volume", float(volume), volume / denom),
+        Effect("Price", "price", price, price / denom),
+        Effect("Mix", "mix", mix, mix / denom),
+    ]
+    return Decomposition(
+        method="price_volume_mix", total_movement=total, effects=effects,
+        residual=float(residual),
+        reconciled=abs(residual) / denom < RECONCILE_TOLERANCE,
+        segment_dimension=segment_by,
     )
 
 
-def attribute_region_movement(sales: pd.DataFrame, region: str,
-                               comparison_period: tuple[pd.Timestamp, pd.Timestamp],
-                               current_period: tuple[pd.Timestamp, pd.Timestamp],
-                               dominant_share_threshold: float = 0.5) -> AttributionResult:
-    """Full attribution for one region's net_revenue movement.
-
-    Strategy: rank accounts by contribution share first. If one account
-    explains more than `dominant_share_threshold` of the total change, it
-    is treated as a distinct driver and excluded before running the
-    product-level price/volume/mix split on the remainder — otherwise a
-    single account's departure gets smeared across every product it used
-    to buy, hiding the real story. If no account dominates, run PVM on the
-    full region instead.
+def by_dimension(wh: Warehouse, kpi: str, period: Period, dimension: str,
+                 filters: Filters = None, top_n: int = 6) -> Decomposition:
     """
-    df = _slice(sales, region)
-    account_ranking = rank_segments(sales, region, "account_name", comparison_period, current_period)
+    Where the movement came from. Additive KPIs only, since a ratio cannot be
+    split across slices without a weighting convention the contract does not define.
+    """
+    additive = {"net_revenue": "revenue", "units_sold": "units"}
+    if kpi not in additive:
+        raise ValueError(f"'{kpi}' is not additive and cannot be split by {dimension}")
 
-    total_rev0 = float(df[(df["date"] >= comparison_period[0]) & (df["date"] <= comparison_period[1])]["revenue"].sum())
-    total_rev1 = float(df[(df["date"] >= current_period[0]) & (df["date"] <= current_period[1])]["revenue"].sum())
-    total_change = total_rev1 - total_rev0
+    col = additive[kpi]
+    prior = period.shifted(period.days)
+    cur = wh.segments(period, dimension, filters).set_index(dimension)
+    pri = wh.segments(prior, dimension, filters).set_index(dimension)
 
-    dominant = account_ranking[0] if account_ranking else None
-    if dominant and abs(dominant.contribution_share) >= dominant_share_threshold:
-        remainder = df[df["account_name"] != dominant.segment]
-        pvm = _pvm_by_product(remainder, comparison_period, current_period)
-    else:
-        dominant = None
-        pvm = _pvm_by_product(df, comparison_period, current_period)
+    keys = sorted(set(cur.index) | set(pri.index))
+    c = cur.reindex(keys).fillna(0.0)[col].astype(float)
+    p = pri.reindex(keys).fillna(0.0)[col].astype(float)
 
-    return AttributionResult(
-        region=region,
-        total_change_inr=round(total_change, 2),
-        top_segments=account_ranking[:5],
-        pvm=pvm,
-        dominant_segment=dominant,
+    deltas = (c - p).sort_values(key=abs, ascending=False)
+    total = float(c.sum() - p.sum())
+    denom = abs(total) if abs(total) > 1e-9 else 1.0
+
+    effects = [Effect(str(k), dimension, float(v), float(v) / denom)
+               for k, v in deltas.items()]
+
+    head = effects[:top_n]
+    tail = effects[top_n:]
+    if tail:
+        rest = sum(e.value for e in tail)
+        head.append(Effect(f"all other {dimension}s ({len(tail)})", dimension,
+                           rest, rest / denom))
+
+    residual = total - sum(e.value for e in head)
+    return Decomposition(
+        method=f"contribution_by_{dimension}", total_movement=total, effects=head,
+        residual=float(residual),
+        reconciled=abs(residual) / denom < RECONCILE_TOLERANCE,
+        segment_dimension=dimension,
     )

@@ -1,185 +1,193 @@
-#!/usr/bin/env python3
-"""Phase 1 gate: contract + data foundation. Must be 14/14 before any lane
-starts building on top of it (README Day 2).
+"""
+Phase 1 gate. Run this before starting Phase 2.
 
-Usage:
-    python scripts/verify_phase1.py [--data-dir data/raw] [--contract contracts/kpis.yaml]
+Proves, against the generated data and the contract, that the foundations the rest
+of FRIDAY depends on actually hold. Every check maps to a Round 2 requirement.
+
+Run:  python scripts/verify_phase1.py
 """
 from __future__ import annotations
 
-import argparse
-import pathlib
+import os
 import sys
+from datetime import date
 
 import pandas as pd
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from friday.contracts import ContractError, load_contract  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from friday import contracts  # noqa: E402
 
-PASS = "PASS"
-FAIL = "FAIL"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RAW = os.path.join(ROOT, "data", "raw")
 
+CURRENT = (date(2026, 7, 24), date(2026, 8, 20))
+PRIOR = (date(2026, 6, 26), date(2026, 7, 23))
 
-class Checklist:
-    def __init__(self):
-        self.results: list[tuple[str, str, str]] = []  # (name, status, detail)
-
-    def check(self, name: str, fn):
-        try:
-            ok, detail = fn()
-            self.results.append((name, PASS if ok else FAIL, detail))
-        except Exception as e:  # noqa: BLE001
-            self.results.append((name, FAIL, f"raised {type(e).__name__}: {e}"))
-
-    def report(self) -> bool:
-        width = max(len(n) for n, _, _ in self.results)
-        passed = 0
-        for i, (name, status, detail) in enumerate(self.results, 1):
-            mark = "✓" if status == PASS else "✗"
-            print(f"{i:2d}. [{mark}] {name.ljust(width)}  {detail}")
-            passed += status == PASS
-        total = len(self.results)
-        print(f"\n{passed}/{total} checks passed.")
-        return passed == total
+results: list[tuple[bool, str, str]] = []
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--data-dir", default="data/raw")
-    ap.add_argument("--contract", default="contracts/kpis.yaml")
-    args = ap.parse_args()
-
-    data_dir = pathlib.Path(args.data_dir)
-    cl = Checklist()
-
-    # --- Contract checks (1-5) ------------------------------------------
-    contract_holder = {}
-
-    def c1():
-        c = load_contract(args.contract)
-        contract_holder["c"] = c
-        return True, f"loaded from {args.contract}"
-    cl.check("Contract loads and parses as valid YAML", c1)
-
-    def c2():
-        c = contract_holder.get("c")
-        if c is None:
-            return False, "contract failed to load"
-        n = len(c.kpis)
-        return n >= 5, f"{n} KPI(s) defined (brief requires 3-5)"
-    cl.check("Contract defines >=3 connected KPIs", c2)
-
-    def c3():
-        c = contract_holder.get("c")
-        if c is None:
-            return False, "contract failed to load"
-        for kpi in c.kpis.values():
-            for field in ["formula", "grain", "source", "materiality", "lineage", "access"]:
-                if not getattr(kpi, field):
-                    if field in ("materiality", "lineage", "access") and not getattr(kpi, field):
-                        return False, f"KPI '{kpi.name}' missing '{field}'"
-        return True, "every KPI has formula, grain, source, materiality, lineage, access"
-    cl.check("Every KPI has definition+calc+drivers+thresholds+lineage+access", c3)
-
-    def c4():
-        c = contract_holder.get("c")
-        f = c.get_kpi("net_revenue").formula
-        return "units_sold" in f and "avg_selling_price" in f, f"formula: '{f}'"
-    cl.check("net_revenue is the exact identity units_sold * avg_selling_price", c4)
-
-    def c5():
-        c = contract_holder.get("c")
-        n = len(c.roles)
-        scopes = {r.scope for r in c.roles.values()}
-        return n >= 2 and len(scopes) >= 2, f"{n} role(s), scopes={sorted(scopes)}"
-    cl.check("Contract defines >=2 personas with different scopes", c5)
-
-    # --- Data existence checks (6-8) -------------------------------------
-    dfs = {}
-
-    def make_load_check(fname, key):
-        def _c():
-            path = data_dir / fname
-            if not path.exists():
-                return False, f"{path} does not exist"
-            df = pd.read_csv(path)
-            dfs[key] = df
-            return len(df) > 0, f"{len(df)} rows loaded from {path}"
-        return _c
-
-    cl.check("data/raw/sales_transactions.csv exists and loads", make_load_check("sales_transactions.csv", "sales"))
-    cl.check("data/raw/marketing_spend.csv exists and loads", make_load_check("marketing_spend.csv", "marketing"))
-    cl.check("data/raw/service_events.csv exists and loads", make_load_check("service_events.csv", "events"))
-
-    # --- Data integrity / planted-scenario checks (9-14) ------------------
-
-    def c9():
-        sales = dfs.get("sales")
-        if sales is None:
-            return False, "sales_transactions not loaded"
-        d = pd.to_datetime(sales["date"])
-        span_start, span_end = d.min(), d.max()
-        ok = span_start <= pd.Timestamp("2025-09-05") and span_end >= pd.Timestamp("2026-08-15")
-        return ok, f"date span {span_start.date()} to {span_end.date()}"
-    cl.check("sales_transactions spans the full ~12 month history window", c9)
-
-    def c10():
-        sales = dfs.get("sales")
-        nova = sales[sales["product_line"] == "Nova"]
-        if len(nova) == 0:
-            return False, "no Nova rows found"
-        d = pd.to_datetime(nova["date"])
-        span_days = (pd.Timestamp("2026-08-20") - pd.Timestamp("2026-07-31")).days + 1
-        return 15 <= span_days <= 25, f"Nova launched 2026-07-31, {span_days} days of history as of 2026-08-20"
-    cl.check("Nova is a sparse-history KPI (<60 day min_history_days policy)", c10)
-
-    def c11():
-        sales = dfs.get("sales")
-        acme_west = sales[(sales["account_name"] == "Acme Corp") & (sales["region"] == "West")]
-        after = acme_west[pd.to_datetime(acme_west["date"]) >= pd.Timestamp("2026-07-28")]
-        return len(after) == 0, f"{len(after)} Acme Corp orders on/after 2026-07-28 (expect 0)"
-    cl.check("Acme Corp (West) has zero orders on/after the planted stop date", c11)
-
-    def c12():
-        sales = dfs.get("sales")
-        aurora_west = sales[(sales["product_line"] == "Aurora") & (sales["region"] == "West")]
-        d = pd.to_datetime(aurora_west["date"])
-        before = aurora_west[d < pd.Timestamp("2026-08-01")]["unit_price"]
-        after = aurora_west[d >= pd.Timestamp("2026-08-01")]["unit_price"]
-        if len(before) == 0 or len(after) == 0:
-            return False, "insufficient Aurora/West rows on one side of the discount date"
-        drop_pct = 1 - (after.mean() / before.mean())
-        return 0.04 <= drop_pct <= 0.12, f"West Aurora avg price drop = {drop_pct:.1%} (expect ~8%)"
-    cl.check("Aurora (West) unit price drops ~8% on/after the discount date", c12)
-
-    def c13():
-        events = dfs.get("events")
-        crm = events[(events["event_type"] == "crm_note")
-                     & (events["text"].str.contains("alternative suppliers", case=False, na=False))]
-        complaints = events[(events["account_name"] == "Acme Corp") & (events["event_type"] == "complaint")]
-        ts = pd.to_datetime(complaints["timestamp"])
-        surge = complaints[ts >= pd.Timestamp("2026-06-20")]
-        baseline = complaints[ts < pd.Timestamp("2026-06-20")]
-        ok = len(crm) >= 1 and len(surge) > len(baseline)
-        return ok, f"{len(crm)} matching CRM note(s), {len(surge)} post-surge vs {len(baseline)} pre-surge complaints"
-    cl.check("Evidence trail present: CRM note + Acme complaint surge", c13)
-
-    def c14():
-        sales = dfs.get("sales")
-        marketing = dfs.get("marketing")
-        recon = (sales["units"] * sales["unit_price"] - (sales["units"] * sales["unit_price"])).abs().max()
-        sales_grain_daily = pd.to_datetime(sales["date"]).dt.date.nunique() > 300
-        marketing_grain_weekly = len(marketing) > 0 and "week_start" in marketing.columns
-        return (recon < 1.0 and sales_grain_daily and marketing_grain_weekly), (
-            f"sales grain=daily ({pd.to_datetime(sales['date']).dt.date.nunique()} distinct dates), "
-            f"marketing grain=weekly ({marketing['week_start'].nunique() if marketing_grain_weekly else 0} weeks), "
-            f"revenue identity holds"
-        )
-    cl.check("Heterogeneous source grains present + revenue identity reconciles", c14)
-
-    ok = cl.report()
-    sys.exit(0 if ok else 1)
+def check(ok: bool, label: str, detail: str = "") -> None:
+    results.append((bool(ok), label, detail))
 
 
-if __name__ == "__main__":
-    main()
+def window(df: pd.DataFrame, col: str, lo: date, hi: date) -> pd.DataFrame:
+    d = pd.to_datetime(df[col]).dt.date
+    return df[(d >= lo) & (d <= hi)]
+
+
+# ---------------------------------------------------------------- contract
+try:
+    c = contracts.load(strict=True)
+    check(True, "Contract parses and passes structural validation",
+          f"{len(c.kpis)} KPIs, {len(c.sources)} sources, {len(c.roles)} roles")
+except Exception as exc:                                   # noqa: BLE001
+    check(False, "Contract parses and passes structural validation", str(exc))
+    for ok, label, detail in results:
+        print(f"[{'PASS' if ok else 'FAIL'}] {label}\n       {detail}")
+    sys.exit(1)
+
+check(3 <= len(c.kpis) <= 5,
+      "REQ 1a: three to five connected KPIs",
+      f"{len(c.kpis)}: {', '.join(c.kpis)}")
+
+grains = {n: s["time_grain"] for n, s in c.sources.items()}
+cadences = {n: s["refresh_cadence"] for n, s in c.sources.items()}
+check(len(c.sources) >= 2 and len(set(grains.values())) >= 2,
+      "REQ 1b: sources differ in grain and refresh cadence",
+      " | ".join(f"{n}: {grains[n]}/{cadences[n]}" for n in c.sources))
+
+needed = {"definition", "formula", "drivers", "materiality", "lineage", "access"}
+missing = {n: sorted(needed - set(k.spec)) for n, k in c.kpis.items()
+           if needed - set(k.spec)}
+check(not missing,
+      "REQ 2: semantic contract carries definitions, calculations, drivers, "
+      "thresholds, lineage and access",
+      "all KPIs complete" if not missing else str(missing))
+
+# ------------------------------------------------------------------ files
+frames: dict[str, pd.DataFrame] = {}
+missing_files = []
+for name, spec in c.sources.items():
+    path = os.path.join(ROOT, spec["file"])
+    if os.path.exists(path):
+        frames[name] = pd.read_csv(path)
+    else:
+        missing_files.append(spec["file"])
+check(not missing_files, "All declared source files exist",
+      ", ".join(f"{n}={len(d):,} rows" for n, d in frames.items())
+      or f"missing {missing_files}")
+
+sales = frames["sales_transactions"]
+marketing = frames["marketing_spend"]
+events = frames["service_events"]
+
+# ------------------------------------------------- KPI identity reconciles
+cur = window(sales, "date", *CURRENT)
+pri = window(sales, "date", *PRIOR)
+cur_w = cur[cur.region == "West"]
+pri_w = pri[pri.region == "West"]
+
+rev_c, units_c = cur_w.revenue.sum(), cur_w.units.sum()
+rev_p, units_p = pri_w.revenue.sum(), pri_w.units.sum()
+asp_c, asp_p = rev_c / units_c, rev_p / units_p
+
+recon_err = abs(units_c * asp_c - rev_c) / rev_c
+check(recon_err < 1e-9,
+      "KPI identity holds: net_revenue == units_sold * avg_selling_price",
+      f"residual {recon_err:.2e}  (required for price/volume/mix to reconcile)")
+
+# -------------------------------------------------- movement is material
+move_pct = 100 * (rev_c - rev_p) / rev_p
+move_abs = rev_c - rev_p
+stat, biz, both = c.kpis["net_revenue"].thresholds()
+material = abs(move_abs) >= biz["min_abs_change"] and abs(move_pct) >= biz["min_pct_change"]
+check(material,
+      "REQ 4: planted movement clears the contract's business materiality gate",
+      f"West net_revenue {move_pct:+.1f}%  ({move_abs:,.0f} INR)  "
+      f"gate: {biz['min_pct_change']}% and {biz['min_abs_change']:,} INR")
+
+# ------------------------------------------- movement is genuinely multi factor
+vol_effect = (units_c - units_p) * asp_p
+price_mix_effect = (asp_c - asp_p) * units_c
+check(abs(vol_effect) > 0 and abs(price_mix_effect) > 0
+      and abs(vol_effect + price_mix_effect - move_abs) / abs(move_abs) < 1e-6,
+      "REQ 4: movement decomposes into separable volume and price/mix effects",
+      f"volume {vol_effect:+,.0f}  price+mix {price_mix_effect:+,.0f}  "
+      f"sum {vol_effect + price_mix_effect:+,.0f} vs actual {move_abs:+,.0f}")
+
+# ------------------------------------------------------- sparse history
+nova = sales[sales.category == "Nova"]
+nova_days = pd.to_datetime(nova["date"]).dt.date.nunique()
+min_hist = c.kpis["net_revenue"].min_history_days
+check(0 < nova_days < min_hist,
+      "REQ 6: a sparse history slice exists and trips the contract policy",
+      f"Nova has {nova_days} days against min_history_days={min_hist} "
+      f"-> {c.sparse_policy['actions'][1]}")
+
+# --------------------------------------------------- cross grain join works
+s = sales.copy()
+s["week_start"] = (pd.to_datetime(s["date"])
+                   - pd.to_timedelta(pd.to_datetime(s["date"]).dt.weekday, unit="D")
+                   ).dt.date.astype(str)
+weekly_rev = s.groupby(["week_start", "region", "channel"], as_index=False).revenue.sum()
+joined = weekly_rev.merge(marketing, on=["week_start", "region", "channel"], how="inner")
+coverage = len(joined) / len(weekly_rev)
+check(coverage > 0.9 and len(joined) > 0,
+      "REQ 1c: daily sales reconcile upward to weekly marketing grain",
+      f"{len(joined):,} weekly rows joined, {coverage:.0%} coverage, "
+      f"marketing lag {c.sources['marketing_spend']['expected_lag_hours']}h")
+
+# -------------------------------------------------------- text evidence
+ev = events.copy()
+ev["d"] = pd.to_datetime(ev["event_ts"]).dt.date
+acme = ev[(ev.account_name == "Acme Corp") & (ev.kind == "delivery_delay")]
+before = acme[acme.d < date(2026, 6, 20)]
+after = acme[acme.d >= date(2026, 6, 20)]
+days_b = max((date(2026, 6, 20) - date(2025, 9, 1)).days, 1)
+days_a = max((date(2026, 8, 20) - date(2026, 6, 20)).days, 1)
+rate_ratio = (len(after) / days_a) / max(len(before) / days_b, 1e-9)
+crm = ev[(ev.event_type == "crm_note") & (ev.text.str.contains("alternative suppliers"))]
+check(rate_ratio > 2.5 and len(crm) > 0,
+      "REQ 8: unstructured evidence trail is recoverable from text",
+      f"Acme delivery complaints {rate_ratio:.1f}x baseline, "
+      f"{len(crm)} CRM note(s) naming supplier risk")
+
+# ------------------------------------------------------ entitlements work
+sd = set(c.visible_kpis("sales_director"))
+cfo = set(c.visible_kpis("cfo"))
+an = set(c.visible_kpis("analyst"))
+masked = c.masked_columns("net_revenue", "analyst")
+check("gross_margin_pct" in cfo and "gross_margin_pct" not in sd
+      and "account_name" in masked and c.row_filter("net_revenue", "sales_director"),
+      "REQ 7: role based entitlement produces genuinely different access",
+      f"sales_director={len(sd)} KPIs (row filter: "
+      f"{c.row_filter('net_revenue', 'sales_director')}), cfo={len(cfo)}, "
+      f"analyst={len(an)} with {masked} masked")
+
+# ----------------------------------------------------- personas differ
+check(len(c.roles) >= 2
+      and len({r.get("narrative_depth") for r in c.roles.values()}) >= 2
+      and len({tuple(r.get("decision_rights", [])) for r in c.roles.values()}) >= 2,
+      "REQ 3: at least two personas with different depth and decision rights",
+      " | ".join(f"{n}: {r['narrative_depth']}, "
+                 f"{len(r.get('decision_rights', []))} rights"
+                 for n, r in c.roles.items()))
+
+# -------------------------------------------------------- action schema
+check(c.action_schema["required_fields"] == [
+        "driver", "controllable_lever", "action", "expected_impact",
+        "owner", "confidence", "monitoring_plan"],
+      "Action schema matches the shape the brief specifies exactly",
+      " -> ".join(c.action_schema["required_fields"]))
+
+# ------------------------------------------------------------------ report
+print("\nFRIDAY  Phase 1 gate\n" + "=" * 72)
+for ok, label, detail in results:
+    print(f"[{'PASS' if ok else 'FAIL'}] {label}")
+    if detail:
+        print(f"       {detail}")
+
+failed = sum(1 for ok, _, _ in results if not ok)
+print("=" * 72)
+print(f"{len(results) - failed}/{len(results)} checks passed")
+sys.exit(1 if failed else 0)

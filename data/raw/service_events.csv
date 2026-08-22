@@ -1,0 +1,896 @@
+event_ts,event_id,event_type,account_name,region,kind,severity,text
+2025-09-01T13:18:00,EV500001,support_ticket,Ganges Distributors,East,delivery_delay,3,Third late delivery this month against order SO117515. This is becoming a problem.
+2025-09-01T16:06:00,EV500002,support_ticket,Vayu Logistics,West,delivery_delay,3,Third late delivery this month against order SO126653. This is becoming a problem.
+2025-09-02T10:38:00,EV500003,support_ticket,Meridian Group,North,billing,3,Invoice against SO103703 shows the old rate. Please issue a correction.
+2025-09-02T13:16:00,EV500004,support_ticket,Ironwood Ltd,East,delivery_delay,2,Third late delivery this month against order SO176268. This is becoming a problem.
+2025-09-03T08:45:00,EV500005,support_ticket,Bluewater Co,South,delivery_delay,3,Consignment SO144593 was promised on 2025-08-27 and has still not arrived at our depot.
+2025-09-03T11:00:00,EV500006,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-03T11:00:00,EV500007,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-03T11:00:00,EV500008,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-09-03T11:00:00,EV500009,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-09-03T11:00:00,EV500010,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-03T11:00:00,EV500011,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-03T11:00:00,EV500012,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2025-09-03T11:00:00,EV500013,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-04T15:19:00,EV500014,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO196459 was promised on 2025-08-30 and has still not arrived at our depot.
+2025-09-04T09:04:00,EV500015,support_ticket,Orbit Retail,West,delivery_delay,3,Delivery for SO145148 slipped again. Our production line was held up waiting for it.
+2025-09-05T17:29:00,EV500016,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO152719.
+2025-09-05T13:26:00,EV500017,support_ticket,Orbit Retail,West,quality,2,Two cartons in SO106644 arrived damaged. Requesting replacement.
+2025-09-08T14:35:00,EV500018,support_ticket,Sterling Industries,West,delivery_delay,3,We were not notified that SO165997 would be late. Please escalate.
+2025-09-10T12:33:00,EV500019,support_ticket,Meridian Group,North,billing,2,Purchase order number missing from the invoice for SO144845.
+2025-09-10T15:27:00,EV500020,support_ticket,Meridian Group,North,delivery_delay,1,We were not notified that SO160190 would be late. Please escalate.
+2025-09-10T11:00:00,EV500021,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2025-09-10T11:00:00,EV500022,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-09-10T11:00:00,EV500023,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2025-09-10T11:00:00,EV500024,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-12T09:47:00,EV500025,support_ticket,Kalpana Traders,North,billing,2,Purchase order number missing from the invoice for SO170218.
+2025-09-12T09:21:00,EV500026,support_ticket,Bluewater Co,South,quality,3,Two cartons in SO190942 arrived damaged. Requesting replacement.
+2025-09-13T09:40:00,EV500027,support_ticket,Meridian Group,North,delivery_delay,3,We were not notified that SO181701 would be late. Please escalate.
+2025-09-13T17:00:00,EV500028,support_ticket,Ganges Distributors,East,billing,1,Invoice against SO117644 shows the old rate. Please issue a correction.
+2025-09-13T13:17:00,EV500029,support_ticket,Sterling Industries,West,delivery_delay,1,Consignment SO139775 was promised on 2025-09-06 and has still not arrived at our depot.
+2025-09-14T15:51:00,EV500030,support_ticket,Kalpana Traders,North,delivery_delay,3,Consignment SO195001 was promised on 2025-09-07 and has still not arrived at our depot.
+2025-09-14T11:29:00,EV500031,support_ticket,Bluewater Co,South,billing,3,Invoice against SO190808 shows the old rate. Please issue a correction.
+2025-09-16T11:27:00,EV500032,support_ticket,Meridian Group,North,delivery_delay,3,Third late delivery this month against order SO131005. This is becoming a problem.
+2025-09-17T10:14:00,EV500033,support_ticket,Bluewater Co,South,quality,2,Packaging on SO141694 was torn on arrival.
+2025-09-17T11:00:00,EV500034,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2025-09-17T11:00:00,EV500035,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-09-17T11:00:00,EV500036,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-17T11:00:00,EV500037,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-18T17:20:00,EV500038,support_ticket,Meridian Group,North,billing,2,Purchase order number missing from the invoice for SO103602.
+2025-09-19T10:45:00,EV500039,support_ticket,Deccan Supply,South,delivery_delay,1,Third late delivery this month against order SO149826. This is becoming a problem.
+2025-09-21T11:18:00,EV500040,support_ticket,Meridian Group,North,quality,3,Packaging on SO130254 was torn on arrival.
+2025-09-21T15:41:00,EV500041,support_ticket,Ganges Distributors,East,quality,2,Packaging on SO195243 was torn on arrival.
+2025-09-21T09:43:00,EV500042,support_ticket,Sterling Industries,West,billing,2,Invoice against SO154583 shows the old rate. Please issue a correction.
+2025-09-22T11:22:00,EV500043,support_ticket,Orbit Retail,West,quality,2,Two cartons in SO176179 arrived damaged. Requesting replacement.
+2025-09-23T15:56:00,EV500044,support_ticket,Kalpana Traders,North,billing,3,Purchase order number missing from the invoice for SO131658.
+2025-09-23T18:40:00,EV500045,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO157992.
+2025-09-23T12:32:00,EV500046,support_ticket,Bluewater Co,South,billing,3,Invoice against SO159122 shows the old rate. Please issue a correction.
+2025-09-24T09:31:00,EV500047,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO194794 shows the old rate. Please issue a correction.
+2025-09-24T13:17:00,EV500048,support_ticket,Sterling Industries,West,billing,1,Invoice against SO144235 shows the old rate. Please issue a correction.
+2025-09-24T11:00:00,EV500049,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-24T11:00:00,EV500050,crm_note,Deccan Supply,South,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-24T11:00:00,EV500051,crm_note,Bluewater Co,South,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-24T11:00:00,EV500052,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-24T11:00:00,EV500053,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2025-09-24T11:00:00,EV500054,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-09-24T11:00:00,EV500055,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-09-24T11:00:00,EV500056,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-09-26T14:29:00,EV500057,support_ticket,Meridian Group,North,delivery_delay,2,We were not notified that SO190089 would be late. Please escalate.
+2025-09-26T09:15:00,EV500058,support_ticket,Kalpana Traders,North,delivery_delay,2,We were not notified that SO160906 would be late. Please escalate.
+2025-09-27T08:18:00,EV500059,support_ticket,Kalpana Traders,North,billing,3,Invoice against SO157930 shows the old rate. Please issue a correction.
+2025-09-29T12:30:00,EV500060,support_ticket,Meridian Group,North,delivery_delay,3,Third late delivery this month against order SO107974. This is becoming a problem.
+2025-09-29T13:18:00,EV500061,support_ticket,Acme Corp,West,billing,2,Invoice against SO143535 shows the old rate. Please issue a correction.
+2025-09-30T09:29:00,EV500062,support_ticket,Kalpana Traders,North,billing,1,Purchase order number missing from the invoice for SO116468.
+2025-10-01T11:00:00,EV500063,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-10-01T11:00:00,EV500064,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-01T11:00:00,EV500065,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2025-10-01T11:00:00,EV500066,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-01T11:00:00,EV500067,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-10-01T11:00:00,EV500068,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2025-10-03T14:23:00,EV500069,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO198771 was torn on arrival.
+2025-10-03T12:50:00,EV500070,support_ticket,Deccan Supply,South,delivery_delay,3,Third late delivery this month against order SO111164. This is becoming a problem.
+2025-10-04T16:26:00,EV500071,support_ticket,Ironwood Ltd,East,delivery_delay,3,Delivery for SO152184 slipped again. Our production line was held up waiting for it.
+2025-10-04T08:48:00,EV500072,support_ticket,Orbit Retail,West,billing,2,Invoice against SO135154 shows the old rate. Please issue a correction.
+2025-10-05T12:21:00,EV500073,support_ticket,Bluewater Co,South,billing,1,Invoice against SO159629 shows the old rate. Please issue a correction.
+2025-10-06T17:28:00,EV500074,support_ticket,Ganges Distributors,East,quality,2,Packaging on SO124755 was torn on arrival.
+2025-10-07T10:28:00,EV500075,support_ticket,Bluewater Co,South,quality,3,Packaging on SO122331 was torn on arrival.
+2025-10-08T16:33:00,EV500076,support_ticket,Orbit Retail,West,billing,1,Invoice against SO142375 shows the old rate. Please issue a correction.
+2025-10-08T11:00:00,EV500077,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-08T11:00:00,EV500078,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2025-10-08T11:00:00,EV500079,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-10-10T18:56:00,EV500080,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO133054.
+2025-10-10T11:38:00,EV500081,support_ticket,Ganges Distributors,East,delivery_delay,2,Delivery for SO183521 slipped again. Our production line was held up waiting for it.
+2025-10-11T16:50:00,EV500082,support_ticket,Ganges Distributors,East,delivery_delay,1,Third late delivery this month against order SO119433. This is becoming a problem.
+2025-10-11T09:12:00,EV500083,support_ticket,Ganges Distributors,East,delivery_delay,1,Third late delivery this month against order SO147272. This is becoming a problem.
+2025-10-11T17:21:00,EV500084,support_ticket,Ganges Distributors,East,delivery_delay,2,We were not notified that SO161505 would be late. Please escalate.
+2025-10-12T08:35:00,EV500085,support_ticket,Deccan Supply,South,delivery_delay,2,Third late delivery this month against order SO143975. This is becoming a problem.
+2025-10-13T09:31:00,EV500086,support_ticket,Meridian Group,North,quality,1,Packaging on SO107238 was torn on arrival.
+2025-10-13T09:26:00,EV500087,support_ticket,Meridian Group,North,quality,3,Packaging on SO106838 was torn on arrival.
+2025-10-13T08:08:00,EV500088,support_ticket,Orbit Retail,West,billing,1,Purchase order number missing from the invoice for SO106845.
+2025-10-15T13:58:00,EV500089,support_ticket,Deccan Supply,South,billing,3,Purchase order number missing from the invoice for SO156515.
+2025-10-15T11:00:00,EV500090,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-10-16T08:18:00,EV500091,support_ticket,Sterling Industries,West,delivery_delay,2,Third late delivery this month against order SO184370. This is becoming a problem.
+2025-10-16T10:12:00,EV500092,support_ticket,Sterling Industries,West,quality,3,Two cartons in SO199443 arrived damaged. Requesting replacement.
+2025-10-16T15:30:00,EV500093,support_ticket,Orbit Retail,West,delivery_delay,1,Third late delivery this month against order SO138265. This is becoming a problem.
+2025-10-18T12:56:00,EV500094,support_ticket,Meridian Group,North,billing,1,Invoice against SO112532 shows the old rate. Please issue a correction.
+2025-10-19T08:07:00,EV500095,support_ticket,Sterling Industries,West,delivery_delay,2,We were not notified that SO168229 would be late. Please escalate.
+2025-10-20T16:51:00,EV500096,support_ticket,Meridian Group,North,billing,2,Purchase order number missing from the invoice for SO143547.
+2025-10-22T11:00:00,EV500097,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-10-22T11:00:00,EV500098,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-22T11:00:00,EV500099,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-22T11:00:00,EV500100,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2025-10-22T11:00:00,EV500101,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2025-10-23T17:35:00,EV500102,support_ticket,Deccan Supply,South,billing,1,Invoice against SO128896 shows the old rate. Please issue a correction.
+2025-10-23T09:33:00,EV500103,support_ticket,Ganges Distributors,East,billing,3,Purchase order number missing from the invoice for SO135201.
+2025-10-23T13:56:00,EV500104,support_ticket,Sterling Industries,West,billing,2,Invoice against SO173878 shows the old rate. Please issue a correction.
+2025-10-24T17:10:00,EV500105,support_ticket,Bluewater Co,South,billing,2,Invoice against SO153749 shows the old rate. Please issue a correction.
+2025-10-24T08:08:00,EV500106,support_ticket,Ironwood Ltd,East,billing,3,Invoice against SO152231 shows the old rate. Please issue a correction.
+2025-10-25T16:56:00,EV500107,support_ticket,Ganges Distributors,East,quality,1,Two cartons in SO144838 arrived damaged. Requesting replacement.
+2025-10-25T18:46:00,EV500108,support_ticket,Ironwood Ltd,East,delivery_delay,3,Delivery for SO164709 slipped again. Our production line was held up waiting for it.
+2025-10-25T18:05:00,EV500109,support_ticket,Acme Corp,West,quality,2,Two cartons in SO103235 arrived damaged. Requesting replacement.
+2025-10-25T11:50:00,EV500110,support_ticket,Sterling Industries,West,quality,3,Two cartons in SO102187 arrived damaged. Requesting replacement.
+2025-10-26T18:20:00,EV500111,support_ticket,Bluewater Co,South,quality,3,Packaging on SO198715 was torn on arrival.
+2025-10-26T12:44:00,EV500112,support_ticket,Ganges Distributors,East,delivery_delay,1,Delivery for SO151829 slipped again. Our production line was held up waiting for it.
+2025-10-27T08:15:00,EV500113,support_ticket,Sterling Industries,West,delivery_delay,1,Consignment SO197915 was promised on 2025-10-25 and has still not arrived at our depot.
+2025-10-27T16:46:00,EV500114,support_ticket,Vayu Logistics,West,delivery_delay,2,Delivery for SO186272 slipped again. Our production line was held up waiting for it.
+2025-10-28T13:38:00,EV500115,support_ticket,Acme Corp,West,billing,1,Purchase order number missing from the invoice for SO130052.
+2025-10-29T10:29:00,EV500116,support_ticket,Meridian Group,North,billing,3,Invoice against SO184658 shows the old rate. Please issue a correction.
+2025-10-29T11:00:00,EV500117,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2025-10-29T11:00:00,EV500118,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-10-29T11:00:00,EV500119,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2025-10-29T11:00:00,EV500120,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-10-30T11:04:00,EV500121,support_ticket,Meridian Group,North,quality,3,Packaging on SO187834 was torn on arrival.
+2025-10-30T10:20:00,EV500122,support_ticket,Deccan Supply,South,quality,3,Two cartons in SO180695 arrived damaged. Requesting replacement.
+2025-10-30T08:42:00,EV500123,support_ticket,Deccan Supply,South,billing,2,Invoice against SO180527 shows the old rate. Please issue a correction.
+2025-10-30T13:29:00,EV500124,support_ticket,Ironwood Ltd,East,delivery_delay,2,Consignment SO101276 was promised on 2025-10-24 and has still not arrived at our depot.
+2025-11-01T12:55:00,EV500125,support_ticket,Deccan Supply,South,billing,3,Invoice against SO156030 shows the old rate. Please issue a correction.
+2025-11-01T09:54:00,EV500126,support_ticket,Sterling Industries,West,billing,2,Invoice against SO118799 shows the old rate. Please issue a correction.
+2025-11-03T16:35:00,EV500127,support_ticket,Deccan Supply,South,billing,1,Invoice against SO105936 shows the old rate. Please issue a correction.
+2025-11-03T08:20:00,EV500128,support_ticket,Bluewater Co,South,quality,1,Two cartons in SO163313 arrived damaged. Requesting replacement.
+2025-11-03T09:55:00,EV500129,support_ticket,Vayu Logistics,West,billing,3,Purchase order number missing from the invoice for SO161268.
+2025-11-03T11:28:00,EV500130,support_ticket,Vayu Logistics,West,billing,1,Invoice against SO120510 shows the old rate. Please issue a correction.
+2025-11-04T12:32:00,EV500131,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO199408 was promised on 2025-10-28 and has still not arrived at our depot.
+2025-11-04T18:19:00,EV500132,support_ticket,Ironwood Ltd,East,delivery_delay,1,Delivery for SO190682 slipped again. Our production line was held up waiting for it.
+2025-11-04T12:33:00,EV500133,support_ticket,Acme Corp,West,delivery_delay,2,Third late delivery this month against order SO187993. This is becoming a problem.
+2025-11-04T16:15:00,EV500134,support_ticket,Orbit Retail,West,billing,1,Invoice against SO166007 shows the old rate. Please issue a correction.
+2025-11-05T17:33:00,EV500135,support_ticket,Deccan Supply,South,quality,2,Two cartons in SO167376 arrived damaged. Requesting replacement.
+2025-11-05T12:37:00,EV500136,support_ticket,Sterling Industries,West,billing,1,Purchase order number missing from the invoice for SO168095.
+2025-11-05T17:15:00,EV500137,support_ticket,Vayu Logistics,West,quality,2,Packaging on SO138269 was torn on arrival.
+2025-11-05T11:00:00,EV500138,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-05T11:00:00,EV500139,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-05T11:00:00,EV500140,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-05T11:00:00,EV500141,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2025-11-06T13:00:00,EV500142,support_ticket,Meridian Group,North,delivery_delay,1,Consignment SO162505 was promised on 2025-11-01 and has still not arrived at our depot.
+2025-11-06T13:08:00,EV500143,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO138876 shows the old rate. Please issue a correction.
+2025-11-06T15:56:00,EV500144,support_ticket,Deccan Supply,South,billing,1,Invoice against SO103992 shows the old rate. Please issue a correction.
+2025-11-06T16:40:00,EV500145,support_ticket,Bluewater Co,South,delivery_delay,3,Third late delivery this month against order SO185894. This is becoming a problem.
+2025-11-06T17:27:00,EV500146,support_ticket,Ganges Distributors,East,quality,3,Two cartons in SO127604 arrived damaged. Requesting replacement.
+2025-11-06T15:29:00,EV500147,support_ticket,Acme Corp,West,delivery_delay,3,Delivery for SO150290 slipped again. Our production line was held up waiting for it.
+2025-11-07T13:12:00,EV500148,support_ticket,Ironwood Ltd,East,delivery_delay,1,Delivery for SO112512 slipped again. Our production line was held up waiting for it.
+2025-11-07T11:08:00,EV500149,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO122120 would be late. Please escalate.
+2025-11-08T15:01:00,EV500150,support_ticket,Orbit Retail,West,delivery_delay,2,Third late delivery this month against order SO141790. This is becoming a problem.
+2025-11-08T14:53:00,EV500151,support_ticket,Orbit Retail,West,delivery_delay,3,Consignment SO171546 was promised on 2025-11-04 and has still not arrived at our depot.
+2025-11-09T18:54:00,EV500152,support_ticket,Kalpana Traders,North,billing,1,Invoice against SO144177 shows the old rate. Please issue a correction.
+2025-11-09T12:13:00,EV500153,support_ticket,Ironwood Ltd,East,delivery_delay,3,We were not notified that SO164195 would be late. Please escalate.
+2025-11-09T18:54:00,EV500154,support_ticket,Sterling Industries,West,quality,2,Two cartons in SO100575 arrived damaged. Requesting replacement.
+2025-11-10T17:22:00,EV500155,support_ticket,Bluewater Co,South,quality,3,Two cartons in SO135133 arrived damaged. Requesting replacement.
+2025-11-11T08:51:00,EV500156,support_ticket,Ironwood Ltd,East,billing,2,Invoice against SO156303 shows the old rate. Please issue a correction.
+2025-11-12T17:29:00,EV500157,support_ticket,Bluewater Co,South,billing,1,Purchase order number missing from the invoice for SO140211.
+2025-11-12T11:00:00,EV500158,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-11-12T11:00:00,EV500159,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-12T11:00:00,EV500160,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-13T10:53:00,EV500161,support_ticket,Ganges Distributors,East,quality,1,Two cartons in SO192164 arrived damaged. Requesting replacement.
+2025-11-13T08:30:00,EV500162,support_ticket,Sterling Industries,West,quality,2,Packaging on SO171232 was torn on arrival.
+2025-11-15T17:20:00,EV500163,support_ticket,Meridian Group,North,quality,2,Two cartons in SO192411 arrived damaged. Requesting replacement.
+2025-11-15T08:05:00,EV500164,support_ticket,Meridian Group,North,billing,2,Invoice against SO155745 shows the old rate. Please issue a correction.
+2025-11-15T13:12:00,EV500165,support_ticket,Bluewater Co,South,delivery_delay,2,Third late delivery this month against order SO129007. This is becoming a problem.
+2025-11-15T18:42:00,EV500166,support_ticket,Ganges Distributors,East,delivery_delay,3,We were not notified that SO194753 would be late. Please escalate.
+2025-11-16T08:53:00,EV500167,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO197680 was promised on 2025-11-10 and has still not arrived at our depot.
+2025-11-17T13:32:00,EV500168,support_ticket,Deccan Supply,South,delivery_delay,3,Consignment SO109732 was promised on 2025-11-09 and has still not arrived at our depot.
+2025-11-17T18:58:00,EV500169,support_ticket,Sterling Industries,West,billing,2,Purchase order number missing from the invoice for SO199723.
+2025-11-17T11:47:00,EV500170,support_ticket,Sterling Industries,West,delivery_delay,2,Third late delivery this month against order SO166567. This is becoming a problem.
+2025-11-18T12:24:00,EV500171,support_ticket,Vayu Logistics,West,quality,3,Two cartons in SO124303 arrived damaged. Requesting replacement.
+2025-11-18T10:40:00,EV500172,support_ticket,Orbit Retail,West,billing,2,Invoice against SO180502 shows the old rate. Please issue a correction.
+2025-11-18T14:14:00,EV500173,support_ticket,Orbit Retail,West,delivery_delay,2,We were not notified that SO123218 would be late. Please escalate.
+2025-11-19T11:00:00,EV500174,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2025-11-19T11:00:00,EV500175,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-19T11:00:00,EV500176,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-11-19T11:00:00,EV500177,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-19T11:00:00,EV500178,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-19T11:00:00,EV500179,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-19T11:00:00,EV500180,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2025-11-19T11:00:00,EV500181,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-19T11:00:00,EV500182,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-20T12:11:00,EV500183,support_ticket,Deccan Supply,South,quality,1,Two cartons in SO174864 arrived damaged. Requesting replacement.
+2025-11-20T18:09:00,EV500184,support_ticket,Acme Corp,West,quality,2,Packaging on SO110439 was torn on arrival.
+2025-11-21T11:41:00,EV500185,support_ticket,Kalpana Traders,North,billing,2,Purchase order number missing from the invoice for SO135011.
+2025-11-21T10:35:00,EV500186,support_ticket,Kalpana Traders,North,delivery_delay,1,Consignment SO123358 was promised on 2025-11-15 and has still not arrived at our depot.
+2025-11-21T17:25:00,EV500187,support_ticket,Orbit Retail,West,quality,3,Packaging on SO165072 was torn on arrival.
+2025-11-22T08:14:00,EV500188,support_ticket,Deccan Supply,South,billing,2,Invoice against SO190728 shows the old rate. Please issue a correction.
+2025-11-23T10:10:00,EV500189,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO198087 shows the old rate. Please issue a correction.
+2025-11-23T18:47:00,EV500190,support_ticket,Ganges Distributors,East,delivery_delay,2,Consignment SO193310 was promised on 2025-11-20 and has still not arrived at our depot.
+2025-11-23T17:18:00,EV500191,support_ticket,Ganges Distributors,East,delivery_delay,1,Delivery for SO155128 slipped again. Our production line was held up waiting for it.
+2025-11-24T13:52:00,EV500192,support_ticket,Kalpana Traders,North,billing,1,Invoice against SO120167 shows the old rate. Please issue a correction.
+2025-11-24T16:58:00,EV500193,support_ticket,Deccan Supply,South,quality,2,Packaging on SO192173 was torn on arrival.
+2025-11-24T12:39:00,EV500194,support_ticket,Bluewater Co,South,quality,1,Two cartons in SO125239 arrived damaged. Requesting replacement.
+2025-11-26T09:15:00,EV500195,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO126031 was torn on arrival.
+2025-11-26T08:09:00,EV500196,support_ticket,Acme Corp,West,delivery_delay,2,Third late delivery this month against order SO181404. This is becoming a problem.
+2025-11-26T17:42:00,EV500197,support_ticket,Sterling Industries,West,delivery_delay,3,Third late delivery this month against order SO165799. This is becoming a problem.
+2025-11-26T11:00:00,EV500198,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-26T11:00:00,EV500199,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-26T11:00:00,EV500200,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2025-11-26T11:00:00,EV500201,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-11-26T11:00:00,EV500202,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-11-26T11:00:00,EV500203,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2025-11-27T18:40:00,EV500204,support_ticket,Kalpana Traders,North,quality,1,Packaging on SO196739 was torn on arrival.
+2025-11-27T14:31:00,EV500205,support_ticket,Vayu Logistics,West,quality,3,Packaging on SO122154 was torn on arrival.
+2025-11-28T15:07:00,EV500206,support_ticket,Vayu Logistics,West,quality,3,Two cartons in SO111276 arrived damaged. Requesting replacement.
+2025-11-28T10:17:00,EV500207,support_ticket,Vayu Logistics,West,quality,2,Two cartons in SO180470 arrived damaged. Requesting replacement.
+2025-12-01T11:28:00,EV500208,support_ticket,Meridian Group,North,quality,3,Packaging on SO164693 was torn on arrival.
+2025-12-03T08:32:00,EV500209,support_ticket,Deccan Supply,South,billing,2,Invoice against SO198972 shows the old rate. Please issue a correction.
+2025-12-03T16:25:00,EV500210,support_ticket,Orbit Retail,West,billing,2,Purchase order number missing from the invoice for SO142410.
+2025-12-03T11:00:00,EV500211,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-03T11:00:00,EV500212,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2025-12-03T11:00:00,EV500213,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2025-12-03T11:00:00,EV500214,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-03T11:00:00,EV500215,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2025-12-03T11:00:00,EV500216,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-04T08:34:00,EV500217,support_ticket,Kalpana Traders,North,delivery_delay,2,Third late delivery this month against order SO168153. This is becoming a problem.
+2025-12-04T17:36:00,EV500218,support_ticket,Deccan Supply,South,delivery_delay,1,Consignment SO192131 was promised on 2025-11-30 and has still not arrived at our depot.
+2025-12-04T11:35:00,EV500219,support_ticket,Deccan Supply,South,billing,3,Purchase order number missing from the invoice for SO130630.
+2025-12-05T18:15:00,EV500220,support_ticket,Deccan Supply,South,delivery_delay,3,Third late delivery this month against order SO128985. This is becoming a problem.
+2025-12-05T12:25:00,EV500221,support_ticket,Ironwood Ltd,East,delivery_delay,2,Delivery for SO184415 slipped again. Our production line was held up waiting for it.
+2025-12-06T12:45:00,EV500222,support_ticket,Deccan Supply,South,quality,2,Two cartons in SO141387 arrived damaged. Requesting replacement.
+2025-12-07T16:27:00,EV500223,support_ticket,Kalpana Traders,North,delivery_delay,2,Consignment SO112047 was promised on 2025-12-03 and has still not arrived at our depot.
+2025-12-07T12:53:00,EV500224,support_ticket,Vayu Logistics,West,quality,2,Packaging on SO189824 was torn on arrival.
+2025-12-08T16:37:00,EV500225,support_ticket,Orbit Retail,West,billing,1,Purchase order number missing from the invoice for SO171071.
+2025-12-09T09:07:00,EV500226,support_ticket,Deccan Supply,South,delivery_delay,3,Delivery for SO192224 slipped again. Our production line was held up waiting for it.
+2025-12-10T10:02:00,EV500227,support_ticket,Ironwood Ltd,East,quality,3,Packaging on SO181955 was torn on arrival.
+2025-12-10T11:00:00,EV500228,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-10T11:00:00,EV500229,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-10T11:00:00,EV500230,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-10T11:00:00,EV500231,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2025-12-10T11:00:00,EV500232,crm_note,Acme Corp,West,account_review,2,Quarterly catch up. No issues raised.
+2025-12-10T11:00:00,EV500233,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2025-12-11T15:35:00,EV500234,support_ticket,Kalpana Traders,North,billing,1,Purchase order number missing from the invoice for SO186495.
+2025-12-11T10:46:00,EV500235,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO184744 was promised on 2025-12-03 and has still not arrived at our depot.
+2025-12-11T17:13:00,EV500236,support_ticket,Orbit Retail,West,delivery_delay,3,Delivery for SO186926 slipped again. Our production line was held up waiting for it.
+2025-12-12T13:33:00,EV500237,support_ticket,Ganges Distributors,East,billing,2,Invoice against SO150721 shows the old rate. Please issue a correction.
+2025-12-13T08:16:00,EV500238,support_ticket,Bluewater Co,South,delivery_delay,1,Third late delivery this month against order SO171671. This is becoming a problem.
+2025-12-13T12:33:00,EV500239,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO106334. This is becoming a problem.
+2025-12-14T11:01:00,EV500240,support_ticket,Orbit Retail,West,delivery_delay,2,Third late delivery this month against order SO142821. This is becoming a problem.
+2025-12-15T18:09:00,EV500241,support_ticket,Kalpana Traders,North,billing,1,Purchase order number missing from the invoice for SO196239.
+2025-12-17T16:26:00,EV500242,support_ticket,Deccan Supply,South,quality,1,Packaging on SO179530 was torn on arrival.
+2025-12-17T14:38:00,EV500243,support_ticket,Bluewater Co,South,delivery_delay,2,We were not notified that SO154563 would be late. Please escalate.
+2025-12-17T09:53:00,EV500244,support_ticket,Sterling Industries,West,delivery_delay,3,Third late delivery this month against order SO156821. This is becoming a problem.
+2025-12-17T17:33:00,EV500245,support_ticket,Orbit Retail,West,delivery_delay,3,Third late delivery this month against order SO176877. This is becoming a problem.
+2025-12-17T15:55:00,EV500246,support_ticket,Orbit Retail,West,billing,2,Purchase order number missing from the invoice for SO156815.
+2025-12-17T11:00:00,EV500247,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-17T11:00:00,EV500248,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-17T11:00:00,EV500249,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-17T11:00:00,EV500250,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-18T13:23:00,EV500251,support_ticket,Deccan Supply,South,billing,1,Invoice against SO154051 shows the old rate. Please issue a correction.
+2025-12-19T18:37:00,EV500252,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO135363 arrived damaged. Requesting replacement.
+2025-12-19T09:43:00,EV500253,support_ticket,Ironwood Ltd,East,delivery_delay,2,Delivery for SO104442 slipped again. Our production line was held up waiting for it.
+2025-12-20T08:28:00,EV500254,support_ticket,Vayu Logistics,West,billing,3,Purchase order number missing from the invoice for SO190821.
+2025-12-21T18:03:00,EV500255,support_ticket,Deccan Supply,South,quality,1,Packaging on SO165362 was torn on arrival.
+2025-12-21T14:37:00,EV500256,support_ticket,Ganges Distributors,East,quality,2,Packaging on SO100717 was torn on arrival.
+2025-12-21T18:00:00,EV500257,support_ticket,Sterling Industries,West,delivery_delay,2,Third late delivery this month against order SO110142. This is becoming a problem.
+2025-12-22T08:35:00,EV500258,support_ticket,Kalpana Traders,North,delivery_delay,3,Third late delivery this month against order SO184503. This is becoming a problem.
+2025-12-22T12:54:00,EV500259,support_ticket,Bluewater Co,South,billing,2,Invoice against SO132113 shows the old rate. Please issue a correction.
+2025-12-22T16:12:00,EV500260,support_ticket,Acme Corp,West,billing,2,Invoice against SO141916 shows the old rate. Please issue a correction.
+2025-12-23T14:05:00,EV500261,support_ticket,Bluewater Co,South,quality,1,Two cartons in SO180270 arrived damaged. Requesting replacement.
+2025-12-23T12:42:00,EV500262,support_ticket,Vayu Logistics,West,delivery_delay,2,Third late delivery this month against order SO108474. This is becoming a problem.
+2025-12-23T12:38:00,EV500263,support_ticket,Orbit Retail,West,quality,1,Packaging on SO184981 was torn on arrival.
+2025-12-24T18:13:00,EV500264,support_ticket,Deccan Supply,South,billing,2,Purchase order number missing from the invoice for SO158265.
+2025-12-24T08:55:00,EV500265,support_ticket,Bluewater Co,South,delivery_delay,2,We were not notified that SO167183 would be late. Please escalate.
+2025-12-24T09:37:00,EV500266,support_ticket,Ironwood Ltd,East,delivery_delay,1,Consignment SO154375 was promised on 2025-12-18 and has still not arrived at our depot.
+2025-12-24T09:16:00,EV500267,support_ticket,Sterling Industries,West,quality,2,Packaging on SO112954 was torn on arrival.
+2025-12-24T11:00:00,EV500268,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-24T11:00:00,EV500269,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-24T11:00:00,EV500270,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2025-12-24T11:00:00,EV500271,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2025-12-24T11:00:00,EV500272,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-24T11:00:00,EV500273,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-24T11:00:00,EV500274,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2025-12-24T11:00:00,EV500275,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2025-12-25T12:04:00,EV500276,support_ticket,Orbit Retail,West,quality,2,Packaging on SO127320 was torn on arrival.
+2025-12-26T08:12:00,EV500277,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO142579 was torn on arrival.
+2025-12-26T17:17:00,EV500278,support_ticket,Ganges Distributors,East,billing,1,Invoice against SO169230 shows the old rate. Please issue a correction.
+2025-12-27T14:25:00,EV500279,support_ticket,Meridian Group,North,quality,2,Packaging on SO188033 was torn on arrival.
+2025-12-27T09:27:00,EV500280,support_ticket,Ironwood Ltd,East,quality,3,Two cartons in SO118307 arrived damaged. Requesting replacement.
+2025-12-27T16:12:00,EV500281,support_ticket,Ironwood Ltd,East,quality,3,Packaging on SO181393 was torn on arrival.
+2025-12-27T09:04:00,EV500282,support_ticket,Vayu Logistics,West,delivery_delay,1,Consignment SO180068 was promised on 2025-12-21 and has still not arrived at our depot.
+2025-12-27T08:08:00,EV500283,support_ticket,Orbit Retail,West,delivery_delay,2,Delivery for SO143231 slipped again. Our production line was held up waiting for it.
+2025-12-28T09:49:00,EV500284,support_ticket,Meridian Group,North,delivery_delay,3,Consignment SO130709 was promised on 2025-12-21 and has still not arrived at our depot.
+2025-12-28T15:44:00,EV500285,support_ticket,Deccan Supply,South,billing,1,Invoice against SO119683 shows the old rate. Please issue a correction.
+2025-12-31T09:03:00,EV500286,support_ticket,Kalpana Traders,North,quality,1,Two cartons in SO150205 arrived damaged. Requesting replacement.
+2025-12-31T16:47:00,EV500287,support_ticket,Ironwood Ltd,East,quality,1,Packaging on SO136125 was torn on arrival.
+2025-12-31T11:00:00,EV500288,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2025-12-31T11:00:00,EV500289,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-31T11:00:00,EV500290,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2025-12-31T11:00:00,EV500291,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2025-12-31T11:00:00,EV500292,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-01T08:55:00,EV500293,support_ticket,Meridian Group,North,delivery_delay,1,Delivery for SO130550 slipped again. Our production line was held up waiting for it.
+2026-01-01T14:29:00,EV500294,support_ticket,Bluewater Co,South,quality,2,Packaging on SO171887 was torn on arrival.
+2026-01-04T16:44:00,EV500295,support_ticket,Bluewater Co,South,billing,3,Invoice against SO149813 shows the old rate. Please issue a correction.
+2026-01-04T08:47:00,EV500296,support_ticket,Ganges Distributors,East,delivery_delay,3,We were not notified that SO124414 would be late. Please escalate.
+2026-01-04T15:51:00,EV500297,support_ticket,Vayu Logistics,West,delivery_delay,3,Third late delivery this month against order SO186782. This is becoming a problem.
+2026-01-05T15:41:00,EV500298,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO193975.
+2026-01-06T12:04:00,EV500299,support_ticket,Ganges Distributors,East,billing,2,Invoice against SO141298 shows the old rate. Please issue a correction.
+2026-01-06T18:02:00,EV500300,support_ticket,Orbit Retail,West,delivery_delay,2,Delivery for SO180087 slipped again. Our production line was held up waiting for it.
+2026-01-07T10:15:00,EV500301,support_ticket,Deccan Supply,South,delivery_delay,3,We were not notified that SO173804 would be late. Please escalate.
+2026-01-07T17:43:00,EV500302,support_ticket,Acme Corp,West,billing,3,Invoice against SO194966 shows the old rate. Please issue a correction.
+2026-01-07T11:00:00,EV500303,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-01-07T11:00:00,EV500304,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-07T11:00:00,EV500305,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-07T11:00:00,EV500306,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-07T11:00:00,EV500307,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-08T13:03:00,EV500308,support_ticket,Deccan Supply,South,billing,2,Invoice against SO155368 shows the old rate. Please issue a correction.
+2026-01-08T10:33:00,EV500309,support_ticket,Vayu Logistics,West,billing,3,Purchase order number missing from the invoice for SO102759.
+2026-01-09T13:45:00,EV500310,support_ticket,Bluewater Co,South,billing,3,Invoice against SO168789 shows the old rate. Please issue a correction.
+2026-01-10T15:50:00,EV500311,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO103226 shows the old rate. Please issue a correction.
+2026-01-10T16:42:00,EV500312,support_ticket,Ironwood Ltd,East,billing,3,Invoice against SO172766 shows the old rate. Please issue a correction.
+2026-01-10T11:03:00,EV500313,support_ticket,Ironwood Ltd,East,delivery_delay,3,Consignment SO173389 was promised on 2026-01-08 and has still not arrived at our depot.
+2026-01-10T16:00:00,EV500314,support_ticket,Sterling Industries,West,quality,1,Packaging on SO136974 was torn on arrival.
+2026-01-10T08:00:00,EV500315,support_ticket,Sterling Industries,West,delivery_delay,1,Consignment SO157943 was promised on 2026-01-02 and has still not arrived at our depot.
+2026-01-13T10:12:00,EV500316,support_ticket,Ironwood Ltd,East,billing,2,Purchase order number missing from the invoice for SO123200.
+2026-01-14T17:43:00,EV500317,support_ticket,Vayu Logistics,West,quality,2,Two cartons in SO113983 arrived damaged. Requesting replacement.
+2026-01-14T12:40:00,EV500318,support_ticket,Vayu Logistics,West,delivery_delay,1,We were not notified that SO162981 would be late. Please escalate.
+2026-01-14T11:00:00,EV500319,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-01-14T11:00:00,EV500320,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-14T11:00:00,EV500321,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-14T11:00:00,EV500322,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-14T11:00:00,EV500323,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-15T15:41:00,EV500324,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO137973 arrived damaged. Requesting replacement.
+2026-01-15T08:49:00,EV500325,support_ticket,Vayu Logistics,West,quality,2,Packaging on SO191922 was torn on arrival.
+2026-01-16T08:16:00,EV500326,support_ticket,Bluewater Co,South,billing,3,Purchase order number missing from the invoice for SO163006.
+2026-01-17T15:35:00,EV500327,support_ticket,Kalpana Traders,North,billing,1,Invoice against SO150835 shows the old rate. Please issue a correction.
+2026-01-17T15:01:00,EV500328,support_ticket,Bluewater Co,South,billing,3,Invoice against SO105240 shows the old rate. Please issue a correction.
+2026-01-17T08:51:00,EV500329,support_ticket,Acme Corp,West,billing,3,Invoice against SO132783 shows the old rate. Please issue a correction.
+2026-01-17T15:55:00,EV500330,support_ticket,Orbit Retail,West,billing,2,Purchase order number missing from the invoice for SO191800.
+2026-01-18T18:01:00,EV500331,support_ticket,Deccan Supply,South,delivery_delay,2,We were not notified that SO142863 would be late. Please escalate.
+2026-01-19T08:14:00,EV500332,support_ticket,Bluewater Co,South,delivery_delay,3,Third late delivery this month against order SO135664. This is becoming a problem.
+2026-01-20T17:06:00,EV500333,support_ticket,Ironwood Ltd,East,quality,2,Two cartons in SO183512 arrived damaged. Requesting replacement.
+2026-01-21T10:22:00,EV500334,support_ticket,Meridian Group,North,billing,1,Invoice against SO138085 shows the old rate. Please issue a correction.
+2026-01-21T11:00:00,EV500335,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-21T11:00:00,EV500336,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-21T11:00:00,EV500337,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-21T11:00:00,EV500338,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-24T11:15:00,EV500339,support_ticket,Meridian Group,North,billing,2,Purchase order number missing from the invoice for SO123393.
+2026-01-24T13:26:00,EV500340,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO190219.
+2026-01-25T09:12:00,EV500341,support_ticket,Kalpana Traders,North,billing,3,Purchase order number missing from the invoice for SO191366.
+2026-01-25T09:35:00,EV500342,support_ticket,Kalpana Traders,North,delivery_delay,3,Consignment SO199633 was promised on 2026-01-22 and has still not arrived at our depot.
+2026-01-25T12:52:00,EV500343,support_ticket,Deccan Supply,South,billing,1,Invoice against SO191244 shows the old rate. Please issue a correction.
+2026-01-25T16:10:00,EV500344,support_ticket,Bluewater Co,South,delivery_delay,1,Third late delivery this month against order SO122823. This is becoming a problem.
+2026-01-27T11:39:00,EV500345,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO184774.
+2026-01-27T18:43:00,EV500346,support_ticket,Acme Corp,West,quality,2,Two cartons in SO176588 arrived damaged. Requesting replacement.
+2026-01-28T15:19:00,EV500347,support_ticket,Kalpana Traders,North,delivery_delay,3,Consignment SO184172 was promised on 2026-01-22 and has still not arrived at our depot.
+2026-01-28T11:00:00,EV500348,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-28T11:00:00,EV500349,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-28T11:00:00,EV500350,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-28T11:00:00,EV500351,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-28T11:00:00,EV500352,crm_note,Acme Corp,West,account_review,2,Quarterly catch up. No issues raised.
+2026-01-28T11:00:00,EV500353,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-01-28T11:00:00,EV500354,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-01-28T11:00:00,EV500355,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-01-29T12:55:00,EV500356,support_ticket,Bluewater Co,South,billing,2,Invoice against SO117832 shows the old rate. Please issue a correction.
+2026-01-29T11:12:00,EV500357,support_ticket,Bluewater Co,South,quality,3,Packaging on SO161499 was torn on arrival.
+2026-01-29T14:52:00,EV500358,support_ticket,Sterling Industries,West,billing,1,Invoice against SO132971 shows the old rate. Please issue a correction.
+2026-01-29T12:20:00,EV500359,support_ticket,Vayu Logistics,West,delivery_delay,2,We were not notified that SO169648 would be late. Please escalate.
+2026-01-30T09:03:00,EV500360,support_ticket,Meridian Group,North,quality,3,Packaging on SO178602 was torn on arrival.
+2026-01-31T12:27:00,EV500361,support_ticket,Vayu Logistics,West,billing,1,Purchase order number missing from the invoice for SO115336.
+2026-02-01T09:08:00,EV500362,support_ticket,Meridian Group,North,billing,1,Invoice against SO125647 shows the old rate. Please issue a correction.
+2026-02-01T17:57:00,EV500363,support_ticket,Deccan Supply,South,billing,2,Purchase order number missing from the invoice for SO142120.
+2026-02-01T14:51:00,EV500364,support_ticket,Acme Corp,West,billing,3,Purchase order number missing from the invoice for SO184656.
+2026-02-02T18:34:00,EV500365,support_ticket,Ganges Distributors,East,quality,3,Two cartons in SO143094 arrived damaged. Requesting replacement.
+2026-02-02T13:41:00,EV500366,support_ticket,Vayu Logistics,West,quality,1,Packaging on SO159589 was torn on arrival.
+2026-02-02T17:39:00,EV500367,support_ticket,Vayu Logistics,West,delivery_delay,2,Consignment SO194938 was promised on 2026-01-27 and has still not arrived at our depot.
+2026-02-03T08:03:00,EV500368,support_ticket,Deccan Supply,South,billing,2,Purchase order number missing from the invoice for SO134920.
+2026-02-03T12:36:00,EV500369,support_ticket,Bluewater Co,South,billing,1,Invoice against SO151646 shows the old rate. Please issue a correction.
+2026-02-03T15:17:00,EV500370,support_ticket,Ironwood Ltd,East,quality,2,Two cartons in SO167199 arrived damaged. Requesting replacement.
+2026-02-04T18:52:00,EV500371,support_ticket,Ironwood Ltd,East,quality,3,Two cartons in SO175285 arrived damaged. Requesting replacement.
+2026-02-04T08:54:00,EV500372,support_ticket,Ironwood Ltd,East,delivery_delay,3,We were not notified that SO115926 would be late. Please escalate.
+2026-02-04T16:05:00,EV500373,support_ticket,Acme Corp,West,billing,1,Invoice against SO140092 shows the old rate. Please issue a correction.
+2026-02-04T18:10:00,EV500374,support_ticket,Sterling Industries,West,delivery_delay,2,Third late delivery this month against order SO187598. This is becoming a problem.
+2026-02-04T11:00:00,EV500375,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-04T11:00:00,EV500376,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-02-04T11:00:00,EV500377,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-04T11:00:00,EV500378,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-02-04T11:00:00,EV500379,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-02-04T11:00:00,EV500380,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-04T11:00:00,EV500381,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-05T11:17:00,EV500382,support_ticket,Ganges Distributors,East,billing,3,Purchase order number missing from the invoice for SO164124.
+2026-02-06T10:44:00,EV500383,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO125019.
+2026-02-07T15:58:00,EV500384,support_ticket,Meridian Group,North,delivery_delay,3,We were not notified that SO193475 would be late. Please escalate.
+2026-02-08T16:12:00,EV500385,support_ticket,Bluewater Co,South,delivery_delay,1,We were not notified that SO105693 would be late. Please escalate.
+2026-02-08T11:26:00,EV500386,support_ticket,Vayu Logistics,West,billing,3,Invoice against SO116613 shows the old rate. Please issue a correction.
+2026-02-09T15:45:00,EV500387,support_ticket,Kalpana Traders,North,quality,1,Two cartons in SO146895 arrived damaged. Requesting replacement.
+2026-02-09T13:08:00,EV500388,support_ticket,Bluewater Co,South,billing,1,Purchase order number missing from the invoice for SO196794.
+2026-02-10T12:29:00,EV500389,support_ticket,Kalpana Traders,North,delivery_delay,2,Third late delivery this month against order SO155009. This is becoming a problem.
+2026-02-10T11:21:00,EV500390,support_ticket,Orbit Retail,West,delivery_delay,1,Third late delivery this month against order SO114520. This is becoming a problem.
+2026-02-11T14:21:00,EV500391,support_ticket,Acme Corp,West,quality,3,Two cartons in SO149067 arrived damaged. Requesting replacement.
+2026-02-11T11:00:00,EV500392,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-02-11T11:00:00,EV500393,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-02-11T11:00:00,EV500394,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-11T11:00:00,EV500395,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-02-11T11:00:00,EV500396,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-02-12T11:21:00,EV500397,support_ticket,Vayu Logistics,West,billing,1,Invoice against SO119551 shows the old rate. Please issue a correction.
+2026-02-13T12:40:00,EV500398,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO170059 was promised on 2026-02-10 and has still not arrived at our depot.
+2026-02-14T17:09:00,EV500399,support_ticket,Kalpana Traders,North,delivery_delay,1,Delivery for SO167740 slipped again. Our production line was held up waiting for it.
+2026-02-14T18:08:00,EV500400,support_ticket,Deccan Supply,South,delivery_delay,1,Delivery for SO157055 slipped again. Our production line was held up waiting for it.
+2026-02-14T13:28:00,EV500401,support_ticket,Bluewater Co,South,billing,3,Purchase order number missing from the invoice for SO178760.
+2026-02-15T12:35:00,EV500402,support_ticket,Kalpana Traders,North,billing,1,Invoice against SO187947 shows the old rate. Please issue a correction.
+2026-02-16T13:40:00,EV500403,support_ticket,Ganges Distributors,East,quality,1,Two cartons in SO195058 arrived damaged. Requesting replacement.
+2026-02-17T12:03:00,EV500404,support_ticket,Kalpana Traders,North,quality,1,Two cartons in SO189209 arrived damaged. Requesting replacement.
+2026-02-18T11:00:00,EV500405,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-02-18T11:00:00,EV500406,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-02-18T11:00:00,EV500407,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-19T11:16:00,EV500408,support_ticket,Sterling Industries,West,billing,1,Purchase order number missing from the invoice for SO176457.
+2026-02-20T18:03:00,EV500409,support_ticket,Deccan Supply,South,quality,3,Packaging on SO181224 was torn on arrival.
+2026-02-21T12:43:00,EV500410,support_ticket,Bluewater Co,South,quality,1,Two cartons in SO182747 arrived damaged. Requesting replacement.
+2026-02-21T18:44:00,EV500411,support_ticket,Orbit Retail,West,delivery_delay,2,We were not notified that SO138337 would be late. Please escalate.
+2026-02-22T09:41:00,EV500412,support_ticket,Vayu Logistics,West,quality,3,Two cartons in SO185848 arrived damaged. Requesting replacement.
+2026-02-22T14:03:00,EV500413,support_ticket,Orbit Retail,West,delivery_delay,3,Third late delivery this month against order SO167931. This is becoming a problem.
+2026-02-23T10:24:00,EV500414,support_ticket,Kalpana Traders,North,quality,2,Two cartons in SO191381 arrived damaged. Requesting replacement.
+2026-02-23T15:02:00,EV500415,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO144190 was promised on 2026-02-16 and has still not arrived at our depot.
+2026-02-23T18:07:00,EV500416,support_ticket,Sterling Industries,West,delivery_delay,1,Delivery for SO196237 slipped again. Our production line was held up waiting for it.
+2026-02-23T13:32:00,EV500417,support_ticket,Orbit Retail,West,delivery_delay,3,Consignment SO144784 was promised on 2026-02-19 and has still not arrived at our depot.
+2026-02-23T18:39:00,EV500418,support_ticket,Orbit Retail,West,delivery_delay,2,Delivery for SO169558 slipped again. Our production line was held up waiting for it.
+2026-02-24T14:49:00,EV500419,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO126046 would be late. Please escalate.
+2026-02-24T15:50:00,EV500420,support_ticket,Vayu Logistics,West,delivery_delay,3,Third late delivery this month against order SO143284. This is becoming a problem.
+2026-02-24T08:40:00,EV500421,support_ticket,Vayu Logistics,West,quality,1,Two cartons in SO100074 arrived damaged. Requesting replacement.
+2026-02-25T08:45:00,EV500422,support_ticket,Ganges Distributors,East,billing,2,Invoice against SO140262 shows the old rate. Please issue a correction.
+2026-02-25T11:00:00,EV500423,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-02-25T11:00:00,EV500424,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-02-26T11:42:00,EV500425,support_ticket,Bluewater Co,South,billing,3,Invoice against SO142934 shows the old rate. Please issue a correction.
+2026-02-26T12:49:00,EV500426,support_ticket,Acme Corp,West,billing,2,Invoice against SO161005 shows the old rate. Please issue a correction.
+2026-02-27T12:26:00,EV500427,support_ticket,Vayu Logistics,West,billing,1,Invoice against SO192681 shows the old rate. Please issue a correction.
+2026-02-28T18:38:00,EV500428,support_ticket,Kalpana Traders,North,delivery_delay,1,Delivery for SO187423 slipped again. Our production line was held up waiting for it.
+2026-02-28T17:04:00,EV500429,support_ticket,Bluewater Co,South,delivery_delay,2,Consignment SO160689 was promised on 2026-02-26 and has still not arrived at our depot.
+2026-02-28T13:45:00,EV500430,support_ticket,Bluewater Co,South,billing,3,Purchase order number missing from the invoice for SO141295.
+2026-03-02T10:34:00,EV500431,support_ticket,Meridian Group,North,delivery_delay,1,Third late delivery this month against order SO117177. This is becoming a problem.
+2026-03-03T15:50:00,EV500432,support_ticket,Kalpana Traders,North,billing,1,Purchase order number missing from the invoice for SO174805.
+2026-03-03T08:41:00,EV500433,support_ticket,Ironwood Ltd,East,delivery_delay,2,Delivery for SO145493 slipped again. Our production line was held up waiting for it.
+2026-03-04T16:02:00,EV500434,support_ticket,Ganges Distributors,East,billing,1,Purchase order number missing from the invoice for SO153343.
+2026-03-04T15:42:00,EV500435,support_ticket,Ganges Distributors,East,billing,2,Purchase order number missing from the invoice for SO139482.
+2026-03-04T17:58:00,EV500436,support_ticket,Sterling Industries,West,delivery_delay,2,Consignment SO115985 was promised on 2026-02-24 and has still not arrived at our depot.
+2026-03-04T11:00:00,EV500437,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-03-04T11:00:00,EV500438,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-03-04T11:00:00,EV500439,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-03-04T11:00:00,EV500440,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-03-04T11:00:00,EV500441,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-03-06T12:11:00,EV500442,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO111267 was torn on arrival.
+2026-03-06T08:21:00,EV500443,support_ticket,Deccan Supply,South,billing,3,Purchase order number missing from the invoice for SO138980.
+2026-03-06T18:36:00,EV500444,support_ticket,Vayu Logistics,West,quality,3,Packaging on SO101664 was torn on arrival.
+2026-03-07T11:57:00,EV500445,support_ticket,Orbit Retail,West,billing,3,Invoice against SO148871 shows the old rate. Please issue a correction.
+2026-03-08T17:45:00,EV500446,support_ticket,Deccan Supply,South,delivery_delay,2,Third late delivery this month against order SO156920. This is becoming a problem.
+2026-03-11T09:07:00,EV500447,support_ticket,Meridian Group,North,quality,3,Packaging on SO110110 was torn on arrival.
+2026-03-11T11:00:00,EV500448,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-03-11T11:00:00,EV500449,crm_note,Vayu Logistics,West,account_review,2,Quarterly catch up. No issues raised.
+2026-03-11T11:00:00,EV500450,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-03-12T11:08:00,EV500451,support_ticket,Ganges Distributors,East,delivery_delay,2,Delivery for SO172630 slipped again. Our production line was held up waiting for it.
+2026-03-14T10:33:00,EV500452,support_ticket,Bluewater Co,South,billing,1,Invoice against SO155662 shows the old rate. Please issue a correction.
+2026-03-14T09:47:00,EV500453,support_ticket,Ganges Distributors,East,delivery_delay,2,Delivery for SO174867 slipped again. Our production line was held up waiting for it.
+2026-03-15T15:41:00,EV500454,support_ticket,Bluewater Co,South,billing,2,Invoice against SO197293 shows the old rate. Please issue a correction.
+2026-03-15T18:39:00,EV500455,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO118492.
+2026-03-16T11:41:00,EV500456,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO186854 arrived damaged. Requesting replacement.
+2026-03-17T18:13:00,EV500457,support_ticket,Meridian Group,North,quality,3,Packaging on SO153960 was torn on arrival.
+2026-03-17T17:30:00,EV500458,support_ticket,Deccan Supply,South,delivery_delay,1,Delivery for SO149217 slipped again. Our production line was held up waiting for it.
+2026-03-18T15:05:00,EV500459,support_ticket,Kalpana Traders,North,billing,2,Purchase order number missing from the invoice for SO166765.
+2026-03-18T12:35:00,EV500460,support_ticket,Orbit Retail,West,billing,2,Purchase order number missing from the invoice for SO191631.
+2026-03-18T11:00:00,EV500461,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-03-18T11:00:00,EV500462,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-03-18T11:00:00,EV500463,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-03-19T13:36:00,EV500464,support_ticket,Deccan Supply,South,delivery_delay,2,We were not notified that SO122800 would be late. Please escalate.
+2026-03-19T11:17:00,EV500465,support_ticket,Bluewater Co,South,delivery_delay,2,Delivery for SO172344 slipped again. Our production line was held up waiting for it.
+2026-03-19T12:08:00,EV500466,support_ticket,Sterling Industries,West,quality,3,Packaging on SO174341 was torn on arrival.
+2026-03-20T12:47:00,EV500467,support_ticket,Sterling Industries,West,billing,2,Invoice against SO179477 shows the old rate. Please issue a correction.
+2026-03-20T17:28:00,EV500468,support_ticket,Vayu Logistics,West,delivery_delay,2,We were not notified that SO111300 would be late. Please escalate.
+2026-03-21T09:09:00,EV500469,support_ticket,Deccan Supply,South,delivery_delay,2,We were not notified that SO136770 would be late. Please escalate.
+2026-03-21T15:42:00,EV500470,support_ticket,Bluewater Co,South,billing,1,Purchase order number missing from the invoice for SO156947.
+2026-03-23T16:14:00,EV500471,support_ticket,Orbit Retail,West,billing,1,Purchase order number missing from the invoice for SO146715.
+2026-03-25T11:00:00,EV500472,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-03-25T11:00:00,EV500473,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2026-03-25T11:00:00,EV500474,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-03-25T11:00:00,EV500475,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-03-25T11:00:00,EV500476,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-03-26T18:13:00,EV500477,support_ticket,Meridian Group,North,delivery_delay,1,We were not notified that SO176296 would be late. Please escalate.
+2026-03-26T08:50:00,EV500478,support_ticket,Orbit Retail,West,billing,1,Invoice against SO156168 shows the old rate. Please issue a correction.
+2026-03-30T13:43:00,EV500479,support_ticket,Acme Corp,West,delivery_delay,2,Delivery for SO199580 slipped again. Our production line was held up waiting for it.
+2026-03-30T17:11:00,EV500480,support_ticket,Orbit Retail,West,quality,2,Two cartons in SO121302 arrived damaged. Requesting replacement.
+2026-03-30T08:17:00,EV500481,support_ticket,Orbit Retail,West,quality,3,Packaging on SO150301 was torn on arrival.
+2026-03-31T15:03:00,EV500482,support_ticket,Meridian Group,North,delivery_delay,3,Third late delivery this month against order SO198984. This is becoming a problem.
+2026-04-01T14:18:00,EV500483,support_ticket,Deccan Supply,South,billing,2,Purchase order number missing from the invoice for SO172301.
+2026-04-01T08:28:00,EV500484,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO164202 arrived damaged. Requesting replacement.
+2026-04-01T12:06:00,EV500485,support_ticket,Orbit Retail,West,delivery_delay,1,We were not notified that SO139507 would be late. Please escalate.
+2026-04-01T11:00:00,EV500486,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-04-01T11:00:00,EV500487,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-04-01T11:00:00,EV500488,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-04-01T11:00:00,EV500489,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-01T11:00:00,EV500490,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-01T11:00:00,EV500491,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-04-01T11:00:00,EV500492,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-04-02T15:19:00,EV500493,support_ticket,Meridian Group,North,quality,3,Packaging on SO151771 was torn on arrival.
+2026-04-04T08:29:00,EV500494,support_ticket,Meridian Group,North,quality,2,Two cartons in SO171014 arrived damaged. Requesting replacement.
+2026-04-04T16:21:00,EV500495,support_ticket,Bluewater Co,South,quality,3,Packaging on SO183232 was torn on arrival.
+2026-04-04T15:00:00,EV500496,support_ticket,Sterling Industries,West,quality,2,Packaging on SO154639 was torn on arrival.
+2026-04-05T14:41:00,EV500497,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO153365 was torn on arrival.
+2026-04-06T10:05:00,EV500498,support_ticket,Meridian Group,North,delivery_delay,3,Delivery for SO172879 slipped again. Our production line was held up waiting for it.
+2026-04-06T18:55:00,EV500499,support_ticket,Deccan Supply,South,quality,2,Two cartons in SO100776 arrived damaged. Requesting replacement.
+2026-04-06T13:42:00,EV500500,support_ticket,Orbit Retail,West,billing,1,Purchase order number missing from the invoice for SO161448.
+2026-04-08T17:27:00,EV500501,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO149206 would be late. Please escalate.
+2026-04-08T12:14:00,EV500502,support_ticket,Acme Corp,West,quality,3,Two cartons in SO109222 arrived damaged. Requesting replacement.
+2026-04-08T11:00:00,EV500503,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-04-08T11:00:00,EV500504,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-08T11:00:00,EV500505,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-08T11:00:00,EV500506,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-08T11:00:00,EV500507,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-04-09T15:13:00,EV500508,support_ticket,Kalpana Traders,North,delivery_delay,1,We were not notified that SO195934 would be late. Please escalate.
+2026-04-09T09:22:00,EV500509,support_ticket,Orbit Retail,West,billing,1,Purchase order number missing from the invoice for SO171447.
+2026-04-11T13:35:00,EV500510,support_ticket,Meridian Group,North,delivery_delay,1,We were not notified that SO147583 would be late. Please escalate.
+2026-04-11T13:09:00,EV500511,support_ticket,Kalpana Traders,North,quality,1,Packaging on SO136359 was torn on arrival.
+2026-04-12T11:02:00,EV500512,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO195658.
+2026-04-12T14:07:00,EV500513,support_ticket,Bluewater Co,South,delivery_delay,1,Third late delivery this month against order SO105437. This is becoming a problem.
+2026-04-13T13:25:00,EV500514,support_ticket,Bluewater Co,South,billing,3,Purchase order number missing from the invoice for SO181680.
+2026-04-13T08:19:00,EV500515,support_ticket,Ganges Distributors,East,quality,1,Packaging on SO172956 was torn on arrival.
+2026-04-13T12:46:00,EV500516,support_ticket,Ironwood Ltd,East,billing,3,Invoice against SO192061 shows the old rate. Please issue a correction.
+2026-04-14T17:24:00,EV500517,support_ticket,Ironwood Ltd,East,billing,1,Invoice against SO137897 shows the old rate. Please issue a correction.
+2026-04-14T13:37:00,EV500518,support_ticket,Vayu Logistics,West,delivery_delay,2,We were not notified that SO154681 would be late. Please escalate.
+2026-04-15T11:00:00,EV500519,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-15T11:00:00,EV500520,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-15T11:00:00,EV500521,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-15T11:00:00,EV500522,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-15T11:00:00,EV500523,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-15T11:00:00,EV500524,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-15T11:00:00,EV500525,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-16T12:18:00,EV500526,support_ticket,Meridian Group,North,quality,1,Packaging on SO129331 was torn on arrival.
+2026-04-17T14:08:00,EV500527,support_ticket,Meridian Group,North,delivery_delay,2,Third late delivery this month against order SO145722. This is becoming a problem.
+2026-04-17T08:31:00,EV500528,support_ticket,Vayu Logistics,West,billing,3,Invoice against SO197292 shows the old rate. Please issue a correction.
+2026-04-21T16:41:00,EV500529,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO126696 was torn on arrival.
+2026-04-21T18:20:00,EV500530,support_ticket,Sterling Industries,West,delivery_delay,3,Third late delivery this month against order SO104851. This is becoming a problem.
+2026-04-22T13:40:00,EV500531,support_ticket,Kalpana Traders,North,quality,1,Two cartons in SO145217 arrived damaged. Requesting replacement.
+2026-04-22T11:12:00,EV500532,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO173207 would be late. Please escalate.
+2026-04-22T11:00:00,EV500533,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-04-22T11:00:00,EV500534,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-04-22T11:00:00,EV500535,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2026-04-22T11:00:00,EV500536,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-22T11:00:00,EV500537,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-23T11:39:00,EV500538,support_ticket,Bluewater Co,South,quality,1,Packaging on SO169648 was torn on arrival.
+2026-04-23T18:43:00,EV500539,support_ticket,Orbit Retail,West,delivery_delay,3,Consignment SO165905 was promised on 2026-04-20 and has still not arrived at our depot.
+2026-04-25T16:05:00,EV500540,support_ticket,Ironwood Ltd,East,quality,1,Two cartons in SO168116 arrived damaged. Requesting replacement.
+2026-04-26T14:43:00,EV500541,support_ticket,Meridian Group,North,quality,1,Packaging on SO121423 was torn on arrival.
+2026-04-26T12:06:00,EV500542,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO189530 would be late. Please escalate.
+2026-04-29T10:10:00,EV500543,support_ticket,Meridian Group,North,quality,1,Packaging on SO136973 was torn on arrival.
+2026-04-29T09:50:00,EV500544,support_ticket,Bluewater Co,South,billing,2,Invoice against SO195862 shows the old rate. Please issue a correction.
+2026-04-29T12:34:00,EV500545,support_ticket,Ironwood Ltd,East,delivery_delay,3,Consignment SO139675 was promised on 2026-04-24 and has still not arrived at our depot.
+2026-04-29T11:00:00,EV500546,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-29T11:00:00,EV500547,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-29T11:00:00,EV500548,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-04-29T11:00:00,EV500549,crm_note,Acme Corp,West,account_review,2,Quarterly catch up. No issues raised.
+2026-04-29T11:00:00,EV500550,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-04-29T11:00:00,EV500551,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-04-30T09:19:00,EV500552,support_ticket,Meridian Group,North,billing,2,Invoice against SO193903 shows the old rate. Please issue a correction.
+2026-05-02T14:16:00,EV500553,support_ticket,Ironwood Ltd,East,quality,1,Two cartons in SO136470 arrived damaged. Requesting replacement.
+2026-05-02T11:06:00,EV500554,support_ticket,Acme Corp,West,billing,1,Purchase order number missing from the invoice for SO186765.
+2026-05-03T16:24:00,EV500555,support_ticket,Ironwood Ltd,East,billing,2,Purchase order number missing from the invoice for SO116912.
+2026-05-04T10:30:00,EV500556,support_ticket,Acme Corp,West,quality,3,Packaging on SO169951 was torn on arrival.
+2026-05-05T15:36:00,EV500557,support_ticket,Acme Corp,West,quality,1,Two cartons in SO146726 arrived damaged. Requesting replacement.
+2026-05-05T15:27:00,EV500558,support_ticket,Orbit Retail,West,delivery_delay,3,Delivery for SO152276 slipped again. Our production line was held up waiting for it.
+2026-05-06T17:32:00,EV500559,support_ticket,Bluewater Co,South,billing,1,Invoice against SO159281 shows the old rate. Please issue a correction.
+2026-05-06T12:49:00,EV500560,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO129262 was promised on 2026-04-29 and has still not arrived at our depot.
+2026-05-06T17:30:00,EV500561,support_ticket,Ganges Distributors,East,delivery_delay,2,Delivery for SO198560 slipped again. Our production line was held up waiting for it.
+2026-05-06T11:00:00,EV500562,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-06T11:00:00,EV500563,crm_note,Deccan Supply,South,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-06T11:00:00,EV500564,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-05-06T11:00:00,EV500565,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-06T11:00:00,EV500566,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-06T11:00:00,EV500567,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-06T11:00:00,EV500568,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-05-07T14:18:00,EV500569,support_ticket,Orbit Retail,West,quality,3,Packaging on SO169599 was torn on arrival.
+2026-05-09T11:09:00,EV500570,support_ticket,Deccan Supply,South,quality,2,Packaging on SO134560 was torn on arrival.
+2026-05-09T15:52:00,EV500571,support_ticket,Sterling Industries,West,billing,3,Purchase order number missing from the invoice for SO173391.
+2026-05-10T18:29:00,EV500572,support_ticket,Bluewater Co,South,billing,3,Invoice against SO186188 shows the old rate. Please issue a correction.
+2026-05-10T17:42:00,EV500573,support_ticket,Ironwood Ltd,East,quality,2,Two cartons in SO184260 arrived damaged. Requesting replacement.
+2026-05-12T15:26:00,EV500574,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO164930 was promised on 2026-05-08 and has still not arrived at our depot.
+2026-05-13T10:01:00,EV500575,support_ticket,Meridian Group,North,billing,3,Purchase order number missing from the invoice for SO113704.
+2026-05-13T09:29:00,EV500576,support_ticket,Acme Corp,West,billing,1,Purchase order number missing from the invoice for SO183219.
+2026-05-13T11:00:00,EV500577,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-13T11:00:00,EV500578,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-13T11:00:00,EV500579,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-13T11:00:00,EV500580,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-13T11:00:00,EV500581,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-14T13:40:00,EV500582,support_ticket,Deccan Supply,South,quality,1,Packaging on SO114926 was torn on arrival.
+2026-05-14T14:30:00,EV500583,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO110883 was promised on 2026-05-10 and has still not arrived at our depot.
+2026-05-14T10:12:00,EV500584,support_ticket,Ironwood Ltd,East,billing,3,Purchase order number missing from the invoice for SO173534.
+2026-05-14T14:00:00,EV500585,support_ticket,Vayu Logistics,West,billing,1,Invoice against SO174017 shows the old rate. Please issue a correction.
+2026-05-16T10:45:00,EV500586,support_ticket,Kalpana Traders,North,billing,2,Purchase order number missing from the invoice for SO165549.
+2026-05-16T08:25:00,EV500587,support_ticket,Kalpana Traders,North,quality,1,Packaging on SO155140 was torn on arrival.
+2026-05-16T09:46:00,EV500588,support_ticket,Acme Corp,West,delivery_delay,2,Delivery for SO138379 slipped again. Our production line was held up waiting for it.
+2026-05-16T10:39:00,EV500589,support_ticket,Vayu Logistics,West,billing,2,Purchase order number missing from the invoice for SO153461.
+2026-05-17T16:05:00,EV500590,support_ticket,Deccan Supply,South,delivery_delay,1,We were not notified that SO192571 would be late. Please escalate.
+2026-05-19T10:04:00,EV500591,support_ticket,Meridian Group,North,billing,3,Purchase order number missing from the invoice for SO112134.
+2026-05-20T08:34:00,EV500592,support_ticket,Kalpana Traders,North,delivery_delay,3,Third late delivery this month against order SO131004. This is becoming a problem.
+2026-05-20T14:06:00,EV500593,support_ticket,Acme Corp,West,delivery_delay,3,Delivery for SO114660 slipped again. Our production line was held up waiting for it.
+2026-05-20T10:10:00,EV500594,support_ticket,Vayu Logistics,West,quality,2,Packaging on SO104510 was torn on arrival.
+2026-05-20T11:00:00,EV500595,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-20T11:00:00,EV500596,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-20T11:00:00,EV500597,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-20T11:00:00,EV500598,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-20T11:00:00,EV500599,crm_note,Acme Corp,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-20T11:00:00,EV500600,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-05-21T15:10:00,EV500601,support_ticket,Kalpana Traders,North,quality,3,Packaging on SO144863 was torn on arrival.
+2026-05-22T13:14:00,EV500602,support_ticket,Meridian Group,North,quality,3,Packaging on SO124607 was torn on arrival.
+2026-05-23T11:47:00,EV500603,support_ticket,Vayu Logistics,West,billing,2,Purchase order number missing from the invoice for SO133839.
+2026-05-24T16:56:00,EV500604,support_ticket,Sterling Industries,West,delivery_delay,1,We were not notified that SO157342 would be late. Please escalate.
+2026-05-25T10:40:00,EV500605,support_ticket,Meridian Group,North,quality,1,Two cartons in SO150749 arrived damaged. Requesting replacement.
+2026-05-25T09:03:00,EV500606,support_ticket,Ganges Distributors,East,billing,3,Invoice against SO114222 shows the old rate. Please issue a correction.
+2026-05-25T10:48:00,EV500607,support_ticket,Vayu Logistics,West,delivery_delay,1,Consignment SO182950 was promised on 2026-05-18 and has still not arrived at our depot.
+2026-05-25T16:18:00,EV500608,support_ticket,Orbit Retail,West,quality,3,Two cartons in SO157197 arrived damaged. Requesting replacement.
+2026-05-26T12:42:00,EV500609,support_ticket,Meridian Group,North,quality,2,Packaging on SO189109 was torn on arrival.
+2026-05-26T16:23:00,EV500610,support_ticket,Ironwood Ltd,East,quality,1,Packaging on SO125156 was torn on arrival.
+2026-05-26T12:20:00,EV500611,support_ticket,Sterling Industries,West,billing,2,Purchase order number missing from the invoice for SO100598.
+2026-05-27T11:00:00,EV500612,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-27T11:00:00,EV500613,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-27T11:00:00,EV500614,crm_note,Deccan Supply,South,account_review,2,Quarterly catch up. No issues raised.
+2026-05-27T11:00:00,EV500615,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-05-28T12:51:00,EV500616,support_ticket,Ganges Distributors,East,delivery_delay,3,We were not notified that SO114962 would be late. Please escalate.
+2026-05-29T18:19:00,EV500617,support_ticket,Sterling Industries,West,billing,2,Invoice against SO196824 shows the old rate. Please issue a correction.
+2026-05-29T09:25:00,EV500618,support_ticket,Sterling Industries,West,billing,3,Invoice against SO167099 shows the old rate. Please issue a correction.
+2026-05-30T12:11:00,EV500619,support_ticket,Sterling Industries,West,billing,1,Purchase order number missing from the invoice for SO176564.
+2026-05-31T15:45:00,EV500620,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO131742 shows the old rate. Please issue a correction.
+2026-05-31T11:07:00,EV500621,support_ticket,Bluewater Co,South,delivery_delay,2,Consignment SO116491 was promised on 2026-05-28 and has still not arrived at our depot.
+2026-05-31T17:54:00,EV500622,support_ticket,Bluewater Co,South,delivery_delay,1,Consignment SO114571 was promised on 2026-05-23 and has still not arrived at our depot.
+2026-05-31T09:41:00,EV500623,support_ticket,Vayu Logistics,West,quality,3,Packaging on SO157312 was torn on arrival.
+2026-06-01T14:35:00,EV500624,support_ticket,Kalpana Traders,North,quality,1,Packaging on SO168416 was torn on arrival.
+2026-06-01T14:12:00,EV500625,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO173210 was promised on 2026-05-28 and has still not arrived at our depot.
+2026-06-02T11:45:00,EV500626,support_ticket,Vayu Logistics,West,delivery_delay,3,Delivery for SO112897 slipped again. Our production line was held up waiting for it.
+2026-06-02T13:26:00,EV500627,support_ticket,Orbit Retail,West,billing,2,Invoice against SO198710 shows the old rate. Please issue a correction.
+2026-06-03T13:53:00,EV500628,support_ticket,Sterling Industries,West,delivery_delay,1,We were not notified that SO157722 would be late. Please escalate.
+2026-06-03T11:00:00,EV500629,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-06-03T11:00:00,EV500630,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-03T11:00:00,EV500631,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-03T11:00:00,EV500632,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-03T11:00:00,EV500633,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-06-03T11:00:00,EV500634,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-06-04T13:37:00,EV500635,support_ticket,Meridian Group,North,quality,1,Two cartons in SO130666 arrived damaged. Requesting replacement.
+2026-06-04T17:33:00,EV500636,support_ticket,Kalpana Traders,North,delivery_delay,1,We were not notified that SO146469 would be late. Please escalate.
+2026-06-05T08:50:00,EV500637,support_ticket,Ganges Distributors,East,billing,2,Invoice against SO117036 shows the old rate. Please issue a correction.
+2026-06-05T14:57:00,EV500638,support_ticket,Acme Corp,West,quality,3,Packaging on SO129628 was torn on arrival.
+2026-06-05T17:25:00,EV500639,support_ticket,Sterling Industries,West,billing,3,Purchase order number missing from the invoice for SO198413.
+2026-06-05T14:50:00,EV500640,support_ticket,Sterling Industries,West,quality,3,Packaging on SO118782 was torn on arrival.
+2026-06-06T13:56:00,EV500641,support_ticket,Sterling Industries,West,delivery_delay,3,Delivery for SO118939 slipped again. Our production line was held up waiting for it.
+2026-06-06T15:57:00,EV500642,support_ticket,Sterling Industries,West,billing,2,Purchase order number missing from the invoice for SO103065.
+2026-06-06T11:09:00,EV500643,support_ticket,Orbit Retail,West,quality,2,Packaging on SO197980 was torn on arrival.
+2026-06-08T11:41:00,EV500644,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO101880. This is becoming a problem.
+2026-06-09T13:49:00,EV500645,support_ticket,Deccan Supply,South,billing,2,Purchase order number missing from the invoice for SO176249.
+2026-06-09T16:44:00,EV500646,support_ticket,Ironwood Ltd,East,billing,1,Invoice against SO119756 shows the old rate. Please issue a correction.
+2026-06-09T16:56:00,EV500647,support_ticket,Orbit Retail,West,delivery_delay,1,Consignment SO180391 was promised on 2026-06-06 and has still not arrived at our depot.
+2026-06-10T08:23:00,EV500648,support_ticket,Meridian Group,North,billing,2,Purchase order number missing from the invoice for SO112076.
+2026-06-10T14:20:00,EV500649,support_ticket,Ganges Distributors,East,quality,3,Two cartons in SO112180 arrived damaged. Requesting replacement.
+2026-06-10T11:00:00,EV500650,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-06-10T11:00:00,EV500651,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-06-10T11:00:00,EV500652,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-10T11:00:00,EV500653,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-10T11:00:00,EV500654,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-10T11:00:00,EV500655,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-11T15:25:00,EV500656,support_ticket,Orbit Retail,West,billing,1,Invoice against SO178810 shows the old rate. Please issue a correction.
+2026-06-12T17:22:00,EV500657,support_ticket,Vayu Logistics,West,billing,1,Purchase order number missing from the invoice for SO161039.
+2026-06-13T18:14:00,EV500658,support_ticket,Vayu Logistics,West,billing,2,Invoice against SO147062 shows the old rate. Please issue a correction.
+2026-06-14T16:03:00,EV500659,support_ticket,Bluewater Co,South,billing,3,Purchase order number missing from the invoice for SO176095.
+2026-06-14T14:51:00,EV500660,support_ticket,Ganges Distributors,East,billing,1,Purchase order number missing from the invoice for SO108295.
+2026-06-15T16:09:00,EV500661,support_ticket,Meridian Group,North,delivery_delay,1,We were not notified that SO138497 would be late. Please escalate.
+2026-06-15T17:17:00,EV500662,support_ticket,Acme Corp,West,quality,3,Two cartons in SO146365 arrived damaged. Requesting replacement.
+2026-06-16T17:29:00,EV500663,support_ticket,Ganges Distributors,East,quality,2,Two cartons in SO182903 arrived damaged. Requesting replacement.
+2026-06-16T13:46:00,EV500664,support_ticket,Acme Corp,West,quality,1,Packaging on SO149884 was torn on arrival.
+2026-06-16T17:57:00,EV500665,support_ticket,Sterling Industries,West,delivery_delay,3,Consignment SO189895 was promised on 2026-06-14 and has still not arrived at our depot.
+2026-06-17T14:08:00,EV500666,support_ticket,Vayu Logistics,West,quality,2,Two cartons in SO179943 arrived damaged. Requesting replacement.
+2026-06-17T12:30:00,EV500667,support_ticket,Vayu Logistics,West,quality,3,Packaging on SO196459 was torn on arrival.
+2026-06-17T11:00:00,EV500668,crm_note,Meridian Group,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-17T11:00:00,EV500669,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-06-17T11:00:00,EV500670,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-18T09:33:00,EV500671,support_ticket,Deccan Supply,South,delivery_delay,1,We were not notified that SO131374 would be late. Please escalate.
+2026-06-18T16:01:00,EV500672,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO162615.
+2026-06-18T17:12:00,EV500673,support_ticket,Ironwood Ltd,East,billing,3,Purchase order number missing from the invoice for SO194960.
+2026-06-18T17:40:00,EV500674,support_ticket,Orbit Retail,West,quality,2,Packaging on SO191037 was torn on arrival.
+2026-06-18T15:00:00,EV500675,support_ticket,Orbit Retail,West,billing,1,Invoice against SO107434 shows the old rate. Please issue a correction.
+2026-06-19T11:58:00,EV500676,support_ticket,Meridian Group,North,billing,1,Invoice against SO144348 shows the old rate. Please issue a correction.
+2026-06-19T10:12:00,EV500677,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO129269 would be late. Please escalate.
+2026-06-20T14:29:00,EV500678,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO158015 was promised on 2026-06-15 and has still not arrived at our depot.
+2026-06-20T08:09:00,EV500679,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO130525 would be late. Please escalate.
+2026-06-21T13:08:00,EV500680,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO161061.
+2026-06-21T13:45:00,EV500681,support_ticket,Acme Corp,West,delivery_delay,3,Delivery for SO161992 slipped again. Our production line was held up waiting for it.
+2026-06-21T10:28:00,EV500682,support_ticket,Acme Corp,West,delivery_delay,1,Delivery for SO114271 slipped again. Our production line was held up waiting for it.
+2026-06-22T08:07:00,EV500683,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO141498 would be late. Please escalate.
+2026-06-22T08:15:00,EV500684,support_ticket,Acme Corp,West,delivery_delay,1,Delivery for SO175370 slipped again. Our production line was held up waiting for it.
+2026-06-23T15:19:00,EV500685,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO149829.
+2026-06-23T08:53:00,EV500686,support_ticket,Acme Corp,West,delivery_delay,2,Third late delivery this month against order SO166211. This is becoming a problem.
+2026-06-23T15:55:00,EV500687,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO183716. This is becoming a problem.
+2026-06-24T13:50:00,EV500688,support_ticket,Kalpana Traders,North,billing,2,Invoice against SO121577 shows the old rate. Please issue a correction.
+2026-06-24T18:21:00,EV500689,support_ticket,Deccan Supply,South,billing,1,Purchase order number missing from the invoice for SO167418.
+2026-06-24T13:35:00,EV500690,support_ticket,Bluewater Co,South,billing,1,Purchase order number missing from the invoice for SO124002.
+2026-06-24T11:00:00,EV500691,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-06-24T11:00:00,EV500692,crm_note,Deccan Supply,South,account_review,2,Reviewed the product roadmap with the account team.
+2026-06-24T11:00:00,EV500693,crm_note,Ganges Distributors,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-24T11:00:00,EV500694,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-06-24T11:00:00,EV500695,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-06-24T11:00:00,EV500696,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-06-25T10:56:00,EV500697,support_ticket,Ironwood Ltd,East,quality,2,Packaging on SO137029 was torn on arrival.
+2026-06-25T13:22:00,EV500698,support_ticket,Ironwood Ltd,East,quality,1,Two cartons in SO167942 arrived damaged. Requesting replacement.
+2026-06-25T17:47:00,EV500699,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO176070. This is becoming a problem.
+2026-06-25T10:23:00,EV500700,support_ticket,Acme Corp,West,billing,3,Purchase order number missing from the invoice for SO142276.
+2026-06-26T18:46:00,EV500701,support_ticket,Vayu Logistics,West,billing,2,Invoice against SO131203 shows the old rate. Please issue a correction.
+2026-06-27T17:03:00,EV500702,support_ticket,Kalpana Traders,North,quality,3,Two cartons in SO102354 arrived damaged. Requesting replacement.
+2026-06-28T10:29:00,EV500703,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO103506 would be late. Please escalate.
+2026-06-30T08:16:00,EV500704,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO171485 was promised on 2026-06-28 and has still not arrived at our depot.
+2026-07-01T16:10:00,EV500705,support_ticket,Sterling Industries,West,delivery_delay,3,Third late delivery this month against order SO193883. This is becoming a problem.
+2026-07-01T11:00:00,EV500706,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-07-01T11:00:00,EV500707,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-01T11:00:00,EV500708,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-01T11:00:00,EV500709,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-01T11:00:00,EV500710,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-01T11:00:00,EV500711,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-01T11:00:00,EV500712,crm_note,Vayu Logistics,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-02T10:31:00,EV500713,support_ticket,Bluewater Co,South,delivery_delay,1,Delivery for SO132551 slipped again. Our production line was held up waiting for it.
+2026-07-02T14:09:00,EV500714,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO157594 was promised on 2026-06-26 and has still not arrived at our depot.
+2026-07-02T11:00:00,EV500715,support_ticket,Acme Corp,West,delivery_delay,2,Delivery for SO153626 slipped again. Our production line was held up waiting for it.
+2026-07-02T14:43:00,EV500716,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO151763 would be late. Please escalate.
+2026-07-02T08:02:00,EV500717,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO195336. This is becoming a problem.
+2026-07-02T16:19:00,EV500718,support_ticket,Sterling Industries,West,delivery_delay,1,We were not notified that SO189654 would be late. Please escalate.
+2026-07-02T13:29:00,EV500719,support_ticket,Orbit Retail,West,quality,1,Two cartons in SO118728 arrived damaged. Requesting replacement.
+2026-07-02T15:34:00,EV500720,support_ticket,Orbit Retail,West,quality,2,Two cartons in SO101390 arrived damaged. Requesting replacement.
+2026-07-03T12:18:00,EV500721,support_ticket,Meridian Group,North,quality,3,Packaging on SO141023 was torn on arrival.
+2026-07-03T11:31:00,EV500722,support_ticket,Kalpana Traders,North,delivery_delay,3,We were not notified that SO166229 would be late. Please escalate.
+2026-07-03T12:06:00,EV500723,support_ticket,Kalpana Traders,North,billing,3,Purchase order number missing from the invoice for SO145260.
+2026-07-03T17:58:00,EV500724,support_ticket,Ganges Distributors,East,quality,3,Two cartons in SO147277 arrived damaged. Requesting replacement.
+2026-07-03T14:08:00,EV500725,support_ticket,Ganges Distributors,East,delivery_delay,2,Delivery for SO118298 slipped again. Our production line was held up waiting for it.
+2026-07-03T13:43:00,EV500726,support_ticket,Ironwood Ltd,East,billing,1,Purchase order number missing from the invoice for SO102407.
+2026-07-03T10:16:00,EV500727,support_ticket,Acme Corp,West,delivery_delay,3,Delivery for SO155709 slipped again. Our production line was held up waiting for it.
+2026-07-04T08:29:00,EV500728,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO132104 was promised on 2026-06-26 and has still not arrived at our depot.
+2026-07-06T08:23:00,EV500729,support_ticket,Acme Corp,West,billing,1,Purchase order number missing from the invoice for SO172276.
+2026-07-07T14:30:00,EV500730,support_ticket,Meridian Group,North,delivery_delay,2,Delivery for SO171262 slipped again. Our production line was held up waiting for it.
+2026-07-07T16:28:00,EV500731,support_ticket,Kalpana Traders,North,delivery_delay,2,We were not notified that SO139968 would be late. Please escalate.
+2026-07-07T08:09:00,EV500732,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO193576 would be late. Please escalate.
+2026-07-08T15:47:00,EV500733,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO148430 would be late. Please escalate.
+2026-07-08T11:19:00,EV500734,support_ticket,Vayu Logistics,West,delivery_delay,1,Consignment SO193831 was promised on 2026-07-02 and has still not arrived at our depot.
+2026-07-08T15:46:00,EV500735,support_ticket,Orbit Retail,West,delivery_delay,2,Third late delivery this month against order SO142181. This is becoming a problem.
+2026-07-08T11:00:00,EV500736,crm_note,Bluewater Co,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-08T11:00:00,EV500737,crm_note,Acme Corp,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-08T11:00:00,EV500738,crm_note,Sterling Industries,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-09T15:46:00,EV500739,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO138235.
+2026-07-09T13:22:00,EV500740,support_ticket,Ganges Distributors,East,billing,2,Purchase order number missing from the invoice for SO171047.
+2026-07-09T15:27:00,EV500741,support_ticket,Acme Corp,West,quality,2,Packaging on SO140561 was torn on arrival.
+2026-07-09T14:52:00,EV500742,support_ticket,Acme Corp,West,delivery_delay,2,Third late delivery this month against order SO116678. This is becoming a problem.
+2026-07-09T17:34:00,EV500743,support_ticket,Orbit Retail,West,delivery_delay,3,We were not notified that SO170736 would be late. Please escalate.
+2026-07-10T18:02:00,EV500744,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO138176 would be late. Please escalate.
+2026-07-10T13:36:00,EV500745,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO117464. This is becoming a problem.
+2026-07-11T08:32:00,EV500746,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO180593 arrived damaged. Requesting replacement.
+2026-07-11T11:33:00,EV500747,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO150510 would be late. Please escalate.
+2026-07-11T14:47:00,EV500748,support_ticket,Vayu Logistics,West,quality,2,Two cartons in SO149214 arrived damaged. Requesting replacement.
+2026-07-12T18:37:00,EV500749,support_ticket,Deccan Supply,South,billing,2,Invoice against SO130531 shows the old rate. Please issue a correction.
+2026-07-12T09:58:00,EV500750,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO179230. This is becoming a problem.
+2026-07-12T13:55:00,EV500751,support_ticket,Acme Corp,West,delivery_delay,3,Delivery for SO131260 slipped again. Our production line was held up waiting for it.
+2026-07-12T16:06:00,EV500752,support_ticket,Vayu Logistics,West,delivery_delay,3,Delivery for SO159966 slipped again. Our production line was held up waiting for it.
+2026-07-13T09:33:00,EV500753,support_ticket,Deccan Supply,South,billing,1,Invoice against SO175420 shows the old rate. Please issue a correction.
+2026-07-13T17:41:00,EV500754,support_ticket,Deccan Supply,South,delivery_delay,3,We were not notified that SO112875 would be late. Please escalate.
+2026-07-13T15:28:00,EV500755,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO169421 would be late. Please escalate.
+2026-07-13T12:21:00,EV500756,support_ticket,Vayu Logistics,West,quality,1,Packaging on SO136827 was torn on arrival.
+2026-07-13T11:52:00,EV500757,support_ticket,Orbit Retail,West,quality,2,Two cartons in SO146385 arrived damaged. Requesting replacement.
+2026-07-14T10:39:00,EV500758,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO190953.
+2026-07-14T18:58:00,EV500759,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO102377 would be late. Please escalate.
+2026-07-14T17:38:00,EV500760,support_ticket,Sterling Industries,West,billing,2,Purchase order number missing from the invoice for SO114787.
+2026-07-15T09:20:00,EV500761,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO192235. This is becoming a problem.
+2026-07-15T14:58:00,EV500762,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO172724 would be late. Please escalate.
+2026-07-15T11:00:00,EV500763,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-15T11:00:00,EV500764,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-15T11:00:00,EV500765,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2026-07-15T11:00:00,EV500766,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-15T11:00:00,EV500767,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-07-15T11:00:00,EV500768,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-15T11:00:00,EV500769,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-15T11:00:00,EV500770,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-16T18:13:00,EV500771,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO137403 was promised on 2026-07-14 and has still not arrived at our depot.
+2026-07-17T16:45:00,EV500772,support_ticket,Bluewater Co,South,billing,2,Purchase order number missing from the invoice for SO100513.
+2026-07-17T15:19:00,EV500773,support_ticket,Ganges Distributors,East,billing,1,Purchase order number missing from the invoice for SO154215.
+2026-07-17T09:44:00,EV500774,support_ticket,Acme Corp,West,quality,2,Two cartons in SO100517 arrived damaged. Requesting replacement.
+2026-07-17T16:32:00,EV500775,support_ticket,Acme Corp,West,delivery_delay,2,Delivery for SO162521 slipped again. Our production line was held up waiting for it.
+2026-07-17T14:42:00,EV500776,support_ticket,Vayu Logistics,West,delivery_delay,3,Consignment SO181253 was promised on 2026-07-10 and has still not arrived at our depot.
+2026-07-18T08:20:00,EV500777,support_ticket,Kalpana Traders,North,delivery_delay,3,We were not notified that SO171273 would be late. Please escalate.
+2026-07-18T10:45:00,EV500778,support_ticket,Kalpana Traders,North,delivery_delay,2,Delivery for SO134783 slipped again. Our production line was held up waiting for it.
+2026-07-18T08:42:00,EV500779,support_ticket,Bluewater Co,South,quality,2,Two cartons in SO129264 arrived damaged. Requesting replacement.
+2026-07-19T11:01:00,EV500780,support_ticket,Bluewater Co,South,delivery_delay,3,Delivery for SO100024 slipped again. Our production line was held up waiting for it.
+2026-07-19T18:20:00,EV500781,support_ticket,Sterling Industries,West,delivery_delay,3,We were not notified that SO123378 would be late. Please escalate.
+2026-07-20T12:38:00,EV500782,support_ticket,Vayu Logistics,West,delivery_delay,2,Delivery for SO124600 slipped again. Our production line was held up waiting for it.
+2026-07-21T17:56:00,EV500783,support_ticket,Ironwood Ltd,East,delivery_delay,1,Consignment SO134807 was promised on 2026-07-15 and has still not arrived at our depot.
+2026-07-21T15:51:00,EV500784,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO163010 would be late. Please escalate.
+2026-07-22T14:54:00,EV500785,support_ticket,Ironwood Ltd,East,billing,2,Invoice against SO142344 shows the old rate. Please issue a correction.
+2026-07-22T14:12:00,EV500786,support_ticket,Sterling Industries,West,delivery_delay,1,We were not notified that SO138056 would be late. Please escalate.
+2026-07-22T18:26:00,EV500787,support_ticket,Vayu Logistics,West,billing,1,Purchase order number missing from the invoice for SO182768.
+2026-07-22T09:07:00,EV500788,support_ticket,Vayu Logistics,West,quality,3,Packaging on SO106856 was torn on arrival.
+2026-07-22T11:00:00,EV500789,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-22T11:00:00,EV500790,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-22T11:00:00,EV500791,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2026-07-22T11:00:00,EV500792,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2026-07-22T11:00:00,EV500793,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-22T11:00:00,EV500794,crm_note,Acme Corp,West,account_review,2,Spoke with procurement. They are evaluating alternative suppliers after the recent delivery problems. Renewal is at risk.
+2026-07-22T11:00:00,EV500795,crm_note,Orbit Retail,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-23T15:58:00,EV500796,support_ticket,Acme Corp,West,quality,1,Packaging on SO180735 was torn on arrival.
+2026-07-23T16:41:00,EV500797,support_ticket,Sterling Industries,West,quality,1,Two cartons in SO171247 arrived damaged. Requesting replacement.
+2026-07-24T18:54:00,EV500798,support_ticket,Sterling Industries,West,delivery_delay,1,Delivery for SO108705 slipped again. Our production line was held up waiting for it.
+2026-07-25T16:23:00,EV500799,support_ticket,Bluewater Co,South,quality,2,Packaging on SO120247 was torn on arrival.
+2026-07-25T09:30:00,EV500800,support_ticket,Ganges Distributors,East,delivery_delay,2,We were not notified that SO124503 would be late. Please escalate.
+2026-07-25T13:54:00,EV500801,support_ticket,Ironwood Ltd,East,quality,1,Packaging on SO196050 was torn on arrival.
+2026-07-25T17:33:00,EV500802,support_ticket,Orbit Retail,West,delivery_delay,3,We were not notified that SO126065 would be late. Please escalate.
+2026-07-26T15:17:00,EV500803,support_ticket,Meridian Group,North,quality,1,Two cartons in SO157309 arrived damaged. Requesting replacement.
+2026-07-26T15:12:00,EV500804,support_ticket,Bluewater Co,South,quality,3,Packaging on SO153229 was torn on arrival.
+2026-07-26T16:01:00,EV500805,support_ticket,Orbit Retail,West,delivery_delay,2,Third late delivery this month against order SO174017. This is becoming a problem.
+2026-07-27T16:01:00,EV500806,support_ticket,Acme Corp,West,billing,1,Invoice against SO162636 shows the old rate. Please issue a correction.
+2026-07-27T10:17:00,EV500807,support_ticket,Sterling Industries,West,delivery_delay,2,Consignment SO157623 was promised on 2026-07-22 and has still not arrived at our depot.
+2026-07-28T14:27:00,EV500808,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO136748. This is becoming a problem.
+2026-07-28T15:44:00,EV500809,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO185514. This is becoming a problem.
+2026-07-28T12:43:00,EV500810,support_ticket,Sterling Industries,West,delivery_delay,1,Delivery for SO143008 slipped again. Our production line was held up waiting for it.
+2026-07-29T18:42:00,EV500811,support_ticket,Orbit Retail,West,delivery_delay,2,Consignment SO173786 was promised on 2026-07-22 and has still not arrived at our depot.
+2026-07-29T11:00:00,EV500812,crm_note,Kalpana Traders,North,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-29T11:00:00,EV500813,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-07-29T11:00:00,EV500814,crm_note,Bluewater Co,South,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-29T11:00:00,EV500815,crm_note,Ganges Distributors,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-29T11:00:00,EV500816,crm_note,Ironwood Ltd,East,account_review,2,Quarterly catch up. No issues raised.
+2026-07-29T11:00:00,EV500817,crm_note,Acme Corp,West,account_review,2,Spoke with procurement. They are evaluating alternative suppliers after the recent delivery problems. Renewal is at risk.
+2026-07-29T11:00:00,EV500818,crm_note,Sterling Industries,West,account_review,2,Reviewed the product roadmap with the account team.
+2026-07-29T11:00:00,EV500819,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-07-30T13:40:00,EV500820,support_ticket,Meridian Group,North,billing,1,Invoice against SO106543 shows the old rate. Please issue a correction.
+2026-07-30T16:16:00,EV500821,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO182020 would be late. Please escalate.
+2026-07-30T13:52:00,EV500822,support_ticket,Acme Corp,West,billing,3,Invoice against SO116748 shows the old rate. Please issue a correction.
+2026-07-30T11:20:00,EV500823,support_ticket,Sterling Industries,West,delivery_delay,1,Delivery for SO162012 slipped again. Our production line was held up waiting for it.
+2026-07-30T16:58:00,EV500824,support_ticket,Orbit Retail,West,delivery_delay,2,We were not notified that SO102823 would be late. Please escalate.
+2026-08-01T09:26:00,EV500825,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO135545. This is becoming a problem.
+2026-08-01T08:41:00,EV500826,support_ticket,Acme Corp,West,quality,1,Two cartons in SO113948 arrived damaged. Requesting replacement.
+2026-08-01T16:19:00,EV500827,support_ticket,Vayu Logistics,West,delivery_delay,3,We were not notified that SO106717 would be late. Please escalate.
+2026-08-01T11:29:00,EV500828,support_ticket,Orbit Retail,West,delivery_delay,2,Consignment SO177419 was promised on 2026-07-26 and has still not arrived at our depot.
+2026-08-02T11:25:00,EV500829,support_ticket,Meridian Group,North,quality,3,Two cartons in SO197359 arrived damaged. Requesting replacement.
+2026-08-02T11:56:00,EV500830,support_ticket,Orbit Retail,West,delivery_delay,2,Delivery for SO159282 slipped again. Our production line was held up waiting for it.
+2026-08-03T14:15:00,EV500831,support_ticket,Ganges Distributors,East,delivery_delay,3,Consignment SO156315 was promised on 2026-07-27 and has still not arrived at our depot.
+2026-08-03T10:08:00,EV500832,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO107614. This is becoming a problem.
+2026-08-03T15:16:00,EV500833,support_ticket,Vayu Logistics,West,quality,2,Two cartons in SO193511 arrived damaged. Requesting replacement.
+2026-08-04T10:36:00,EV500834,support_ticket,Ganges Distributors,East,billing,3,Purchase order number missing from the invoice for SO186911.
+2026-08-05T15:43:00,EV500835,support_ticket,Acme Corp,West,quality,3,Packaging on SO118971 was torn on arrival.
+2026-08-05T12:25:00,EV500836,support_ticket,Acme Corp,West,delivery_delay,1,Third late delivery this month against order SO141354. This is becoming a problem.
+2026-08-05T12:14:00,EV500837,support_ticket,Acme Corp,West,delivery_delay,1,Consignment SO116977 was promised on 2026-07-31 and has still not arrived at our depot.
+2026-08-05T18:02:00,EV500838,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO116234 was promised on 2026-07-29 and has still not arrived at our depot.
+2026-08-05T13:06:00,EV500839,support_ticket,Acme Corp,West,quality,3,Packaging on SO135729 was torn on arrival.
+2026-08-05T11:00:00,EV500840,crm_note,Meridian Group,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-08-05T11:00:00,EV500841,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2026-08-05T11:00:00,EV500842,crm_note,Ironwood Ltd,East,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-08-05T11:00:00,EV500843,crm_note,Acme Corp,West,account_review,2,Account is unhappy about reliability. Asked for a written service improvement plan.
+2026-08-05T11:00:00,EV500844,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-08-05T11:00:00,EV500845,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-08-07T17:08:00,EV500846,support_ticket,Acme Corp,West,delivery_delay,3,Consignment SO127157 was promised on 2026-07-31 and has still not arrived at our depot.
+2026-08-07T13:54:00,EV500847,support_ticket,Sterling Industries,West,quality,2,Two cartons in SO191589 arrived damaged. Requesting replacement.
+2026-08-09T17:57:00,EV500848,support_ticket,Meridian Group,North,billing,1,Invoice against SO142635 shows the old rate. Please issue a correction.
+2026-08-09T15:45:00,EV500849,support_ticket,Bluewater Co,South,delivery_delay,2,We were not notified that SO122724 would be late. Please escalate.
+2026-08-09T12:10:00,EV500850,support_ticket,Ganges Distributors,East,delivery_delay,3,Third late delivery this month against order SO102492. This is becoming a problem.
+2026-08-09T08:53:00,EV500851,support_ticket,Acme Corp,West,quality,1,Packaging on SO136091 was torn on arrival.
+2026-08-10T13:30:00,EV500852,support_ticket,Sterling Industries,West,quality,2,Two cartons in SO177704 arrived damaged. Requesting replacement.
+2026-08-11T15:28:00,EV500853,support_ticket,Ganges Distributors,East,delivery_delay,3,Delivery for SO181425 slipped again. Our production line was held up waiting for it.
+2026-08-11T08:48:00,EV500854,support_ticket,Acme Corp,West,delivery_delay,2,Consignment SO172299 was promised on 2026-08-03 and has still not arrived at our depot.
+2026-08-11T16:14:00,EV500855,support_ticket,Acme Corp,West,billing,1,Purchase order number missing from the invoice for SO103560.
+2026-08-11T14:40:00,EV500856,support_ticket,Sterling Industries,West,delivery_delay,1,Third late delivery this month against order SO123809. This is becoming a problem.
+2026-08-12T10:10:00,EV500857,support_ticket,Ganges Distributors,East,billing,2,Purchase order number missing from the invoice for SO162851.
+2026-08-12T13:36:00,EV500858,support_ticket,Ganges Distributors,East,billing,3,Invoice against SO116744 shows the old rate. Please issue a correction.
+2026-08-12T11:00:00,EV500859,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-08-12T11:00:00,EV500860,crm_note,Kalpana Traders,North,account_review,2,Reviewed the product roadmap with the account team.
+2026-08-12T11:00:00,EV500861,crm_note,Ganges Distributors,East,account_review,2,Quarterly catch up. No issues raised.
+2026-08-12T11:00:00,EV500862,crm_note,Acme Corp,West,account_review,2,Spoke with procurement. They are evaluating alternative suppliers after the recent delivery problems. Renewal is at risk.
+2026-08-12T11:00:00,EV500863,crm_note,Sterling Industries,West,account_review,2,Quarterly catch up. No issues raised.
+2026-08-12T11:00:00,EV500864,crm_note,Orbit Retail,West,account_review,2,Quarterly catch up. No issues raised.
+2026-08-13T16:58:00,EV500865,support_ticket,Acme Corp,West,delivery_delay,3,We were not notified that SO127956 would be late. Please escalate.
+2026-08-13T18:56:00,EV500866,support_ticket,Orbit Retail,West,delivery_delay,1,Consignment SO153382 was promised on 2026-08-06 and has still not arrived at our depot.
+2026-08-14T15:30:00,EV500867,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO121108 would be late. Please escalate.
+2026-08-15T12:06:00,EV500868,support_ticket,Ironwood Ltd,East,quality,1,Packaging on SO103803 was torn on arrival.
+2026-08-15T08:45:00,EV500869,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO110463. This is becoming a problem.
+2026-08-15T12:09:00,EV500870,support_ticket,Acme Corp,West,delivery_delay,3,Consignment SO112678 was promised on 2026-08-11 and has still not arrived at our depot.
+2026-08-15T13:53:00,EV500871,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO166531 would be late. Please escalate.
+2026-08-15T08:44:00,EV500872,support_ticket,Sterling Industries,West,delivery_delay,2,Consignment SO156088 was promised on 2026-08-07 and has still not arrived at our depot.
+2026-08-15T18:30:00,EV500873,support_ticket,Vayu Logistics,West,billing,3,Invoice against SO183879 shows the old rate. Please issue a correction.
+2026-08-15T16:18:00,EV500874,support_ticket,Orbit Retail,West,delivery_delay,1,Delivery for SO192666 slipped again. Our production line was held up waiting for it.
+2026-08-16T11:08:00,EV500875,support_ticket,Sterling Industries,West,quality,2,Packaging on SO170146 was torn on arrival.
+2026-08-18T15:38:00,EV500876,support_ticket,Bluewater Co,South,delivery_delay,2,Consignment SO117770 was promised on 2026-08-15 and has still not arrived at our depot.
+2026-08-18T18:22:00,EV500877,support_ticket,Acme Corp,West,delivery_delay,2,We were not notified that SO121224 would be late. Please escalate.
+2026-08-18T12:58:00,EV500878,support_ticket,Vayu Logistics,West,delivery_delay,1,Consignment SO151985 was promised on 2026-08-14 and has still not arrived at our depot.
+2026-08-18T08:10:00,EV500879,support_ticket,Orbit Retail,West,delivery_delay,2,Delivery for SO157586 slipped again. Our production line was held up waiting for it.
+2026-08-19T18:56:00,EV500880,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO175471 would be late. Please escalate.
+2026-08-19T11:00:00,EV500881,crm_note,Meridian Group,North,account_review,2,Quarterly catch up. No issues raised.
+2026-08-19T11:00:00,EV500882,crm_note,Kalpana Traders,North,account_review,2,Quarterly catch up. No issues raised.
+2026-08-19T11:00:00,EV500883,crm_note,Deccan Supply,South,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-08-19T11:00:00,EV500884,crm_note,Bluewater Co,South,account_review,2,Quarterly catch up. No issues raised.
+2026-08-19T11:00:00,EV500885,crm_note,Ironwood Ltd,East,account_review,2,Reviewed the product roadmap with the account team.
+2026-08-19T11:00:00,EV500886,crm_note,Acme Corp,West,account_review,2,Spoke with procurement. They are evaluating alternative suppliers after the recent delivery problems. Renewal is at risk.
+2026-08-19T11:00:00,EV500887,crm_note,Vayu Logistics,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-08-19T11:00:00,EV500888,crm_note,Orbit Retail,West,account_review,2,Discussed upcoming volumes. Outlook broadly stable.
+2026-08-20T18:42:00,EV500889,support_ticket,Meridian Group,North,billing,1,Purchase order number missing from the invoice for SO107119.
+2026-08-20T17:16:00,EV500890,support_ticket,Bluewater Co,South,billing,1,Invoice against SO132334 shows the old rate. Please issue a correction.
+2026-08-20T16:10:00,EV500891,support_ticket,Acme Corp,West,delivery_delay,3,Third late delivery this month against order SO170949. This is becoming a problem.
+2026-08-20T14:51:00,EV500892,support_ticket,Acme Corp,West,billing,2,Invoice against SO169631 shows the old rate. Please issue a correction.
+2026-08-20T15:40:00,EV500893,support_ticket,Acme Corp,West,delivery_delay,1,We were not notified that SO112503 would be late. Please escalate.
+2026-08-20T08:27:00,EV500894,support_ticket,Sterling Industries,West,quality,3,Packaging on SO173362 was torn on arrival.
+2026-08-20T11:57:00,EV500895,support_ticket,Orbit Retail,West,delivery_delay,1,Third late delivery this month against order SO128288. This is becoming a problem.

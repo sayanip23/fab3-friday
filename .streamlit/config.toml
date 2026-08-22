@@ -1,0 +1,20 @@
+# Native Streamlit theming.
+#
+# Palette follows the "Data-Dense Dashboard" profile from the ui-ux-pro-max design
+# system, with one deliberate substitution: the profile recommends a blue primary
+# (#1E40AF), but every other Fab3 deliverable uses Accenture purple. Brand
+# continuity with the deck wins; the amber accent from the same profile is kept.
+
+[theme]
+base = "light"
+primaryColor = "#A000FF"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F7F4FC"
+textColor = "#1A1A1A"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

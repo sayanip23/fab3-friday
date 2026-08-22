@@ -1,172 +1,143 @@
-"""Semantic contract loader, validator, and entitlement resolver.
+"""
+Load and validate the KPI semantic contract.
 
-The contract at contracts/kpis.yaml is the single source of truth for every
-KPI definition, threshold, driver, lineage rule, and access rule in FRIDAY.
-No other module may hardcode any of these — they must come through this
-loader. This module is what makes that rule enforceable rather than just
-stated.
+Every other module in FRIDAY reads KPI meaning from here. Nothing is allowed to
+hardcode a definition, threshold, driver list or access rule.
 """
 from __future__ import annotations
 
-import dataclasses
-import pathlib
+import os
+from dataclasses import dataclass
 from typing import Any
 
 import yaml
 
-REQUIRED_KPI_FIELDS = ["description", "formula", "grain", "source", "unit",
-                        "materiality", "lineage", "access"]
-REQUIRED_MATERIALITY_FIELDS = ["method", "baseline_window_days", "threshold_z"]
-REQUIRED_LINEAGE_FIELDS = ["source_tables", "max_staleness_hours"]
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONTRACT_PATH = os.path.join(ROOT, "contracts", "kpis.yaml")
+
+REQUIRED_KPI_FIELDS = [
+    "label", "definition", "formula", "calculation_method", "time_grain",
+    "unit", "direction", "drivers", "materiality", "min_history_days",
+    "lineage", "access",
+]
+
+REQUIRED_SOURCE_FIELDS = [
+    "label", "grain", "time_grain", "refresh_cadence", "expected_lag_hours", "file",
+]
 
 
-class ContractError(ValueError):
-    """Raised when contracts/kpis.yaml is missing, malformed, or incomplete."""
+class ContractError(Exception):
+    """Raised when the contract is structurally invalid."""
 
 
-@dataclasses.dataclass(frozen=True)
-class Kpi:
+@dataclass(frozen=True)
+class KPI:
     name: str
-    description: str
-    formula: str
-    grain: list[str]
-    source: Any
-    unit: str
-    drivers: list[str]
-    materiality: dict
-    lineage: dict
-    access: dict
+    spec: dict[str, Any]
+
+    def __getattr__(self, item: str) -> Any:
+        try:
+            return self.spec[item]
+        except KeyError as exc:
+            raise AttributeError(f"KPI '{self.name}' has no field '{item}'") from exc
+
+    @property
+    def sources(self) -> list[str]:
+        if "sources" in self.spec:
+            return list(self.spec["sources"])
+        if "source" in self.spec:
+            return [self.spec["source"]]
+        return []
+
+    @property
+    def controllable_drivers(self) -> list[dict]:
+        return [d for d in self.spec["drivers"] if d.get("controllable")]
+
+    def thresholds(self) -> tuple[dict, dict, bool]:
+        m = self.spec["materiality"]
+        return m.get("statistical", {}), m.get("business", {}), m.get("require_both", True)
 
 
-@dataclasses.dataclass(frozen=True)
-class Role:
-    name: str
-    description: str
-    scope: str
-    masked_fields: list[str]
-    decision_rights: list[str]
-
-
-@dataclasses.dataclass(frozen=True)
 class Contract:
-    version: int
-    business: dict
-    roles: dict[str, Role]
-    sources: dict[str, dict]
-    kpis: dict[str, Kpi]
-    policies: dict
+    def __init__(self, raw: dict[str, Any]):
+        self.raw = raw
+        self.sources: dict[str, dict] = raw.get("sources", {})
+        self.dimensions: dict[str, dict] = raw.get("dimensions", {})
+        self.roles: dict[str, dict] = raw.get("roles", {})
+        self.kpis: dict[str, KPI] = {n: KPI(n, s) for n, s in raw.get("kpis", {}).items()}
+        self.sparse_policy: dict = raw.get("sparse_history_policy", {})
+        self.action_schema: dict = raw.get("action_schema", {})
+        self.abstention: dict = raw.get("abstention", {})
 
-    def get_kpi(self, name: str) -> Kpi:
-        if name not in self.kpis:
-            raise ContractError(
-                f"'{name}' is not a defined KPI. Known KPIs: "
-                f"{sorted(self.kpis)}. FRIDAY will not compute an "
-                f"undefined metric."
-            )
-        return self.kpis[name]
+    # ---------------------------------------------------------------- access
+    def visible_kpis(self, role: str) -> list[str]:
+        if role not in self.roles:
+            raise ContractError(f"unknown role '{role}'")
+        allowed = set(self.roles[role].get("kpis", []))
+        return [n for n, k in self.kpis.items()
+                if n in allowed and role in k.spec["access"].get("roles_allowed", [])]
 
-    def get_role(self, name: str) -> Role:
-        if name not in self.roles:
-            raise ContractError(
-                f"'{name}' is not a defined role. Known roles: {sorted(self.roles)}."
-            )
-        return self.roles[name]
+    def row_filter(self, kpi: str, role: str) -> str | None:
+        """Returns 'own_region' style token, or None for unrestricted."""
+        rules = self.kpis[kpi].spec["access"].get("row_level_filter", {})
+        return rules.get(role)
 
+    def masked_columns(self, kpi: str, role: str) -> list[str]:
+        rules = self.kpis[kpi].spec["access"].get("column_masking", {})
+        cols = list(rules.get(role, []))
+        if not self.roles.get(role, {}).get("can_see_account_names", True):
+            if "account_name" not in cols:
+                cols.append("account_name")
+        return cols
 
-def load_contract(path: str | pathlib.Path = "contracts/kpis.yaml") -> Contract:
-    """Load and validate the KPI semantic contract.
+    def decision_rights(self, role: str) -> list[str]:
+        return list(self.roles.get(role, {}).get("decision_rights", []))
 
-    Raises ContractError with a specific, actionable message on any
-    structural problem — a missing field fails loudly here rather than
-    silently producing a wrong number three modules downstream.
-    """
-    path = pathlib.Path(path)
-    if not path.exists():
-        raise ContractError(f"Contract not found at {path}.")
+    # ------------------------------------------------------------ validation
+    def validate(self) -> list[str]:
+        problems: list[str] = []
 
-    with open(path) as f:
-        raw = yaml.safe_load(f)
+        if not self.sources:
+            problems.append("no sources declared")
+        for name, spec in self.sources.items():
+            for f in REQUIRED_SOURCE_FIELDS:
+                if f not in spec:
+                    problems.append(f"source '{name}' missing '{f}'")
 
-    for top in ["version", "business", "roles", "sources", "kpis", "policies"]:
-        if top not in raw:
-            raise ContractError(f"Contract is missing top-level key '{top}'.")
+        if not self.kpis:
+            problems.append("no kpis declared")
+        for name, kpi in self.kpis.items():
+            for f in REQUIRED_KPI_FIELDS:
+                if f not in kpi.spec:
+                    problems.append(f"kpi '{name}' missing '{f}'")
+            for src in kpi.sources:
+                if src not in self.sources:
+                    problems.append(f"kpi '{name}' references unknown source '{src}'")
+            for dep in kpi.spec.get("depends_on", []):
+                if dep not in self.kpis:
+                    problems.append(f"kpi '{name}' depends on unknown kpi '{dep}'")
+            for role in kpi.spec.get("access", {}).get("roles_allowed", []):
+                if role not in self.roles:
+                    problems.append(f"kpi '{name}' grants access to unknown role '{role}'")
+            for d in kpi.spec.get("drivers", []):
+                if "controllable" not in d or "lever" not in d:
+                    problems.append(f"kpi '{name}' driver '{d.get('name')}' "
+                                    f"missing controllable/lever")
 
-    roles = {}
-    for rname, rdef in raw["roles"].items():
-        for field in ["description", "scope", "masked_fields", "decision_rights"]:
-            if field not in rdef:
-                raise ContractError(f"Role '{rname}' is missing field '{field}'.")
-        roles[rname] = Role(name=rname, **rdef)
+        if not self.action_schema.get("required_fields"):
+            problems.append("action_schema.required_fields is empty")
+        if not self.abstention.get("abstain_when"):
+            problems.append("abstention.abstain_when is empty")
 
-    kpis = {}
-    for kname, kdef in raw["kpis"].items():
-        missing = [f for f in REQUIRED_KPI_FIELDS if f not in kdef]
-        if missing:
-            raise ContractError(f"KPI '{kname}' is missing required field(s): {missing}.")
-        mat_missing = [f for f in REQUIRED_MATERIALITY_FIELDS if f not in kdef["materiality"]]
-        if mat_missing:
-            raise ContractError(f"KPI '{kname}'.materiality is missing: {mat_missing}.")
-        lin_missing = [f for f in REQUIRED_LINEAGE_FIELDS if f not in kdef["lineage"]]
-        if lin_missing:
-            raise ContractError(f"KPI '{kname}'.lineage is missing: {lin_missing}.")
-        kpis[kname] = Kpi(
-            name=kname,
-            description=kdef["description"],
-            formula=kdef["formula"],
-            grain=kdef["grain"],
-            source=kdef["source"],
-            unit=kdef["unit"],
-            drivers=kdef.get("drivers", []),
-            materiality=kdef["materiality"],
-            lineage=kdef["lineage"],
-            access=kdef["access"],
-        )
-
-    if len(kpis) < 5:
-        raise ContractError(
-            f"Contract defines only {len(kpis)} KPIs; the Round 2 brief "
-            f"requires three to five connected KPIs."
-        )
-    if len(roles) < 2:
-        raise ContractError(
-            f"Contract defines only {len(roles)} role(s); the brief requires "
-            f"at least two personas with different narratives or actions."
-        )
-
-    return Contract(
-        version=raw["version"],
-        business=raw["business"],
-        roles=roles,
-        sources=raw["sources"],
-        kpis=kpis,
-        policies=raw["policies"],
-    )
+        return problems
 
 
-def resolve_entitlement(contract: Contract, role_name: str, kpi_name: str,
-                         row: dict) -> dict:
-    """Apply row- and column-level access rules for a role to a single record.
-
-    Returns a copy of `row` with masked fields replaced by "[MASKED]", and
-    raises ContractError if the role has no row-level access to this record
-    at all (e.g. a regional director asking about a region that is not
-    theirs). This is the only function in FRIDAY allowed to decide whether
-    a row reaches a narrative — see friday/access.py, which calls this for
-    every record before it is handed to evidence retrieval or narration.
-    """
-    role = contract.get_role(role_name)
-    kpi = contract.get_kpi(kpi_name)
-
-    if kpi.access.get("row_level") == "region_scope" and role.scope == "own_region":
-        home_region = row.get("_role_home_region")
-        if home_region is not None and row.get("region") != home_region:
-            raise ContractError(
-                f"Role '{role_name}' is scoped to '{home_region}' and has no "
-                f"row-level access to region '{row.get('region')}'."
-            )
-
-    masked = dict(row)
-    for field in role.masked_fields:
-        if field in masked:
-            masked[field] = "[MASKED]"
-    return masked
+def load(path: str = CONTRACT_PATH, strict: bool = True) -> Contract:
+    with open(path, encoding="utf-8") as fh:
+        raw = yaml.safe_load(fh)
+    c = Contract(raw)
+    if strict:
+        problems = c.validate()
+        if problems:
+            raise ContractError("invalid contract:\n  " + "\n  ".join(problems))
+    return c

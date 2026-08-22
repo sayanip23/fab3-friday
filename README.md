@@ -4,9 +4,15 @@ KPI intelligence to action engine. Team Fab3, Accenture Innovation Challenge 202
 Track 3 BusinessIntelligence.ai. Submission 30 August 2026.
 
 ```bash
-pip install pandas numpy pyyaml scikit-learn
-python scripts/generate_data.py     # rebuild the three source systems
-python scripts/verify_phase1.py     # phase gate, must be 14/14
+pip install pandas numpy pyyaml
+python scripts/generate_data.py        # rebuild the three source systems
+python scripts/verify_phase1.py        # foundations gate, 14/14
+python scripts/verify_phase23.py       # analytics gate, 18/18
+python scripts/verify_lane_b.py        # narrative gate, 22/22
+python scripts/verify_lane_c.py        # governance gate, 23/23
+python scripts/calibrate_thresholds.py # false positive rate by threshold
+
+streamlit run app.py                   # the demo UI
 ```
 
 ## Layout
@@ -29,17 +35,26 @@ brief means by a semantic contract, and it is the thing most teams will not have
 West net revenue, 28 days to 2026-08-20 against the prior 28 days:
 
 ```
-movement    -9.2%   (-744,243 INR)
-volume      -155,522     Acme Corp stopped ordering 2026-07-28
-price+mix   -588,722     Aurora discounted 8% from 08-01, demand drifted to Vertex
-reconciles  -744,243     exactly
+movement    -19.2%  (-1,556,566 INR)   z = -5.34 against threshold 2.0
+volume      -1,132,495  (72.8%)  Acme Corp stopped ordering
+price         -286,059  (18.4%)  Aurora discounted 14% in West
+mix           -138,011   (8.9%)  demand drifted to the cheaper Vertex line
+residual            0.000000     reconciles exactly
 ```
 
-Evidence trail: Acme delivery complaints run 11.4x baseline after the West logistics
-provider changed on 2026-06-14, and one CRM note on 2026-07-22 names supplier risk.
-Nova line has 21 days of history against a 60 day minimum, so it trips the sparse policy.
+The engine is told none of this and recovers all of it:
 
-The engine is told none of this. It has to recover it.
+| Planted | Recovered | 
+|---|---|
+| Acme stops ordering 2026-07-28 | onset detected 2026-07-27, Acme named top account at 71.4% |
+| Logistics provider changed 2026-06-14 | change point found 2026-06-14, 13.4x its pre change rate |
+| CRM warning 2026-07-22 | cited as evidence, precedes onset |
+| Nova launched 2026-07-31 | 21 days against a 60 day minimum, sparse policy trips, abstains |
+| Nothing planted in North | no change point, no alert, ratio 0.00x |
+
+Full chain, stated with high confidence and no abstention:
+
+    delivery_reliability -> volume (73% of the movement) -> net_revenue -19.2%
 
 ## Lanes
 
@@ -48,7 +63,11 @@ Three people, three lanes, one integration day.
 | | Lane A, analytics | Lane B, evidence and narrative | Lane C, governance and ops |
 |---|---|---|---|
 | Owns | detection, attribution, causal screen | retrieval, narrative, personas, abstention | entitlements, telemetry, feedback, UI |
-| Modules | `detect.py` `attribute.py` `causal.py` | `evidence.py` `narrate.py` `personas.py` | `access.py` `telemetry.py` `feedback.py` `app.py` |
+| Modules | `detect.py` `attribute.py` `causal.py` **done** | `evidence.py` `narrate.py` `personas.py` **done** | `access.py` `telemetry.py` `feedback.py` `app.py` **done** |
+
+`engine.py` is the integration point. The UI, the gates and any future caller drive
+the identical instrumented pipeline, so a demo cannot work by wiring stages in a
+special order.
 | Must never | call an LLM for a number | invent a number not passed in | let an unentitled row reach a narrative |
 
 ## Schedule
@@ -56,9 +75,9 @@ Three people, three lanes, one integration day.
 | Day | Date | A | B | C |
 |---|---|---|---|---|
 | 1 | Fri 21 Aug | contract and data **done**, whole team reads ASSUMPTIONS.md | | |
-| 2 | Sat 22 Aug | baseline and materiality detection | build retrieval index over service_events | entitlement enforcement on dataframes |
-| 3 | Sun 23 Aug | price volume mix decomposition | evidence scoring and freshness stamps | telemetry wrapper, latency and tokens |
-| 4 | Mon 24 Aug | causal screen, sequence magnitude mechanism | narrative synthesis, numbers injected only | feedback store and threshold adjustment |
+| 2 | Sat 22 Aug | ~~detection~~ ~~price volume mix~~ ~~causal screen~~ **done day 1** | build retrieval index over service_events | entitlement enforcement on dataframes |
+| 3 | Sun 23 Aug | action recommendations from the contract schema | evidence scoring and freshness stamps | telemetry wrapper, latency and tokens |
+| 4 | Mon 24 Aug | expand evidential drivers beyond delivery | narrative synthesis, numbers injected only | feedback store and threshold adjustment |
 | 5 | Tue 25 Aug | confidence scoring, sparse handling | persona templates and abstention path | Streamlit shell wired to the engine |
 | 6 | Wed 26 Aug | **integration**, all three lanes meet | | |
 | 7 | Thu 27 Aug | **verify**, all ten checklist items demonstrable | | |
@@ -77,14 +96,14 @@ Round 2 minimum prototype expectations. Tick these, not features.
 |---|---|---|
 | 1 | 3 to 5 connected KPIs, 2 to 3 sources, different grains and cadences | **done** |
 | 2 | KPI semantic contract: definitions, calculations, drivers, thresholds, lineage, access | **done** |
-| 3 | Two personas, different narratives or actions | contract ready, narratives pending |
-| 4 | One multi factor movement with known drivers | **data done**, attribution pending |
-| 5 | One low confidence case, engine asks or abstains | policy written, path pending |
-| 6 | One sparse history or newly launched KPI | **data done**, handling pending |
-| 7 | One role based security scenario | contract ready, enforcement pending |
-| 8 | Evidence with freshness, method, contribution, confidence, lineage | **data done**, panel pending |
-| 9 | Clear LLM versus non LLM breakdown | design fixed, instrumentation pending |
-| 10 | Runtime telemetry: latency, model calls, tokens, estimated cost | pending |
+| 3 | Two personas, different narratives or actions | **done**, three personas, different prose and different levers |
+| 4 | One multi factor movement with known drivers | **done**, price volume mix reconciles to zero residual |
+| 5 | One low confidence case, engine asks or abstains | **done**, Nova abstains and names the next check |
+| 6 | One sparse history or newly launched KPI | **done**, policy trips automatically |
+| 7 | One role based security scenario | **done**, row filter + column mask + KPI denial + audit trail |
+| 8 | Evidence with freshness, method, contribution, confidence, lineage | **done**, every citation carries all five |
+| 9 | Clear LLM versus non LLM breakdown | **done**, enforced by `telemetry.Run.verify()` |
+| 10 | Runtime telemetry: latency, model calls, tokens, estimated cost | **done**, stamped on every insight |
 
 ## Method split, LLM versus not
 

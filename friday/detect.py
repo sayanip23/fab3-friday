@@ -1,160 +1,240 @@
-"""Lane A — materiality detection.
+"""
+Phase 2. Materiality detection and prioritisation.
 
-Decides whether a KPI movement is worth anyone's attention at all, using
-the method the contract specifies (robust_z_score) rather than a hardcoded
-threshold. This module never sees the planted scenario — it only sees raw
-sales_transactions and the contract, and has to notice the West net_revenue
-drop on its own.
+Answers Round 2 objective 1: "Detects and prioritises material KPI movements."
+
+A movement is material only when it clears BOTH gates declared in the contract:
+
+  statistical  the change is unusual against this slice's own history
+  business     the change is large enough that somebody should act
+
+The contract sets require_both: true, matching the brief's insistence that
+materiality rests on "both statistical significance and business impact".
+
+Method: robust z score. Median and MAD, not mean and standard deviation, because a
+handful of past shocks would otherwise inflate the baseline and hide real movements.
+Deterministic. No LLM.
 """
 from __future__ import annotations
 
-import dataclasses
+from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 import numpy as np
 import pandas as pd
 
-from friday.contracts import Contract
+from .contracts import Contract
+from .kpi import Filters, Period, Warehouse
+
+MAD_TO_SIGMA = 1.4826
 
 
-@dataclasses.dataclass(frozen=True)
-class MaterialityResult:
+@dataclass
+class Movement:
     kpi: str
-    grain_key: dict          # e.g. {"region": "West"}
-    baseline_median: float
-    baseline_mad: float
-    current_value: float
-    comparison_value: float
+    label: str
+    filters: dict
+    current: float
+    prior: float
+    delta: float
+    pct: float
+    unit: str
+
     z_score: float
-    pct_change: float | None
-    abs_change: float
-    is_statistically_material: bool
-    is_business_material: bool
-    is_material: bool         # both statistical AND business thresholds, per contract
-    reason: str
+    baseline_median_pct: float
+    baseline_n: int
+
+    statistical_pass: bool
+    business_pass: bool
+    material: bool
+
+    sparse: bool
+    history_days: int
+    min_history_days: int
+    confidence_cap: str | None
+
+    priority: float = 0.0
+    notes: list[str] = field(default_factory=list)
+
+    @property
+    def slice_label(self) -> str:
+        if not self.filters:
+            return "all"
+        return ", ".join(f"{k}={v}" for k, v in self.filters.items())
+
+    def summary(self) -> str:
+        arrow = "down" if self.delta < 0 else "up"
+        return (f"{self.label} [{self.slice_label}] {arrow} {abs(self.pct):.1f}% "
+                f"({self.delta:+,.0f} {self.unit})")
 
 
-def _robust_z(value: float, baseline: np.ndarray) -> tuple[float, float, float]:
-    """Median/MAD-based z-score — robust to the outliers a plain mean/std
-    would let a single freak day distort."""
-    median = float(np.median(baseline))
-    mad = float(np.median(np.abs(baseline - median)))
-    # 1.4826 makes MAD a consistent estimator of std under normality.
-    scaled_mad = mad * 1.4826
-    if scaled_mad == 0:
-        z = 0.0 if value == median else np.inf
+def _robust_z(current: float, history: np.ndarray) -> tuple[float, float, int]:
+    """Robust z of `current` against a history of comparable period changes."""
+    clean = history[np.isfinite(history)]
+    if len(clean) < 8:
+        return float("nan"), float("nan"), len(clean)
+    med = float(np.median(clean))
+    mad = float(np.median(np.abs(clean - med)))
+    sigma = mad * MAD_TO_SIGMA
+    if sigma <= 1e-12:
+        sigma = float(np.std(clean)) or 1e-12
+    return (current - med) / sigma, med, len(clean)
+
+
+def _baseline_changes(wh: Warehouse, kpi: str, period: Period, filters: Filters,
+                      window_days: int) -> np.ndarray:
+    """
+    Distribution of historical period over period percentage changes for this slice.
+
+    We roll the same comparison the user is making (N days against the preceding N
+    days) backwards through history, so the current movement is judged against
+    like for like rather than against daily noise.
+    """
+    hist_end = period.start - timedelta(days=1)
+    hist_start = hist_end - timedelta(days=window_days + 2 * period.days)
+
+    series, grain = wh.series(kpi, hist_start, hist_end, filters)
+    # compare like for like: the same span the user is comparing, in the KPI's own grain
+    n = max(1, period.days // 7) if grain == "weekly" else period.days
+
+    if series.empty or len(series) < 2 * n + 4:
+        return np.array([])
+
+    ratio_kpis = {"avg_selling_price", "gross_margin_pct", "marketing_efficiency"}
+    if kpi in ratio_kpis:
+        block = series.rolling(n, min_periods=max(3, n // 2)).mean()
     else:
-        z = (value - median) / scaled_mad
-    return z, median, mad
+        block = series.rolling(n, min_periods=max(3, n // 2)).sum()
+
+    cur = block.iloc[n:].to_numpy(dtype=float)
+    pre = block.iloc[:-n].to_numpy(dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        pct = 100.0 * (cur - pre) / np.where(pre == 0, np.nan, pre)
+    return pct[np.isfinite(pct)]
 
 
-def _daily_series(sales: pd.DataFrame, region: str) -> pd.Series:
-    df = sales[sales["region"] == region].copy()
-    df["date"] = pd.to_datetime(df["date"])
-    df["revenue"] = df["units"] * df["unit_price"]
-    return df.groupby("date")["revenue"].sum()
+def evaluate(wh: Warehouse, kpi: str, period: Period,
+             filters: Filters = None, threshold_multiplier: float = 1.0) -> Movement:
+    """
+    Evaluate one KPI on one slice against the contract's materiality gates.
 
+    `threshold_multiplier` carries the learned nudge from the feedback store, so a
+    slice an analyst has repeatedly marked immaterial gets a higher bar. Default 1.0
+    leaves contract behaviour untouched.
+    """
+    c: Contract = wh.c
+    spec = c.kpis[kpi]
+    stat_cfg, biz_cfg, require_both = spec.thresholds()
 
-def _rolling_window_sums(daily: pd.Series, window_days: int, start: pd.Timestamp,
-                          end: pd.Timestamp) -> np.ndarray:
-    """Every overlapping `window_days`-day sum with an end date in
-    [start, end] — the distribution of 'what a typical N-day total looks
-    like' that the current period gets compared against."""
-    idx = pd.date_range(daily.index.min(), daily.index.max(), freq="D")
-    full = daily.reindex(idx, fill_value=0.0)
-    sums = full.rolling(window_days).sum()
-    return sums[(sums.index >= start) & (sums.index <= end)].dropna().to_numpy()
+    prior_period = period.shifted(period.days)
+    cur = wh.value(kpi, period, filters)
+    pri = wh.value(kpi, prior_period, filters)
 
+    delta = cur - pri
+    pct = 100.0 * delta / pri if pri not in (0, None) and np.isfinite(pri) else float("nan")
 
-def detect_region_revenue_movement(sales: pd.DataFrame, contract: Contract, region: str,
-                                    comparison_period: tuple[pd.Timestamp, pd.Timestamp],
-                                    current_period: tuple[pd.Timestamp, pd.Timestamp]) -> MaterialityResult:
-    """Materiality check for net_revenue in one region, current vs
-    comparison window, against a rolling 90-day baseline distribution."""
-    kpi = contract.get_kpi("net_revenue")
-    window_days = (current_period[1] - current_period[0]).days + 1
-    baseline_days = kpi.materiality["baseline_window_days"]
-    threshold_z = kpi.materiality["threshold_z"]
-    min_impact = kpi.materiality.get("min_business_impact_inr", 0)
+    window = stat_cfg.get("baseline_window_days", 90)
+    if stat_cfg.get("baseline_unit") == "weeks":
+        window *= 7
+    hist = _baseline_changes(wh, kpi, period, filters, window)
+    z, med, n_obs = _robust_z(pct, hist)
 
-    daily = _daily_series(sales, region)
+    # sparse history policy, straight from the contract
+    hist_days = wh.history_days(kpi, filters)
+    min_days = spec.min_history_days
+    sparse = hist_days < min_days
+    cap = None
+    notes: list[str] = []
+    if sparse:
+        policy = c.sparse_policy
+        cap = next((a["cap_confidence_at"] for a in policy["actions"]
+                    if "cap_confidence_at" in a), "low")
+        notes.append(policy["disclaimer"].strip().format(
+            observed_history_days=hist_days, min_history_days=min_days))
 
-    baseline_end = comparison_period[0] - pd.Timedelta(days=1)
-    baseline_start = baseline_end - pd.Timedelta(days=baseline_days - 1)
-    baseline = _rolling_window_sums(daily, window_days, baseline_start, baseline_end)
+    stat_threshold = stat_cfg.get("threshold", 3.0) * threshold_multiplier
+    if abs(threshold_multiplier - 1.0) > 1e-9:
+        notes.append(f"threshold adjusted x{threshold_multiplier:.2f} by analyst feedback")
+    if sparse:
+        widen = next((a["widen_prediction_interval_by"] for a in c.sparse_policy["actions"]
+                      if "widen_prediction_interval_by" in a), 1.0)
+        stat_threshold *= widen
+        notes.append(f"statistical threshold widened to {stat_threshold:.1f} "
+                     f"by the sparse history policy")
 
-    comparison_value = float(daily[(daily.index >= comparison_period[0])
-                                    & (daily.index <= comparison_period[1])].sum())
-    current_value = float(daily[(daily.index >= current_period[0])
-                                 & (daily.index <= current_period[1])].sum())
+    statistical_pass = bool(np.isfinite(z) and abs(z) >= stat_threshold)
+    business_pass = bool(
+        abs(delta) >= biz_cfg.get("min_abs_change", 0)
+        and np.isfinite(pct) and abs(pct) >= biz_cfg.get("min_pct_change", 0)
+    )
 
-    if len(baseline) < 5:
-        # Not enough history to judge — abstain rather than guess, per the
-        # sparse_history policy.
-        z = float("nan")
-        stat_material = False
-        reason = f"only {len(baseline)} baseline windows available (<5); insufficient history to judge materiality"
-        median = mad = float("nan")
-    else:
-        z, median, mad = _robust_z(current_value, baseline)
-        stat_material = abs(z) >= threshold_z
-        reason = f"z={z:.2f} vs threshold {threshold_z}"
+    material = (statistical_pass and business_pass) if require_both \
+        else (statistical_pass or business_pass)
 
-    abs_change = current_value - comparison_value
-    pct_change = (abs_change / comparison_value * 100) if comparison_value else None
-    business_material = abs(abs_change) >= min_impact
+    if not np.isfinite(z):
+        notes.append(f"insufficient baseline: only {n_obs} comparable periods")
 
-    return MaterialityResult(
-        kpi="net_revenue",
-        grain_key={"region": region},
-        baseline_median=median,
-        baseline_mad=mad,
-        current_value=current_value,
-        comparison_value=comparison_value,
-        z_score=z,
-        pct_change=pct_change,
-        abs_change=abs_change,
-        is_statistically_material=stat_material,
-        is_business_material=business_material,
-        is_material=bool(stat_material and business_material),
-        reason=reason,
+    return Movement(
+        kpi=kpi, label=spec.label, filters=dict(filters or {}),
+        current=cur, prior=pri, delta=delta, pct=pct, unit=spec.unit,
+        z_score=z, baseline_median_pct=med, baseline_n=n_obs,
+        statistical_pass=statistical_pass, business_pass=business_pass,
+        material=material, sparse=sparse, history_days=hist_days,
+        min_history_days=min_days, confidence_cap=cap, notes=notes,
     )
 
 
-def detect_all_regions(sales: pd.DataFrame, contract: Contract,
-                        comparison_period: tuple[pd.Timestamp, pd.Timestamp],
-                        current_period: tuple[pd.Timestamp, pd.Timestamp]) -> list[MaterialityResult]:
-    """Scan every region and return only material movements, ranked by
-    absolute rupee impact — this is the triage step: most enterprise
-    dashboards fire far more alerts than are worth a human's attention."""
-    results = [
-        detect_region_revenue_movement(sales, contract, region, comparison_period, current_period)
-        for region in contract.business["regions"]
-    ]
-    return sorted(results, key=lambda r: abs(r.abs_change), reverse=True)
+def scan(wh: Warehouse, period: Period, role: str,
+         dimension: str = "region") -> list[Movement]:
+    """
+    Sweep every KPI the role may see, across every value of one dimension plus the
+    unfiltered total, and return material movements ordered by priority.
+
+    Prioritisation is by absolute business impact, normalised per KPI so that a
+    revenue movement in rupees and a margin movement in points can be ranked
+    against each other.
+    """
+    c = wh.c
+    found: list[Movement] = []
+    values = c.dimensions[dimension]["values"]
+
+    for kpi in c.visible_kpis(role):
+        row_filter = c.row_filter(kpi, role)
+        scope = values
+        if row_filter == "own_region" and dimension == "region":
+            scope = [c.roles[role]["region_scope"]]
+
+        candidates: list[Filters] = [None] + [{dimension: v} for v in scope]
+        for filters in candidates:
+            if row_filter == "own_region" and filters is None:
+                continue                      # role may not see the national total
+            m = evaluate(wh, kpi, period, filters)
+            if m.material:
+                found.append(m)
+
+    for m in found:
+        biz = c.kpis[m.kpi].spec["materiality"]["business"]
+        floor = max(biz.get("min_abs_change", 1), 1e-9)
+        impact = abs(m.delta) / floor
+        certainty = min(abs(m.z_score) / 3.0, 3.0) if np.isfinite(m.z_score) else 0.5
+        m.priority = round(float(impact * certainty), 3)
+
+    found.sort(key=lambda m: m.priority, reverse=True)
+    return found
 
 
-@dataclasses.dataclass(frozen=True)
-class HistorySufficiencyResult:
-    product_line: str
-    history_days: int
-    min_required_days: int
-    is_sufficient: bool
-    reason: str
-
-
-def check_history_sufficiency(sales: pd.DataFrame, contract: Contract, product_line: str,
-                               as_of: pd.Timestamp) -> HistorySufficiencyResult:
-    """Sparse-history guard, per contracts/kpis.yaml policies.sparse_history.
-    A product with too little history gets flagged rather than fed into
-    materiality/trend logic that assumes a stable baseline exists."""
-    min_days = contract.policies["sparse_history"]["min_history_days"]
-    rows = sales[sales["product_line"] == product_line]
-    if len(rows) == 0:
-        return HistorySufficiencyResult(product_line, 0, min_days, False, "no sales rows found at all")
-
-    first_date = pd.to_datetime(rows["date"]).min()
-    history_days = int((as_of - first_date).days) + 1
-    sufficient = history_days >= min_days
-    reason = (f"{history_days} days of history since first sale on {first_date.date()} "
-              f"(policy requires >= {min_days})")
-    return HistorySufficiencyResult(product_line, history_days, min_days, sufficient, reason)
+def dedupe_overlapping(movements: list[Movement]) -> list[Movement]:
+    """
+    Drop a national total when a single region already explains most of it, so the
+    user is not alerted twice about the same underlying event.
+    """
+    keep: list[Movement] = []
+    for m in movements:
+        if m.filters:
+            keep.append(m)
+            continue
+        same_kpi = [o for o in movements if o.kpi == m.kpi and o.filters]
+        if same_kpi and max(abs(o.delta) for o in same_kpi) >= 0.7 * abs(m.delta):
+            continue
+        keep.append(m)
+    return keep

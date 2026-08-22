@@ -1,132 +1,218 @@
-"""Lane B — evidence retrieval.
+"""
+Lane B. Evidence retrieval.
 
-Retrieval, not generation: given a claim to support (an account, a region,
-a time window), find the service_events text that's actually relevant, and
-attach freshness and a similarity score to every result so the narrative
-layer can cite *why* it trusts a piece of evidence, not just assert it.
+Answers the brief's requirement for narratives "supported by traceable evidence",
+and supplies the freshness, method and lineage fields of minimum expectation 8.
 
-Method: TF-IDF + cosine similarity rather than a neural embedding model.
-This is a deliberate, stated scope choice (see ASSUMPTIONS.md) — it needs
-no downloaded model and no network call, so the retrieval step is fast,
-fully reproducible, and doesn't add a multi-GB dependency to a hackathon
-judge's machine. Swapping in sentence-transformers or a hosted embedding
-endpoint is a drop-in replacement for `EvidenceIndex.search` if the team
-wants denser semantic matching later.
+Ranking is BM25, implemented here rather than pulled in, for three reasons: it needs
+no model download so the prototype runs offline and reproducibly, it is fully
+explainable to a sceptical stakeholder, and its scores are stable across runs so a
+citation shown in the video is the citation a judge gets when they run it. Swapping
+in embeddings later means replacing `_score` and nothing else.
+
+Note the division of labour with `causal.gather_evidence`. That function screens, so
+it wants recall across a driver's whole vocabulary and returns everything matching.
+This module cites, so it wants precision and returns the best few passages. Different
+jobs, different tools.
 """
 from __future__ import annotations
 
-import dataclasses
-
-import numpy as np
-import pandas as pd
+import math
 import re
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import date, timedelta
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from .kpi import Filters, Period, Warehouse
 
+TOKEN = re.compile(r"[a-z0-9]+")
+K1, B = 1.5, 0.75
 
-def _light_stem_tokenizer(text: str) -> list[str]:
-    """Crude suffix-stripping so 'supplier'/'suppliers', 'complaint'/
-    'complaints' etc. match as the same token, without pulling in a full
-    stemming dependency. Good enough for short operational text; a real
-    embedding model would do this more robustly (see module docstring)."""
-    tokens = re.findall(r"[a-zA-Z]+", text.lower())
-    stemmed = []
-    for t in tokens:
-        if len(t) > 4 and t.endswith("ies"):
-            t = t[:-3] + "y"
-        elif len(t) > 4 and t.endswith("es"):
-            t = t[:-2]
-        elif len(t) > 4 and t.endswith("s") and not t.endswith("ss"):
-            t = t[:-1]
-        stemmed.append(t)
-    return stemmed
+STOPWORDS = {
+    "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "is", "was",
+    "we", "our", "us", "this", "that", "it", "has", "have", "been", "with",
+    "at", "as", "be", "are", "not", "but", "from", "by",
+}
 
 
-@dataclasses.dataclass(frozen=True)
-class EvidenceRecord:
+def tokenize(text: str) -> list[str]:
+    return [t for t in TOKEN.findall(str(text).lower()) if t not in STOPWORDS]
+
+
+@dataclass
+class Passage:
+    """One citable piece of evidence, carrying everything a reader needs to check it."""
     event_id: str
-    timestamp: pd.Timestamp
-    region: str | None
-    account_id: str | None
-    account_name: str | None
-    event_type: str
+    source: str
+    when: date
+    kind: str
+    account: str
+    region: str
     text: str
-    relevance_score: float
+    score: float
     freshness_hours: float
-    method: str = "tfidf_cosine_similarity"
+    method: str = "bm25"
+
+    @property
+    def age_days(self) -> int:
+        return (date(2026, 8, 20) - self.when).days
+
+    def cite(self, max_len: int = 150) -> str:
+        t = self.text if len(self.text) <= max_len else self.text[: max_len - 1] + "…"
+        return f'[{self.source} · {self.when} · {self.kind}] "{t}"'
+
+    def provenance(self) -> dict:
+        """The lineage stamp required by minimum expectation 8."""
+        return {
+            "event_id": self.event_id,
+            "source": self.source,
+            "date": self.when.isoformat(),
+            "age_days": self.age_days,
+            "source_lag_hours": self.freshness_hours,
+            "retrieval_method": self.method,
+            "relevance_score": round(self.score, 3),
+        }
 
 
-class EvidenceIndex:
-    """A fitted TF-IDF index over one service_events table. Build once,
-    search many times — rebuilding per query would be wasteful and would
-    make freshness/relevance non-comparable across calls."""
+@dataclass
+class Index:
+    """BM25 over the free text source. Built once, queried many times."""
+    docs: list[dict] = field(default_factory=list)
+    _df: Counter = field(default_factory=Counter)
+    _tokens: list[list[str]] = field(default_factory=list)
+    _avg_len: float = 0.0
 
-    def __init__(self, events: pd.DataFrame):
-        self.events = events.reset_index(drop=True).copy()
-        self.events["timestamp"] = pd.to_datetime(self.events["timestamp"])
-        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-        stemmed_stop_words = {_light_stem_tokenizer(w)[0] for w in ENGLISH_STOP_WORDS if _light_stem_tokenizer(w)}
-        self.vectorizer = TfidfVectorizer(tokenizer=_light_stem_tokenizer, stop_words=list(stemmed_stop_words),
-                                          min_df=1, token_pattern=None)
-        self.matrix = self.vectorizer.fit_transform(self.events["text"].fillna(""))
+    @classmethod
+    def build(cls, wh: Warehouse) -> "Index":
+        spec = wh.c.sources["service_events"]
+        if spec.get("role") != "evidence_only":
+            raise ValueError("service_events must be declared evidence_only")
 
-    def search(self, query: str, as_of: pd.Timestamp, top_k: int = 5,
-               account_name: str | None = None, region: str | None = None,
-               event_types: list[str] | None = None,
-               max_age_days: int | None = None) -> list[EvidenceRecord]:
-        """Rank service_events by text relevance to `query`, after applying
-        structural filters (account/region/type/recency) — filter first,
-        then rank, so a highly-relevant record about the wrong account
-        can't leak into someone else's evidence trail.
+        df = wh.frame("service_events")
+        idx = cls()
+        for _, r in df.iterrows():
+            idx.docs.append({
+                "event_id": r["event_id"], "when": r["_d"], "kind": r["kind"],
+                "account": r["account_name"], "region": r["region"],
+                "text": r["text"], "lag": spec["expected_lag_hours"],
+            })
+            toks = tokenize(r["text"])
+            idx._tokens.append(toks)
+            idx._df.update(set(toks))
+
+        n = len(idx._tokens)
+        idx._avg_len = sum(len(t) for t in idx._tokens) / n if n else 0.0
+        return idx
+
+    def _idf(self, term: str) -> float:
+        n = len(self._tokens)
+        df = self._df.get(term, 0)
+        return math.log(1 + (n - df + 0.5) / (df + 0.5))
+
+    def _score(self, query: list[str], i: int) -> float:
+        toks = self._tokens[i]
+        if not toks:
+            return 0.0
+        tf = Counter(toks)
+        norm = 1 - B + B * (len(toks) / self._avg_len) if self._avg_len else 1.0
+        return sum(self._idf(q) * (tf[q] * (K1 + 1)) / (tf[q] + K1 * norm)
+                   for q in query if tf[q])
+
+    def search(self, query: str, period: Period, filters: Filters = None,
+               lookback_days: int = 90, top_k: int = 3,
+               recency_halflife_days: float = 45.0) -> list[Passage]:
         """
-        mask = pd.Series(True, index=self.events.index)
-        if account_name is not None:
-            mask &= self.events["account_name"] == account_name
-        if region is not None:
-            mask &= self.events["region"] == region
-        if event_types is not None:
-            mask &= self.events["event_type"].isin(event_types)
-        mask &= self.events["timestamp"] <= as_of
-        if max_age_days is not None:
-            mask &= self.events["timestamp"] >= (as_of - pd.Timedelta(days=max_age_days))
+        Best passages for a query, within the window and the caller's slice.
 
-        candidates = self.events[mask]
-        if len(candidates) == 0:
+        Score is BM25 with a gentle recency decay. Without the decay an eloquent
+        complaint from last year outranks the terse one from last week that actually
+        explains the movement.
+        """
+        q = tokenize(query)
+        if not q:
             return []
 
-        query_vec = self.vectorizer.transform([query])
-        cand_matrix = self.matrix[candidates.index]
-        sims = cosine_similarity(query_vec, cand_matrix).ravel()
+        lo = period.start - timedelta(days=lookback_days)
+        hits: list[Passage] = []
 
-        # Rank by (relevance, recency) and drop exact-duplicate text before
-        # truncating to top_k — otherwise a handful of boilerplate
-        # complaint templates can occupy the entire result set and crowd
-        # out a single, more informative record like a CRM note.
-        ranked_positions = sorted(
-            range(len(sims)),
-            key=lambda i: (sims[i], candidates.iloc[i]["timestamp"]),
-            reverse=True,
-        )
-        results = []
-        seen_text = set()
-        for pos in ranked_positions:
-            row = candidates.iloc[pos]
-            if row["text"] in seen_text:
+        for i, d in enumerate(self.docs):
+            if not (lo <= d["when"] <= period.end):
                 continue
-            seen_text.add(row["text"])
-            age_hours = (as_of - row["timestamp"]).total_seconds() / 3600
-            results.append(EvidenceRecord(
-                event_id=row["event_id"],
-                timestamp=row["timestamp"],
-                region=row.get("region"),
-                account_id=row.get("account_id"),
-                account_name=row.get("account_name"),
-                event_type=row["event_type"],
-                text=row["text"],
-                relevance_score=round(float(sims[pos]), 4),
-                freshness_hours=round(float(age_hours), 1),
+            if filters:
+                if filters.get("region") and d["region"] != filters["region"]:
+                    continue
+                if filters.get("account_name") and d["account"] != filters["account_name"]:
+                    continue
+
+            raw = self._score(q, i)
+            if raw <= 0:
+                continue
+            age = (period.end - d["when"]).days
+            decayed = raw * (0.5 ** (age / recency_halflife_days))
+
+            hits.append(Passage(
+                event_id=d["event_id"], source="service_events", when=d["when"],
+                kind=d["kind"], account=d["account"], region=d["region"],
+                text=d["text"], score=decayed, freshness_hours=d["lag"],
             ))
-            if len(results) >= top_k:
-                break
-        return results
+
+        hits.sort(key=lambda p: (-p.score, p.when))
+        return _diversify(hits, top_k)
+
+
+def _diversify(hits: list[Passage], top_k: int) -> list[Passage]:
+    """
+    Prefer distinct kinds and dates.
+
+    The generated corpus repeats phrasings, and unfiltered BM25 will happily return
+    the same sentence three times from three tickets. Three identical citations look
+    like three pieces of evidence and are one.
+    """
+    out: list[Passage] = []
+    seen_kind: Counter = Counter()
+    seen_text: set[str] = set()
+
+    for p in hits:
+        sig = " ".join(tokenize(p.text)[:8])
+        if sig in seen_text:
+            continue
+        if seen_kind[p.kind] >= 2:
+            continue
+        out.append(p)
+        seen_text.add(sig)
+        seen_kind[p.kind] += 1
+        if len(out) >= top_k:
+            break
+    return out
+
+
+# queries per driver, kept declarative so they read as configuration
+DRIVER_QUERIES = {
+    "delivery_reliability": "late delivery delayed not arrived escalate consignment slipped",
+    "volume": "evaluating alternative suppliers renewal at risk unhappy reliability",
+    "price": "invoice rate correction discount price",
+    "quality": "damaged torn packaging replacement",
+}
+
+
+def for_driver(index: Index, driver: str, period: Period,
+               filters: Filters = None, top_k: int = 3) -> list[Passage]:
+    q = DRIVER_QUERIES.get(driver)
+    return index.search(q, period, filters, top_k=top_k) if q else []
+
+
+def freshness_report(wh: Warehouse, sources: list[str]) -> list[dict]:
+    """Per source freshness, so a narrative can disclose what it was working from."""
+    out = []
+    for name in sources:
+        spec = wh.c.sources[name]
+        lag = spec["expected_lag_hours"]
+        warn = spec.get("staleness_warning_hours", float("inf"))
+        out.append({
+            "source": name,
+            "cadence": spec["refresh_cadence"],
+            "lag_hours": lag,
+            "stale": lag > warn,
+            "grain": spec["grain"],
+        })
+    return out

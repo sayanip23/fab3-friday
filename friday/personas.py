@@ -1,111 +1,340 @@
-"""Lane B — personas and abstention.
+"""
+Lane B. Persona specific insight assembly.
 
-The same movement, the same underlying numbers, but a different narrative
-and different recommended action per role — and for roles with no decision
-rights, no recommended action at all. This module never sees raw rows: it
-takes the already-computed materiality/attribution/causal results and
-applies entitlement + framing on top of them.
+Answers Round 2 objectives 4 and 6, and minimum expectation 3: the same KPI movement
+must produce different narratives and different recommended actions for different
+people, each supported by traceable evidence.
+
+The differences are not cosmetic rewording. Three things genuinely change:
+
+  what they may see      entitlement filters the facts before a sentence is written
+  what they care about   the lever a role owns determines which driver leads
+  what they may do       an action is only offered to someone holding the right
+
+An analyst with no decision rights therefore receives no actions at all, which is the
+correct behaviour and not an omission.
 """
 from __future__ import annotations
 
-import dataclasses
+from dataclasses import dataclass, field
+from datetime import date
 
-from friday.attribute import AttributionResult
-from friday.causal import CausalScreenResult
-from friday.contracts import Contract, resolve_entitlement
-from friday.detect import MaterialityResult
+from . import narrate
+from .access import Principal, pseudonymise
+from .attribute import Decomposition
+from .causal import Assessment, Verdict
+from .detect import Movement
+from .evidence import Passage
+from .kpi import Period, Warehouse
 
-# Persona-specific framing. What each role is told to care about, and what
-# action language is appropriate for their decision rights — pulled from
-# the contract's role.decision_rights, not hardcoded per persona here.
-PERSONA_FOCUS = {
-    "regional_sales_director": "account retention and service recovery in your own region",
-    "cfo": "margin erosion and the ROI of any pricing action",
-    "junior_analyst": "producing an accurate, properly-sourced weekly summary",
-}
+# an association below this share of the movement earns no action at all
+ASSOCIATION_FLOOR = 0.15
+
+CONFIDENCE_ORDER = ["none", "low", "medium", "high"]
 
 
-@dataclasses.dataclass(frozen=True)
-class PersonaView:
+def _downgrade(level: str) -> str:
+    i = CONFIDENCE_ORDER.index(level) if level in CONFIDENCE_ORDER else 0
+    return CONFIDENCE_ORDER[max(i - 1, 0)]
+
+
+@dataclass
+class Action:
+    """The brief's action schema, filled exactly."""
+    driver: str
+    controllable_lever: str
+    action: str
+    expected_impact: str
+    owner: str
+    confidence: str
+    monitoring_plan: str
+
+    def as_dict(self) -> dict:
+        return {
+            "driver": self.driver,
+            "controllable_lever": self.controllable_lever,
+            "action": self.action,
+            "expected_impact": self.expected_impact,
+            "owner": self.owner,
+            "confidence": self.confidence,
+            "monitoring_plan": self.monitoring_plan,
+        }
+
+    def line(self) -> str:
+        return (f"{self.driver} -> {self.controllable_lever} -> {self.action} "
+                f"-> {self.expected_impact} -> {self.owner} -> {self.confidence} "
+                f"-> {self.monitoring_plan}")
+
+
+@dataclass
+class Insight:
+    persona: str
     role: str
-    region_label: str
     headline: str
-    can_recommend_action: bool
-    recommended_action: str | None
+    narrative: narrate.Rendered
+    actions: list[Action]
+    evidence: list[Passage]
     confidence: str
     abstained: bool
-    abstain_reason: str | None
-    masked_fields: list[str]
-    focus: str
+    abstain_reasons: list[str] = field(default_factory=list)
+    next_check: str | None = None
+    facts: narrate.FactPack | None = None
+    masked: bool = False
+
+    def render(self) -> str:
+        out = [self.headline, "", self.narrative.text]
+        if self.abstained:
+            out += ["", "Not asserting a cause. " + "; ".join(self.abstain_reasons)]
+            if self.next_check:
+                out += [f"Check that would settle it: {self.next_check}"]
+        if self.actions:
+            out += ["", "Recommended actions:"]
+            out += [f"  {i+1}. {a.action}  (owner: {a.owner}, "
+                    f"confidence: {a.confidence})" for i, a in enumerate(self.actions)]
+        elif not self.abstained:
+            out += ["", "No actions offered: this role holds no decision rights."]
+        if self.evidence:
+            out += ["", "Evidence:"]
+            out += [f"  - {p.cite(120)}" for p in self.evidence]
+        return "\n".join(out)
 
 
-def build_persona_view(contract: Contract, role_name: str,
-                        materiality: MaterialityResult,
-                        attribution: AttributionResult,
-                        causal: CausalScreenResult | None,
-                        home_region: str | None = None) -> PersonaView:
-    """Build one persona's view of a single material movement.
-
-    If `causal` is None or did not pass, this abstains rather than naming a
-    cause — the persona layer is not allowed to be more confident than the
-    causal screen was.
+# ------------------------------------------------------------------ fact pack
+def build_facts(wh: Warehouse, principal: Principal, movement: Movement,
+                pvm: Decomposition, by_account: Decomposition,
+                assessment: Assessment, period: Period) -> narrate.FactPack:
     """
-    role = contract.get_role(role_name)
-    region = materiality.grain_key.get("region", "unknown")
+    Every number the narrative may state, each stamped with what produced it.
 
-    row = {"region": region, "account_name": attribution.dominant_segment.segment if attribution.dominant_segment else None,
-           "_role_home_region": home_region}
-    try:
-        masked_row = resolve_entitlement(contract, role_name, "net_revenue", row)
-        access_denied = False
-    except Exception:
-        masked_row = None
-        access_denied = True
+    Nothing enters this pack that was not computed by a deterministic stage.
+    """
+    pack = narrate.FactPack()
+    unit = movement.unit
 
-    if access_denied:
-        return PersonaView(
-            role=role_name, region_label=region,
-            headline=f"No access: {role_name} is not entitled to {region} data.",
-            can_recommend_action=False, recommended_action=None,
-            confidence="n/a", abstained=True,
-            abstain_reason="row-level access denied by contract", masked_fields=role.masked_fields,
-            focus=PERSONA_FOCUS.get(role_name, ""),
-        )
+    def q(v: float) -> str:
+        """Ratio KPIs live near 1, so ',.0f' destroys them: -1.63 becomes '-2'."""
+        if v != v:
+            return "n/a"
+        return f"{v:+,.2f}" if abs(v) < 1000 else f"{v:+,.0f}"
+    masks = "account_name" in principal.contract.masked_columns(movement.kpi, principal.role)
 
-    account_label = masked_row.get("account_name") if masked_row else None
-    pct = materiality.pct_change
-    abs_change = materiality.abs_change
+    pack.add("kpi", movement.label, movement.label, provenance="contract")
+    pack.add("slice", movement.slice_label, movement.slice_label, provenance="contract")
+    pack.add("period", str(period), str(period), provenance="request")
+    pack.add("current_value", movement.current, f"{q(movement.current).lstrip(chr(43))} {unit}",
+             unit, "kpi.value, deterministic sql")
+    pack.add("prior_value", movement.prior, f"{q(movement.prior).lstrip(chr(43))} {unit}",
+             unit, "kpi.value, deterministic sql")
+    pack.add("change_abs", movement.delta, f"{q(movement.delta)} {unit}",
+             unit, "kpi.value, deterministic sql")
+    pack.add("change_pct", movement.pct, f"{movement.pct:+.1f}%", "percent",
+             "kpi.value, deterministic sql")
+    pack.add("z_score", movement.z_score, f"{movement.z_score:.2f}", "sigma",
+             "detect.evaluate, robust z score")
+    pack.add("normal_swing", movement.baseline_median_pct,
+             f"{abs(movement.baseline_median_pct):.1f}%", "percent",
+             "detect, 90 day baseline median")
 
-    causal_ok = causal is not None and causal.passed
-    if not causal_ok:
-        reason = causal.reason if causal is not None else "no causal screen was run for this segment"
-        return PersonaView(
-            role=role_name, region_label=region,
-            headline=(f"{region} net_revenue moved {pct:.1f}% ({abs_change:,.0f} INR). "
-                      f"FRIDAY cannot confirm a specific cause with the evidence available."),
-            can_recommend_action=False, recommended_action=None,
-            confidence="abstain", abstained=True, abstain_reason=reason,
-            masked_fields=role.masked_fields, focus=PERSONA_FOCUS.get(role_name, ""),
-        )
+    for eff in pvm.effects:
+        key = f"{eff.driver}_effect"
+        pack.add(key, eff.value, f"{q(eff.value)} {unit}", unit,
+                 "attribute.price_volume_mix, deterministic arithmetic")
+        pack.add(f"{eff.driver}_share", abs(eff.share), f"{abs(eff.share):.0%}",
+                 "percent", "attribute.price_volume_mix")
 
-    headline = (f"{region} net_revenue is down {abs(pct):.1f}% ({abs_change:,.0f} INR), "
-                f"driven primarily by {account_label or 'a single account'} "
-                f"({attribution.dominant_segment.contribution_share:.0%} of the change).")
+    top = by_account.top(1)
+    if top:
+        name = pseudonymise(top[0].name) if masks else top[0].name
+        pack.add("top_account", name, name, provenance="attribute.by_dimension")
+        pack.add("top_account_effect", top[0].value, f"{top[0].value:+,.0f} {unit}",
+                 unit, "attribute.by_dimension, deterministic arithmetic")
 
-    can_act = len(role.decision_rights) > 0
-    action = None
-    if can_act:
-        if role_name == "regional_sales_director":
-            action = f"Contact {account_label} before their next renewal window; audit delivery performance on the current logistics route."
-        elif role_name == "cfo":
-            action = ("Review the West Aurora discount's margin impact and the mix shift toward Vertex; "
-                      "decide whether to continue, adjust, or withdraw the pricing action.")
+    for v in assessment.causes:
+        if v.kind == "evidential":
+            pack.add("root_cause", v.driver, v.driver.replace("_", " "),
+                     provenance="causal.screen, three gate test")
+            pack.add("root_cause_strength", v.strength, f"{v.strength:.1f} times",
+                     "ratio", "causal.evidence_rate_ratio, changepoint anchored")
+            if v.first_evidence:
+                pack.add("root_cause_from", v.first_evidence,
+                         v.first_evidence.isoformat(),
+                         provenance="causal.driver_change_point")
+    if assessment.verdicts and assessment.verdicts[0].onset:
+        pack.add("onset", assessment.verdicts[0].onset,
+                 assessment.verdicts[0].onset.isoformat(),
+                 provenance="causal.movement_onset")
+
+    pack.add("confidence", assessment.confidence, assessment.confidence,
+             provenance="causal, calibrated")
+    return pack
+
+
+# -------------------------------------------------------------------- actions
+def build_actions(principal: Principal, assessment: Assessment,
+                  pack: narrate.FactPack, movement: Movement,
+                  pvm: Decomposition) -> list[Action]:
+    """
+    One action per controllable cause, owned by whoever holds the matching right.
+
+    Two rules from the contract are enforced here rather than assumed: a driver that
+    is not controllable gets no action, and an action is withheld from a principal
+    who does not hold the right it requires.
+    """
+    c = principal.contract
+    schema = c.action_schema
+    rights = schema.get("lever_rights", {})
+    phrasing = schema.get("lever_actions", {})
+    out: list[Action] = []
+
+    if assessment.abstain:
+        return out
+
+    region = movement.filters.get("region", "the affected region")
+    top_segment = max(pvm.effects, key=lambda e: abs(e.value)).name if pvm.effects else "affected"
+
+    # Causes first, then material associations.
+    #
+    # Restricting actions to causes alone looks rigorous but fails the person it
+    # matters to. Price here accounts for 18% of the movement and is the only lever
+    # the CFO owns; screening it out because it missed the 35% causal bar leaves the
+    # one person able to act on discounting with nothing to do. So an association
+    # above the floor still earns an action, at reduced confidence and framed as a
+    # review rather than a fix.
+    candidates: list[tuple[Verdict, bool]] = [(v, True) for v in assessment.causes]
+    seen = {v.driver for v in assessment.causes}
+    for v in assessment.verdicts:
+        if (v.driver not in seen and v.kind == "arithmetic"
+                and v.controllable and v.share >= ASSOCIATION_FLOOR):
+            candidates.append((v, False))
+
+    for v, is_cause in candidates:
+        if not v.controllable:
+            continue
+        right = rights.get(v.lever)
+        if not right or not principal.may_act(right):
+            continue
+
+        template = phrasing.get(v.lever)
+        if not template:
+            continue
+
+        text = " ".join(template.split()).format(
+            account=pack.get("top_account", "the account"),
+            region=region, segment=top_segment)
+
+        if v.kind == "arithmetic":
+            impact = (f"worth {pack.get(f'{v.driver}_effect', 'the observed amount')} "
+                      f"over the period, being "
+                      f"{pack.get(f'{v.driver}_share', 'its share')} of the movement")
         else:
-            action = "Escalate to the relevant regional owner for a commercial decision."
+            impact = (f"addresses the upstream cause running at "
+                      f"{pack.get('root_cause_strength', 'an elevated rate')} "
+                      f"its pre change rate")
+        if not is_cause:
+            impact += ", association only, not established as a cause"
 
-    return PersonaView(
-        role=role_name, region_label=region, headline=headline,
-        can_recommend_action=can_act, recommended_action=action,
-        confidence=causal.confidence, abstained=False, abstain_reason=None,
-        masked_fields=role.masked_fields, focus=PERSONA_FOCUS.get(role_name, ""),
+        conf = assessment.confidence if is_cause else _downgrade(assessment.confidence)
+
+        out.append(Action(
+            driver=v.driver,
+            controllable_lever=v.lever,
+            action=text,
+            expected_impact=impact,
+            owner=c.roles[principal.role]["label"],
+            confidence=conf,
+            monitoring_plan=(
+                f"Track {movement.label} for {movement.slice_label} weekly. "
+                f"Re-alert if the {v.driver} effect has not reversed within "
+                f"three periods."),
+        ))
+
+    missing = [f for f in schema.get("required_fields", []) if not
+               all(getattr(a, f, None) for a in out)]
+    if out and missing:
+        raise ValueError(f"action schema incomplete, missing {missing}")
+    return out
+
+
+# ------------------------------------------------------------------ narrative
+def _headline(principal: Principal, movement: Movement,
+              pack: narrate.FactPack) -> str:
+    return (f"{movement.label} · {movement.slice_label} · "
+            f"{pack.get('change_pct')} against the prior period")
+
+
+def _template(principal: Principal, movement: Movement, pack: narrate.FactPack,
+              assessment: Assessment) -> str:
+    """Deterministic prose. Also the fallback when the guard fires."""
+    depth = principal.contract.roles[principal.role].get("narrative_depth", "detailed")
+    p = pack.get
+
+    import math
+    swing = pack["normal_swing"].numeric if "normal_swing" in pack.facts else None
+    swing_txt = (f", where the usual swing is about {p('normal_swing')}"
+                 if swing is not None and math.isfinite(swing) else
+                 ", against a baseline too short to characterise")
+    lead = (f"{movement.label} for {movement.slice_label} moved {p('change_pct')} "
+            f"({p('change_abs')}) against the prior period{swing_txt}.")
+
+    if assessment.abstain:
+        return lead + " The evidence is not sufficient to name a cause."
+
+    if depth == "operational":
+        body = (f" The movement is concentrated in {p('top_account')}, which accounts "
+                f"for {p('top_account_effect')}. Volume explains "
+                f"{p('volume_share')} of the total. Upstream, {p('root_cause')} has "
+                f"been running at {p('root_cause_strength')} its previous rate since "
+                f"{p('root_cause_from')}, before the movement began on {p('onset')}.")
+    elif depth == "financial":
+        body = (f" Volume accounts for {p('volume_share')} of the movement and price "
+                f"for {p('price_share')}, with the price effect worth "
+                f"{p('price_effect')}. The upstream cause is {p('root_cause')}, "
+                f"running at {p('root_cause_strength')} its previous rate since "
+                f"{p('root_cause_from')}.")
+    else:
+        body = (f" Decomposition attributes {p('volume_share')} to volume, "
+                f"{p('price_share')} to price and {p('mix_share')} to mix, "
+                f"reconciling exactly to {p('change_abs')}. The largest single "
+                f"account is {p('top_account')} at {p('top_account_effect')}. "
+                f"Detection fired at {p('z_score')} sigma. The upstream cause is "
+                f"{p('root_cause')} at {p('root_cause_strength')} its pre change "
+                f"rate from {p('root_cause_from')}.")
+
+    return lead + body + f" Confidence: {p('confidence')}."
+
+
+def build_insight(wh: Warehouse, principal: Principal, movement: Movement,
+                  pvm: Decomposition, by_account: Decomposition,
+                  assessment: Assessment, evidence: list[Passage],
+                  period: Period,
+                  client: narrate.LLMClient | None = None) -> Insight:
+    """Assemble one persona's complete insight."""
+    pack = build_facts(wh, principal, movement, pvm, by_account, assessment, period)
+    label = principal.contract.roles[principal.role]["label"]
+    fallback = lambda: _template(principal, movement, pack, assessment)   # noqa: E731
+
+    if client is None:
+        rendered = narrate.Rendered(text=fallback(), renderer="template",
+                                    guarded=False)
+    else:
+        depth = principal.contract.roles[principal.role].get("narrative_depth", "detailed")
+        rendered = narrate.render_guarded(
+            client, pack, persona=f"{label} ({depth} depth)",
+            instruction=("Explain in three sentences what moved, what accounts for "
+                         "it, and what upstream cause precedes it."),
+            citations=[p.cite(120) for p in evidence[:2]],
+            fallback=fallback)
+
+    return Insight(
+        persona=label, role=principal.role,
+        headline=_headline(principal, movement, pack),
+        narrative=rendered,
+        actions=build_actions(principal, assessment, pack, movement, pvm),
+        evidence=evidence,
+        confidence=assessment.confidence,
+        abstained=assessment.abstain,
+        abstain_reasons=assessment.abstain_reasons,
+        next_check=assessment.discriminating_check,
+        facts=pack,
+        masked=bool(principal.contract.masked_columns(movement.kpi, principal.role)),
     )

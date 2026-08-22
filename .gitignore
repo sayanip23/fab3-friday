@@ -3,9 +3,4 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
-
-# Generated data — reproducible from SEED via scripts/generate_data.py,
-# not committed so the repo stays small and there's no merge noise on data.
-data/raw/*.csv
-data/raw/*.json
-!data/raw/.gitkeep
+.streamlit/secrets.toml
