@@ -1,6 +1,30 @@
+# ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
+*.egg-info/
 .venv/
 venv/
-*.egg-info/
+
+# ── Secrets ───────────────────────────────────────────────────────────────
+# Never commit these. Streamlit reads secrets.toml at runtime; keep it local.
 .streamlit/secrets.toml
+.env
+.env.*
+
+# ── Node / web app ────────────────────────────────────────────────────────
+node_modules/
+dist/
+*.local
+
+# ── Editors and tooling ───────────────────────────────────────────────────
+# .vscode/launch.json and .streamlit/config.toml ARE tracked on purpose:
+# they make the project run the same way for everyone. Everything below is
+# per-developer state that would only cause noisy diffs.
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Generated output ──────────────────────────────────────────────────────
+# Knowledge-graph output, regenerated on demand; large and not a source file.
+graphify-out/
+.impeccable/

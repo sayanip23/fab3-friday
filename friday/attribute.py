@@ -117,18 +117,36 @@ def by_dimension(wh: Warehouse, kpi: str, period: Period, dimension: str,
     Where the movement came from. Additive KPIs only, since a ratio cannot be
     split across slices without a weighting convention the contract does not define.
     """
-    additive = {"net_revenue": "revenue", "units_sold": "units"}
-    if kpi not in additive:
-        raise ValueError(f"'{kpi}' is not additive and cannot be split by {dimension}")
-
-    col = additive[kpi]
     prior = period.shifted(period.days)
-    cur = wh.segments(period, dimension, filters).set_index(dimension)
-    pri = wh.segments(prior, dimension, filters).set_index(dimension)
+    spec = wh.c.kpis[kpi].spec
 
-    keys = sorted(set(cur.index) | set(pri.index))
-    c = cur.reindex(keys).fillna(0.0)[col].astype(float)
-    p = pri.reindex(keys).fillna(0.0)[col].astype(float)
+    # Generic path for synthesised contracts (uploaded files): the KPI names
+    # its own column and aggregation, so attribution works on data whose
+    # schema the engine has never seen.
+    if spec.get("column") and spec.get("agg"):
+        if spec["agg"] != "sum":
+            raise ValueError(
+                f"'{kpi}' aggregates with {spec['agg']}, which is not additive; "
+                f"contributions would not reconcile to the movement"
+            )
+        src = spec.get("source") or wh.c.kpis[kpi].sources[0]
+        cur_s = wh.generic_segments(src, spec["column"], "sum", period, dimension, filters)
+        pri_s = wh.generic_segments(src, spec["column"], "sum", prior, dimension, filters)
+        keys = sorted(set(cur_s.index) | set(pri_s.index))
+        c = cur_s.reindex(keys).fillna(0.0).astype(float)
+        p = pri_s.reindex(keys).fillna(0.0).astype(float)
+    else:
+        additive = {"net_revenue": "revenue", "units_sold": "units"}
+        if kpi not in additive:
+            raise ValueError(f"'{kpi}' is not additive and cannot be split by {dimension}")
+
+        col = additive[kpi]
+        cur = wh.segments(period, dimension, filters).set_index(dimension)
+        pri = wh.segments(prior, dimension, filters).set_index(dimension)
+
+        keys = sorted(set(cur.index) | set(pri.index))
+        c = cur.reindex(keys).fillna(0.0)[col].astype(float)
+        p = pri.reindex(keys).fillna(0.0)[col].astype(float)
 
     deltas = (c - p).sort_values(key=abs, ascending=False)
     total = float(c.sum() - p.sum())
