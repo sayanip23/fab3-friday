@@ -26,11 +26,7 @@ st.set_page_config(page_title="FRIDAY", page_icon="F", layout="wide")
 theme.apply()
 
 PERIOD = Period(date(2026, 7, 24), date(2026, 8, 20))
-# Chart colours come from the theme so the palette is defined once. The
-# down/up pair is blue vs orange, not green vs red: red-green is the most
-# common colour vision deficiency and this chart is the attribution story.
-PURPLE, GREY = theme.PURPLE, "#CBCBCB"
-DOWN, UP = theme.CHART_DOWN, theme.CHART_UP
+PURPLE, GREY, RED, GREEN = "#A000FF", "#CBCBCB", "#C0392B", "#1E8449"
 
 USERS = {
     "sales_director": ("R. Mehta", "Regional Sales Director, West"),
@@ -89,12 +85,6 @@ choice = st.sidebar.radio(f"Material movements ({len(alerts)})", list(options),
                                "Movements inside normal variance never appear here.")
 movement = options[choice]
 
-# Streamlit's automatic page nav is hidden in theme.py (it labels this file
-# "app"). One explicit link keeps the second page reachable. Delete these two
-# lines if the demo should be single-page.
-st.sidebar.divider()
-st.sidebar.page_link("pages/1_Bring_your_own_data.py", label="Bring your own data")
-
 try:
     result = engine.explain(principal, movement.kpi, PERIOD, movement.filters)
 except EntitlementError as e:
@@ -104,10 +94,7 @@ except EntitlementError as e:
 ins, run, pvm, assess = result.insight, result.run, result.pvm, result.assessment
 
 # ------------------------------------------------------------------- headline
-# The engine hands back "<kpi> · <slice> · <change> against the prior period".
-# Split it back into its three facts so each gets its own box.
-_parts = [x.strip() for x in ins.headline.split(" · ") if x.strip()]
-st.markdown(theme.headline(_parts or [ins.headline]), unsafe_allow_html=True)
+st.subheader(ins.headline)
 c1, c2, c3, c4 = st.columns(4)
 def fmt(v: float) -> str:
     """Ratios and percentages need decimals; a ratio of 2.46 shown as '2' is wrong."""
@@ -181,7 +168,7 @@ with tabs[1]:
     chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=2).encode(
         y=alt.Y("effect:N", title=None, sort="-x"),
         x=alt.X("value:Q", title=f"contribution ({movement.unit})", stack=False),
-        color=alt.condition(alt.datum.value < 0, alt.value(DOWN), alt.value(UP)),
+        color=alt.condition(alt.datum.value < 0, alt.value(RED), alt.value(GREEN)),
         tooltip=[alt.Tooltip("effect:N"),
                  alt.Tooltip("value:Q", format=",.0f"),
                  alt.Tooltip("share_of_movement:Q", format="+.1%")],
