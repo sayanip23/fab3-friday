@@ -1,16 +1,18 @@
 # Native Streamlit theming.
 #
-# Palette follows the "Data-Dense Dashboard" profile from the ui-ux-pro-max design
-# system, with one deliberate substitution: the profile recommends a blue primary
-# (#1E40AF), but every other Fab3 deliverable uses Accenture purple. Brand
-# continuity with the deck wins; the amber accent from the same profile is kept.
+# Palette is Accenture's documented brand purple (#A100FF, PMS 7442 C) —
+# the exact value used in the official Round 1 PPTX template — plus black
+# and white, Accenture's other brand colours, for a high-contrast look
+# rather than a pastel one. Font is Arial, per the official template's own
+# stated rule ("use standard Arial font"), so the app and the deck read as
+# one submission.
 
 [theme]
 base = "light"
-primaryColor = "#A000FF"
+primaryColor = "#A100FF"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F7F4FC"
-textColor = "#1A1A1A"
+secondaryBackgroundColor = "#F7F2FF"
+textColor = "#141414"
 font = "sans serif"
 
 [server]
