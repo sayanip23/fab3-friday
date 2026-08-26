@@ -1,48 +1,89 @@
 """
 Presentation layer only. No engine logic lives here.
 
-Derived from the ui-ux-pro-max "Data-Dense Dashboard" profile, with the palette
-kept on Accenture purple for brand continuity with the deck. Tokens are declared
-in three layers as the profile specifies: primitive values, semantic roles, then
+Accenture brand alignment: primary purple is #A100FF, the exact, documented
+Accenture brand purple used in the official Round 1 template (verified
+against Accenture's own PPTX — not an approximation; the prior value here,
+#A000FF, was a one-digit typo off-brand). Typography uses Arial, per the
+official template's own stated rule ("use standard Arial font"), so the
+app and the deck are visually one submission, not two. Numbers use a
+monospace system stack so figures align in columns without depending on a
+Google Fonts CDN call the demo can't afford to fail on.
+
+Tokens are declared in three layers: primitive values, semantic roles, then
 component usage. Nothing outside this file hardcodes a colour.
 
-Accessibility is treated as priority 1 and 2 from the skill's rule table, so the
-non-negotiables here are 4.5:1 body contrast, a visible focus ring on every
-interactive control, 44px touch targets, and a reduced-motion escape hatch.
+Accessibility is treated as priority 1 and 2 from the skill's rule table, so
+the non-negotiables here are 4.5:1 body contrast, a visible focus ring on
+every interactive control, 44px touch targets, and a reduced-motion escape
+hatch.
 """
 from __future__ import annotations
 
 import streamlit as st
 
 # ---------------------------------------------------------------- primitives
-PURPLE = "#A000FF"
-PURPLE_DEEP = "#450073"
-PURPLE_MID = "#7400C0"
+# #A100FF is Accenture's documented brand purple (PMS 7442 C) — the exact
+# value used in the official Round 1 PPTX template, not a rounded guess.
+PURPLE = "#A100FF"
+PURPLE_DEEP = "#3D0066"
+PURPLE_MID = "#7500C0"
 LILAC = "#C1A3FF"
-WASH = "#F7F4FC"
-AMBER = "#D97706"          # accent, from the recommended profile
-GREEN = "#1E8449"
-RED = "#C0392B"
-INK = "#1A1A1A"
+WASH = "#F7F2FF"
+BLACK = "#000000"          # Accenture's brand palette is purple/black/white.
+WHITE = "#FFFFFF"
+SIDE_BG = "#F1E7FE"        # sidebar: a light purple wash, one step deeper than
+SIDE_HOVER = "#E3D2FB"     # the main-content wash so the rail still separates.
+# Status colours use the blue / orange / neutral axis rather than red / green.
+# Red-green is invisible to roughly 1 in 12 men (deuteran and protan CVD), and
+# a judge or a CFO who cannot tell "cause established" from "no cause" is the
+# whole product failing. Blue and orange stay distinguishable under every
+# common CVD type, and the neutral is far enough apart in luminance to survive
+# full monochromacy. Values are darkened from the Okabe-Ito safe palette so
+# every one clears 4.5:1 as text on its own pill.
+OK = "#0072B2"             # Okabe-Ito blue   - established / pass / high
+CAUTION = "#9E5C00"        # dark amber       - medium / low confidence
+NEUTRAL = "#3A3A3A"        # dark neutral     - abstained / refused / fail
+
+# Chart fills are a separate token from text colours on purpose. Text needs
+# 4.5:1 so it has to be dark, and a dark orange starts to read as red, which
+# defeats the point. A large filled bar only needs 3:1, so it can sit at a
+# brighter, unmistakably amber value that no one will mistake for red.
+CHART_UP = "#0072B2"
+CHART_DOWN = "#CC7A00"
+
+# Legacy aliases: some call sites still import these names.
+AMBER = CAUTION
+GREEN = OK
+RED = CAUTION
+INK = "#141414"
 MUTED = "#5A5A5A"
-BORDER = "#E6DCF5"
+BORDER = "#E4D9F7"
+HEAD_BG = "#E3D0FA"        # headline chips: a step darker than the page wash
+HEAD_BORDER = "#C39BF0"    # so the three facts read as objects, not as text
+
+FONT_SANS = "Arial, 'Helvetica Neue', Helvetica, sans-serif"
+FONT_MONO = "Consolas, 'Courier New', ui-monospace, monospace"
 
 # density 8/10 -> 8-32px scale, per the design dials
 CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
-
 :root {{
   --c-primary: {PURPLE};
   --c-primary-deep: {PURPLE_DEEP};
   --c-primary-mid: {PURPLE_MID};
-  --c-accent: {AMBER};
-  --c-ok: {GREEN};
-  --c-bad: {RED};
+  --c-black: {BLACK};
+  --c-white: {WHITE};
+  --c-ok: {OK};
+  --c-caution: {CAUTION};
+  --c-neutral: {NEUTRAL};
+  --c-accent: {CAUTION};
   --c-ink: {INK};
   --c-muted: {MUTED};
   --c-border: {BORDER};
   --c-wash: {WASH};
+  --c-side-bg: {SIDE_BG};
+  --c-side-hover: {SIDE_HOVER};
 
   --space-1: 8px;  --space-2: 12px; --space-3: 16px;
   --space-4: 20px; --space-5: 24px; --space-6: 32px;
@@ -53,6 +94,45 @@ CSS = f"""
   --ease: cubic-bezier(.4,0,.2,1);
 }}
 
+/* ---- hide Streamlit's own chrome: this is an internal tool, not a --------
+   Streamlit Cloud demo, so the hamburger menu, Deploy button and "Made
+   with Streamlit" footer read as unfinished rather than as a product. The
+   header bar itself stays (it still hosts the sidebar-collapse control). */
+#MainMenu {{ visibility: hidden; }}
+footer {{ visibility: hidden; }}
+[data-testid="stToolbar"] {{ visibility: hidden; }}
+[data-testid="stDecoration"] {{ display: none; }}
+[data-testid="stHeader"] {{ background: transparent; }}
+
+/* The control that re-opens a collapsed sidebar lives in the header. Hiding
+   the toolbar must never take it with it, or the sidebar becomes a one-way
+   door. Force it visible and give it brand styling so it reads as a button. */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stExpandSidebarButton"] {{
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+  z-index: 1000;
+}}
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stExpandSidebarButton"] {{
+  background: var(--c-primary) !important;
+  border: 1px solid var(--c-primary) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
+}}
+[data-testid="stSidebarCollapsedControl"] button *,
+[data-testid="stExpandSidebarButton"] * {{
+  color: var(--c-white) !important;
+  fill: var(--c-white) !important;
+}}
+
+/* ---- page rhythm: Streamlit ships ~6rem of dead space above the first
+   heading. Pull it in, but leave enough room for the re-open control. */
+[data-testid="stMainBlockContainer"], .block-container {{
+  padding-top: 2.6rem !important;
+}}
+
 /* Deliberately narrow. A blanket [class*="st-"], span, div rule also captures
    Streamlit's Material Symbols spans, and the icon ligature then renders as the
    literal string "keyboard_arrow_right" instead of a glyph. */
@@ -60,9 +140,9 @@ html, body, .stMarkdown, p, li, h1, h2, h3, h4, h5, h6,
 [data-testid="stMetricLabel"], [data-testid="stMarkdownContainer"],
 [data-testid="stCaptionContainer"], .stButton button,
 [data-testid="stTabs"] [role="tab"] {{
-  font-family: 'Fira Sans', -apple-system, 'Segoe UI', sans-serif;
+  font-family: {FONT_SANS};
 }}
-code, pre, [data-testid="stJson"] {{ font-family: 'Fira Code', monospace; }}
+code, pre, [data-testid="stJson"] {{ font-family: {FONT_MONO}; }}
 
 /* belt and braces: never let the icon font be overridden */
 [data-testid="stIconMaterial"], .material-icons, .material-symbols-rounded {{
@@ -70,23 +150,54 @@ code, pre, [data-testid="stJson"] {{ font-family: 'Fira Code', monospace; }}
 }}
 
 /* ---- headings ------------------------------------------------------- */
-h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
+h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
+/* The headline is the single most important line on the page, so it gets
+   treated as a banner rather than as text with a rule under it, and real
+   space beneath so it does not crowd the KPI row. */
 [data-testid="stMain"] h3 {{
   color: var(--c-primary-deep);
-  font-weight: 600;
-  border-bottom: 1px solid var(--c-border);
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-4);
+  font-weight: 700;
+  font-size: 1.5rem;
+  background: var(--c-wash);
+  border: 1px solid var(--c-border);
+  border-left: 5px solid var(--c-primary);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-6) 0;
 }}
 [data-testid="stMain"] h4 {{
-  color: var(--c-primary-mid); font-weight: 600; font-size: 1.02rem;
+  color: var(--c-primary-mid); font-weight: 700; font-size: 1.02rem;
   margin-top: var(--space-2);
 }}
 
 /* ---- metric cards ---------------------------------------------------- */
+/* Columns stretch, cards fill them. Without this the card shrink-wraps its
+   text, so four KPIs render as four different-sized boxes. */
+[data-testid="stHorizontalBlock"] {{ align-items: stretch; }}
+[data-testid="stColumn"] {{ display: flex; flex-direction: column; }}
+/* the height has to be handed down through every wrapper Streamlit inserts,
+   or the card shrink-wraps its own text again */
+[data-testid="stColumn"] > div,
+[data-testid="stColumn"] [data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stColumn"] [data-testid="stVerticalBlock"],
+[data-testid="stColumn"] [data-testid="stElementContainer"] {{
+  width: 100%;
+  height: 100%;
+}}
 [data-testid="stMetric"] {{
+  width: 100%;
+  height: 100%;
+  min-height: 118px;                     /* tallest card sets the floor */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* top-aligned, NOT centred: a card with no delta row would otherwise sit
+     its label lower than its neighbours' */
+  justify-content: flex-start;
+  gap: 2px;
   background: var(--c-wash);
   border: 1px solid var(--c-border);
+  border-top: 3px solid var(--c-primary);
   border-radius: var(--radius);
   padding: var(--space-3) var(--space-4);
   transition: border-color var(--t-base) var(--ease),
@@ -101,13 +212,13 @@ h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
   text-transform: uppercase;
   letter-spacing: .07em;
   color: var(--c-muted) !important;
-  font-weight: 600;
+  font-weight: 700;
 }}
 [data-testid="stMetricValue"] {{
-  font-family: 'Fira Code', monospace !important;
-  color: var(--c-primary-deep) !important;
+  font-family: {FONT_MONO} !important;
+  color: var(--c-black) !important;
   font-size: 1.7rem !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }}
 
 /* ---- tabs ------------------------------------------------------------ */
@@ -116,16 +227,25 @@ h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
 }}
 [data-testid="stTabs"] [role="tab"] {{
   padding: var(--space-2) var(--space-4);
+  /* a light outline on every tab, so the unselected ones read as targets
+     you can click rather than as loose text next to a purple block */
+  border: 1px solid var(--c-border);
+  border-bottom: none;
+  background: var(--c-white);
   border-radius: var(--radius) var(--radius) 0 0;
-  font-size: .9rem; font-weight: 500; color: var(--c-muted);
-  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  font-size: .9rem; font-weight: 600; color: var(--c-muted);
+  transition: background var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
   min-height: 44px;                      /* touch target, priority 2 */
 }}
 [data-testid="stTabs"] [role="tab"]:hover {{
   background: var(--c-wash); color: var(--c-primary-deep);
+  border-color: {HEAD_BORDER};
 }}
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
-  color: var(--c-primary); font-weight: 600; background: var(--c-wash);
+  color: var(--c-white); font-weight: 700;
+  background: var(--c-primary); border-color: var(--c-primary);
 }}
 
 /* ---- tables: row highlighting on hover, a key effect in the profile --- */
@@ -135,18 +255,67 @@ h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
 [data-testid="stDataFrame"] [role="row"]:hover {{ background: var(--c-wash) !important; }}
 
 /* ---- sidebar --------------------------------------------------------- */
+/* Light purple rail rather than a black one: black next to a white canvas
+   reads as two separate applications bolted together. */
 [data-testid="stSidebar"] {{
-  background: var(--c-wash); border-right: 1px solid var(--c-border);
+  background: var(--c-side-bg);
+  border-right: 1px solid var(--c-border);
 }}
+[data-testid="stSidebar"] * {{ color: var(--c-ink); }}
 [data-testid="stSidebar"] h1 {{
-  font-size: 1.5rem; font-weight: 700; color: var(--c-primary-deep);
-  letter-spacing: -.02em;
+  font-size: 1.6rem; font-weight: 700; color: var(--c-primary-deep) !important;
+  letter-spacing: -.01em; display: flex; align-items: center; gap: 6px;
+}}
+[data-testid="stSidebar"] h1::before {{
+  content: '>'; color: var(--c-primary); font-weight: 900;
+}}
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {{
+  color: var(--c-primary-mid) !important;
 }}
 [data-testid="stSidebar"] [role="radiogroup"] label {{
   padding: var(--space-1) var(--space-2); border-radius: 6px;
   transition: background var(--t-fast) var(--ease);
 }}
-[data-testid="stSidebar"] [role="radiogroup"] label:hover {{ background: #EFE7FA; }}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {{
+  background: var(--c-side-hover);
+}}
+[data-testid="stSidebar"] hr {{ border-color: var(--c-border) !important; }}
+[data-testid="stSidebar"] [data-baseweb="select"] > div {{
+  background: var(--c-white); border-color: var(--c-border);
+}}
+/* Streamlit's automatic multipage nav labels the entry point "app", after
+   the filename, which reads as an unfinished project rather than a product.
+   Hidden here; app.py adds a properly labelled link instead. */
+[data-testid="stSidebarNav"] {{ display: none; }}
+
+/* Hiding the nav leaves Streamlit's reserved space behind, so the sidebar
+   opens with a large void above the title. Pull the content back up to sit
+   just under the collapse control. */
+[data-testid="stSidebarUserContent"] {{
+  padding-top: .5rem !important;
+}}
+[data-testid="stSidebarHeader"] {{
+  padding-top: .5rem !important;
+  padding-bottom: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:first-child {{
+  margin-top: 0 !important;
+}}
+[data-testid="stSidebar"] h1 {{ margin-top: 0 !important; padding-top: 0 !important; }}
+
+/* the hand-placed page link that replaces it */
+[data-testid="stSidebar"] [data-testid="stPageLink"] a {{
+  border-radius: 6px; padding: 6px 10px;
+  border: 1px solid var(--c-border); background: var(--c-white);
+}}
+[data-testid="stSidebar"] [data-testid="stPageLink"] a:hover {{
+  border-color: var(--c-primary); background: var(--c-side-hover);
+}}
+[data-testid="stSidebar"] [data-testid="stPageLink"] a * {{
+  color: var(--c-primary-deep) !important; font-weight: 600;
+}}
 
 /* ---- alerts ---------------------------------------------------------- */
 [data-testid="stAlert"] {{ border-radius: var(--radius); border-left-width: 3px; }}
@@ -159,12 +328,19 @@ h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
 
 /* ---- buttons: cursor + real hover, from the pre-delivery checklist ---- */
 .stButton button {{
-  border-radius: var(--radius); font-weight: 500; min-height: 44px;
+  border-radius: var(--radius); font-weight: 600; min-height: 44px;
   transition: all var(--t-fast) var(--ease); cursor: pointer;
 }}
 .stButton button:hover {{
   border-color: var(--c-primary); color: var(--c-primary);
   transform: translateY(-1px);
+}}
+.stButton button[kind="primary"] {{
+  background: var(--c-primary); border-color: var(--c-primary);
+}}
+.stButton button[kind="primary"]:hover {{
+  background: var(--c-primary-deep); border-color: var(--c-primary-deep);
+  color: var(--c-white);
 }}
 
 /* ---- accessibility priority 1: focus must always be visible ---------- */
@@ -187,36 +363,105 @@ h1, h2, h3 {{ font-family: 'Fira Sans', sans-serif; letter-spacing: -.015em; }}
 /* ---- FRIDAY specific components -------------------------------------- */
 .fr-pill {{
   display: inline-block; padding: 3px 10px; border-radius: 999px;
-  font-size: .72rem; font-weight: 600; letter-spacing: .05em;
-  text-transform: uppercase; font-family: 'Fira Sans', sans-serif;
+  font-size: .72rem; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; font-family: {FONT_SANS};
 }}
-.fr-pill-high {{ background: #E6F4EA; color: {GREEN}; border: 1px solid #A8D5B5; }}
-.fr-pill-medium {{ background: #FEF3E2; color: {AMBER}; border: 1px solid #F3C98B; }}
-.fr-pill-low {{ background: #FEF3E2; color: {AMBER}; border: 1px solid #F3C98B; }}
-.fr-pill-none {{ background: #FDECEA; color: {RED}; border: 1px solid #F0B7B2; }}
-.fr-pill-pass {{ background: #E6F4EA; color: {GREEN}; border: 1px solid #A8D5B5; }}
-.fr-pill-fail {{ background: #F2F2F2; color: {MUTED}; border: 1px solid #DDD; }}
+/* WCAG 1.4.1: colour must never be the only carrier of meaning. Each pill
+   also gets a glyph, so the state survives greyscale printing and every
+   form of colour vision deficiency. */
+.fr-pill::before {{ font-weight: 900; margin-right: 5px; }}
+
+.fr-pill-high {{ background: #EDF6FB; color: {OK}; border: 1px solid #9CC9E2; }}
+.fr-pill-high::before {{ content: '✓'; }}          /* check */
+.fr-pill-pass {{ background: #EDF6FB; color: {OK}; border: 1px solid #9CC9E2; }}
+.fr-pill-pass::before {{ content: '✓'; }}
+
+.fr-pill-medium {{ background: #FDF3E9; color: {CAUTION}; border: 1px solid #E5B98C; }}
+.fr-pill-medium::before {{ content: '▲'; }}        /* triangle */
+.fr-pill-low {{ background: #FDF3E9; color: {CAUTION}; border: 1px solid #E5B98C; }}
+.fr-pill-low::before {{ content: '▲'; }}
+
+.fr-pill-none {{ background: #EDEDED; color: {NEUTRAL}; border: 1px solid #C4C4C4; }}
+.fr-pill-none::before {{ content: '✕'; }}          /* cross */
+.fr-pill-fail {{ background: #EDEDED; color: {NEUTRAL}; border: 1px solid #C4C4C4; }}
+.fr-pill-fail::before {{ content: '✕'; }}
+
+/* ---- metric deltas ---------------------------------------------------
+   st.metric ships its own red/green, which is exactly the pair we are
+   trying to remove, and it is applied through generated emotion classes
+   rather than anything we control. Override it here, keyed on the arrow
+   Streamlit already renders, so the shape channel carries the meaning and
+   the colour only reinforces it.
+   Note: this keys on arrow DIRECTION, so a metric declared with
+   delta_color="inverse" is coloured by direction rather than by sentiment.
+   Down always reads as caution, which is the honest reading for this app. */
+[data-testid="stMetricDelta"] {{
+  color: var(--c-ok) !important;
+  background: #EDF6FB !important;
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-weight: 700;
+  width: fit-content;
+}}
+[data-testid="stMetricDelta"] * {{ color: inherit !important; }}
+[data-testid="stMetricDelta"] svg {{ fill: currentColor !important; }}
+[data-testid="stMetricDelta"]:has([data-testid="stMetricDeltaIcon-Down"]) {{
+  color: var(--c-caution) !important;
+  background: #FDF3E9 !important;
+}}
+
+/* ---- headline chips ---------------------------------------------------
+   The headline is three separate facts glued together with middots: which
+   KPI, which slice, how much it moved. Splitting them into their own boxes
+   lets the eye pick out the one it wants instead of reading a sentence. */
+.fr-head {{
+  display: flex;
+  gap: var(--space-3);            /* matches Streamlit's column gutter, so the
+                                     row lines up with the KPI cards below */
+  width: 100%;
+  margin: 0 0 var(--space-5) 0;
+  align-items: stretch;           /* equal heights, whatever the text length */
+}}
+.fr-head-part {{
+  flex: 1 1 0;                    /* equal widths, full row */
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: {FONT_SANS};
+  font-size: 1.12rem; font-weight: 700; letter-spacing: -.01em;
+  color: var(--c-primary-deep);
+  background: {HEAD_BG};
+  border: 1px solid {HEAD_BORDER};
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}}
+.fr-head-part:first-child {{ border-left: 5px solid var(--c-primary); }}
 
 .fr-chain {{
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
-  background: var(--c-wash); border: 1px solid var(--c-border);
+  /* deep brand purple rather than black: black was the only pure-black
+     element left on the page and read as a different application */
+  background: var(--c-primary-deep);
+  border: 1px solid var(--c-primary-deep);
   border-radius: var(--radius); padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
 }}
 .fr-chain-node {{
-  font-family: 'Fira Code', monospace; font-size: .82rem; font-weight: 500;
-  color: var(--c-primary-deep); background: #fff;
-  border: 1px solid var(--c-border); border-radius: 6px;
+  font-family: {FONT_MONO}; font-size: .82rem; font-weight: 600;
+  color: var(--c-primary-deep); background: var(--c-white);
+  border: 1px solid {HEAD_BORDER}; border-radius: 6px;
   padding: 5px 10px;
 }}
-.fr-chain-arrow {{ color: var(--c-primary); font-weight: 700; }}
+.fr-chain-arrow {{ color: var(--c-primary); font-weight: 900; }}
 .fr-chain-label {{
   font-size: .72rem; text-transform: uppercase; letter-spacing: .07em;
-  color: var(--c-muted); font-weight: 600; margin-right: var(--space-1);
+  color: {LILAC}; font-weight: 700; margin-right: var(--space-1);
 }}
 
 .fr-foot {{
-  font-family: 'Fira Code', monospace; font-size: .74rem;
+  font-family: {FONT_MONO}; font-size: .74rem;
   color: var(--c-muted); border-top: 1px solid var(--c-border);
   padding-top: var(--space-2); margin-top: var(--space-4);
 }}
@@ -243,3 +488,13 @@ def chain(label: str, nodes: list[str]) -> str:
         f'<span class="fr-chain-node">{n}</span>' for n in nodes)
     return (f'<div class="fr-chain"><span class="fr-chain-label">{label}</span>'
             f'{inner}</div>')
+
+
+def headline(parts: list[str]) -> str:
+    """
+    The headline as separate boxes rather than one middot-joined sentence:
+    KPI, slice, movement. Callers pass the parts, so this never has to guess
+    where the boundaries are.
+    """
+    inner = "".join(f'<span class="fr-head-part">{p}</span>' for p in parts)
+    return f'<div class="fr-head">{inner}</div>'
