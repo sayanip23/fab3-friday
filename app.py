@@ -221,6 +221,18 @@ FACT_LABELS = {
 }
 
 
+# The action schema the brief specifies, in the order the contract lists it.
+ACTION_FIELD_LABELS = {
+    "driver": "Driver",
+    "controllable_lever": "Controllable lever",
+    "action": "Action",
+    "expected_impact": "Expected impact",
+    "owner": "Owner",
+    "confidence": "Confidence",
+    "monitoring_plan": "Monitoring plan",
+}
+
+
 def fact_label(key: str) -> str:
     """Human readable name for a fact key: volume_effect -> Volume effect."""
     if key in FACT_LABELS:
@@ -481,8 +493,34 @@ with tabs[3]:
         st.caption(" · ".join(f"{k}: {v}" for k, v in p.provenance().items()))
         st.divider()
     st.markdown("#### Source freshness at the moment this ran")
-    st.dataframe(pd.DataFrame(result.freshness), hide_index=True,
-                 width="stretch")
+    st.dataframe(
+        pd.DataFrame(result.freshness), hide_index=True, width="stretch",
+        column_config={
+            "source": st.column_config.TextColumn(
+                "Source", width="medium",
+                help="The system these rows came from. Declared in the contract, "
+                     "not discovered at run time."),
+            "cadence": st.column_config.TextColumn(
+                "Refresh cadence", width="small",
+                help="How often that system publishes new data. The three sources "
+                     "are deliberately mismatched — daily, weekly and continuous — "
+                     "because reconciling that is the hard part of the problem."),
+            "lag_hours": st.column_config.NumberColumn(
+                "Expected lag (hours)", width="small",
+                help="How far behind reality this source is expected to run. "
+                     "Marketing spend lags sales by up to three days, which is why "
+                     "a movement cannot be attributed to spend that has not landed."),
+            "stale": st.column_config.CheckboxColumn(
+                "Stale?", width="small",
+                help="True when the lag exceeds the staleness warning the contract "
+                     "sets for this source. A stale source is a stated reason to "
+                     "abstain rather than something the engine works around."),
+            "grain": st.column_config.TextColumn(
+                "Grain", width="small",
+                help="What one row represents: an order line, a campaign week, a "
+                     "single event. Two sources at different grains cannot be "
+                     "joined without aggregating the finer one upward first."),
+        })
 
 # --------------------------------------------------------------------- actions
 with tabs[4]:
@@ -494,8 +532,28 @@ with tabs[4]:
     else:
         for a in ins.actions:
             st.markdown(f"**{a.action}**")
-            st.dataframe(pd.DataFrame([a.as_dict()]).T.rename(columns={0: ""}),
-                         width="stretch")
+            # A transposed frame left the value column with a blank header and
+            # raw schema keys down the side. Field/value carries the same content
+            # and can be labelled.
+            _rows = pd.DataFrame(
+                [{"field": ACTION_FIELD_LABELS.get(k, fact_label(k)), "value": v}
+                 for k, v in a.as_dict().items()])
+            st.dataframe(
+                _rows, hide_index=True, width="stretch",
+                height=(len(_rows) + 1) * 35 + 3,
+                column_config={
+                    "field": st.column_config.TextColumn(
+                        "Field", width="small",
+                        help="The action schema the brief specifies. All seven "
+                             "fields must be filled: the engine raises rather than "
+                             "publish a recommendation missing any of them."),
+                    "value": st.column_config.TextColumn(
+                        "Value", width="large",
+                        help="Filled from the contract and the computed facts, "
+                             "never free text. An action is only offered where the "
+                             "driver is marked controllable and this role holds the "
+                             "decision right that lever requires."),
+                })
     st.divider()
 
     st.markdown("#### Was this explanation right?")
@@ -539,7 +597,33 @@ with tabs[5]:
     split_show = split.copy()
     split_show["share of latency"] = split_show["share of latency"].map(
         lambda v: f"{v:.1%}")
-    st.dataframe(split_show, hide_index=True, width="stretch")
+    st.dataframe(
+        split_show, hide_index=True, width="stretch",
+        column_config={
+            "method": st.column_config.TextColumn(
+                "Method", width="medium",
+                help="How the work was done. The vocabulary is fixed — sql, "
+                     "deterministic_logic, business_rules, statistics, "
+                     "traditional_ml, causal_inference, retrieval, llm — and a "
+                     "stage declaring anything outside it is rejected outright."),
+            "stages": st.column_config.NumberColumn(
+                "Stages", width="small",
+                help="How many pipeline stages declared this method. The split is "
+                     "derived from that instrumentation, not written by hand."),
+            "ms": st.column_config.NumberColumn(
+                "Milliseconds", width="small",
+                help="Wall clock time those stages took, measured on this run."),
+            "model calls": st.column_config.NumberColumn(
+                "Model calls", width="small",
+                help="Model calls issued from stages of this method. Any non-zero "
+                     "count on a row other than 'llm' fails the run at runtime — "
+                     "that check is what makes the deterministic claim enforceable "
+                     "rather than merely asserted."),
+            "share of latency": st.column_config.TextColumn(
+                "Share of latency", width="small",
+                help="This method's portion of end to end time, which is how you "
+                     "see at a glance how little of the answer generation touched."),
+        })
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Total latency", f"{run.total_ms:.0f} ms")
