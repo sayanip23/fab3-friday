@@ -496,7 +496,7 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
 .fr-sum {{
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex: 1 1 auto;
   height: 100%;
   box-sizing: border-box;
@@ -525,12 +525,23 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   padding: 3px 10px; white-space: nowrap;
 }}
 .fr-sum-chip b {{ color: var(--c-muted); font-weight: 700; }}
+/* The movement takes the whole space left under the chips and centres in it,
+   so the number sits in the optical middle of the card rather than sinking to
+   one corner with a hole above it. */
+.fr-sum-body {{
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}}
 /* The movement is the one number this card exists to deliver, so it gets the
    largest type on the page and the only colour that carries meaning here. */
 .fr-sum-delta {{
   font-family: {FONT_MONO};
   font-size: 2.5rem; font-weight: 700; line-height: 1;
-  margin-top: var(--space-3);
 }}
 .fr-sum-down {{ color: {CAUTION}; }}
 .fr-sum-up {{ color: {OK}; }}
@@ -620,7 +631,7 @@ def summary(kpi: str, chips: list[tuple[str, str]], delta: str, sub: str,
             f'<div class="fr-sum-title">{kpi}</div>'
             f'<div class="fr-sum-chips">{pills}</div>'
             f'</div>'
-            f'<div>'
+            f'<div class="fr-sum-body">'
             f'<div class="fr-sum-delta {tone}">{delta}</div>'
             f'<div class="fr-sum-sub">{sub}</div>'
             f'</div>'
