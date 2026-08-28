@@ -290,25 +290,34 @@ with tabs[0]:
             st.info(f"Check that would settle it: {ins.next_check}")
 
     with st.expander("The fact pack: every number this narrative was allowed to use"):
+        st.caption(
+            "Read the right hand column. Every figure above was computed by one "
+            "of these methods before the sentence was written, which is what lets "
+            "us say the model is not the source of any number here — and mean it.")
         _facts = pd.DataFrame(ins.facts.lineage())
         _facts["fact"] = _facts["fact"].map(fact_label)
         st.dataframe(
             _facts, hide_index=True, width="stretch",
+            # size to the content: an inner scrollbar on a short reference table
+            # makes the reader hunt, and this already sits inside an expander
+            height=(len(_facts) + 1) * 35 + 3,
             column_config={
                 "fact": st.column_config.TextColumn(
-                    "Fact",
+                    "Fact", width="medium",
                     help="One quantity the narrative was permitted to state. If a "
                          "number is not on this list, the guard rejects the text "
                          "rather than letting it reach you."),
                 "value": st.column_config.TextColumn(
-                    "Value",
+                    "Value", width="small",
                     help="The figure as computed, in the unit the contract declares "
                          "for it. This is what the prose must match."),
                 "produced_by": st.column_config.TextColumn(
-                    "Produced by",
-                    help="The stage that computed it, and by which method. Every "
-                         "entry here is deterministic; no number in this table was "
-                         "produced by a model."),
+                    "Produced by", width="large",
+                    help="The method that produced the figure. Deterministic SQL, "
+                         "arithmetic, a statistical test or the causal screen — "
+                         "never generation. This column is the evidence for that "
+                         "claim, and a gate fails the build if any row here ever "
+                         "names a model."),
             })
 
 # ----------------------------------------------------------------- attribution

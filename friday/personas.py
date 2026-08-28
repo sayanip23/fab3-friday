@@ -31,6 +31,29 @@ from .kpi import Period, Warehouse
 # an association below this share of the movement earns no action at all
 ASSOCIATION_FLOOR = 0.15
 
+# How each fact was produced, in words.
+#
+# This string is the visible proof of the brief's hardest requirement — that no
+# number reaching a reader came from a model — so it has to survive being read
+# by a CFO, not just by whoever wrote the module. It names the *method*, which
+# is the auditable claim, rather than the function that happens to implement it.
+# verify_lane_b asserts none of these ever mentions generation.
+PROVENANCE = {
+    "contract":    "Declared in the KPI contract",
+    "request":     "Taken from the question that was asked",
+    "sql":         "Deterministic SQL over the source data",
+    "z_score":     "Robust z score against this slice's own history",
+    "baseline":    "Median change across 90 days of comparable periods",
+    "pvm":         "Price, volume and mix · deterministic arithmetic",
+    "pvm_share":   "Price, volume and mix · share of the total movement",
+    "by_account":  "Contribution ranked by account · deterministic arithmetic",
+    "gates":       "Causal screen · cleared the sequence, magnitude and mechanism gates",
+    "rate_ratio":  "Event rate measured against its own pre-change baseline",
+    "changepoint": "Change point detected in the driver's own event rate",
+    "onset":       "First durable departure from the prior level",
+    "confidence":  "Causal screen · calibrated on how sufficient the evidence was",
+}
+
 CONFIDENCE_ORDER = ["none", "low", "medium", "high"]
 
 
@@ -119,54 +142,55 @@ def build_facts(wh: Warehouse, principal: Principal, movement: Movement,
         return f"{v:+,.2f}" if abs(v) < 1000 else f"{v:+,.0f}"
     masks = "account_name" in principal.contract.masked_columns(movement.kpi, principal.role)
 
-    pack.add("kpi", movement.label, movement.label, provenance="contract")
-    pack.add("slice", movement.slice_label, movement.slice_label, provenance="contract")
-    pack.add("period", str(period), str(period), provenance="request")
+    P = PROVENANCE
+    pack.add("kpi", movement.label, movement.label, provenance=P["contract"])
+    pack.add("slice", movement.slice_label, movement.slice_label,
+             provenance=P["contract"])
+    pack.add("period", str(period), str(period), provenance=P["request"])
     pack.add("current_value", movement.current, f"{q(movement.current).lstrip(chr(43))} {unit}",
-             unit, "kpi.value, deterministic sql")
+             unit, P["sql"])
     pack.add("prior_value", movement.prior, f"{q(movement.prior).lstrip(chr(43))} {unit}",
-             unit, "kpi.value, deterministic sql")
+             unit, P["sql"])
     pack.add("change_abs", movement.delta, f"{q(movement.delta)} {unit}",
-             unit, "kpi.value, deterministic sql")
+             unit, P["sql"])
     pack.add("change_pct", movement.pct, f"{movement.pct:+.1f}%", "percent",
-             "kpi.value, deterministic sql")
+             P["sql"])
     pack.add("z_score", movement.z_score, f"{movement.z_score:.2f}", "sigma",
-             "detect.evaluate, robust z score")
+             P["z_score"])
     pack.add("normal_swing", movement.baseline_median_pct,
              f"{abs(movement.baseline_median_pct):.1f}%", "percent",
-             "detect, 90 day baseline median")
+             P["baseline"])
 
     for eff in pvm.effects:
         key = f"{eff.driver}_effect"
-        pack.add(key, eff.value, f"{q(eff.value)} {unit}", unit,
-                 "attribute.price_volume_mix, deterministic arithmetic")
+        pack.add(key, eff.value, f"{q(eff.value)} {unit}", unit, P["pvm"])
         pack.add(f"{eff.driver}_share", abs(eff.share), f"{abs(eff.share):.0%}",
-                 "percent", "attribute.price_volume_mix")
+                 "percent", P["pvm_share"])
 
     top = by_account.top(1)
     if top:
         name = pseudonymise(top[0].name) if masks else top[0].name
-        pack.add("top_account", name, name, provenance="attribute.by_dimension")
+        pack.add("top_account", name, name, provenance=P["by_account"])
         pack.add("top_account_effect", top[0].value, f"{top[0].value:+,.0f} {unit}",
-                 unit, "attribute.by_dimension, deterministic arithmetic")
+                 unit, P["by_account"])
 
     for v in assessment.causes:
         if v.kind == "evidential":
             pack.add("root_cause", v.driver, v.driver.replace("_", " "),
-                     provenance="causal.screen, three gate test")
+                     provenance=P["gates"])
             pack.add("root_cause_strength", v.strength, f"{v.strength:.1f} times",
-                     "ratio", "causal.evidence_rate_ratio, changepoint anchored")
+                     "ratio", P["rate_ratio"])
             if v.first_evidence:
                 pack.add("root_cause_from", v.first_evidence,
                          v.first_evidence.isoformat(),
-                         provenance="causal.driver_change_point")
+                         provenance=P["changepoint"])
     if assessment.verdicts and assessment.verdicts[0].onset:
         pack.add("onset", assessment.verdicts[0].onset,
                  assessment.verdicts[0].onset.isoformat(),
-                 provenance="causal.movement_onset")
+                 provenance=P["onset"])
 
     pack.add("confidence", assessment.confidence, assessment.confidence,
-             provenance="causal, calibrated")
+             provenance=P["confidence"])
     return pack
 
 
