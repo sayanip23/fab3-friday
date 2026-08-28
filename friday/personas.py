@@ -16,6 +16,7 @@ correct behaviour and not an omission.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -262,45 +263,62 @@ def _headline(principal: Principal, movement: Movement,
             f"{pack.get('change_pct')} against the prior period")
 
 
+def _slice_phrase(movement: Movement) -> str:
+    """
+    The slice as English rather than as a filter expression.
+
+    'region=West' is what the engine calls it internally; a reader wants 'West'.
+    The label still names the dimension when it is not the obvious one.
+    """
+    if not movement.filters:
+        return "across every region"
+    parts = []
+    for key, value in movement.filters.items():
+        parts.append(str(value) if key == "region"
+                     else f"{value} ({key.replace('_', ' ')})")
+    return " and ".join(parts)
+
+
 def _template(principal: Principal, movement: Movement, pack: narrate.FactPack,
               assessment: Assessment) -> str:
     """Deterministic prose. Also the fallback when the guard fires."""
     depth = principal.contract.roles[principal.role].get("narrative_depth", "detailed")
     p = pack.get
 
-    import math
     swing = pack["normal_swing"].numeric if "normal_swing" in pack.facts else None
     swing_txt = (f", where the usual swing is about {p('normal_swing')}"
                  if swing is not None and math.isfinite(swing) else
                  ", against a baseline too short to characterise")
-    lead = (f"{movement.label} for {movement.slice_label} moved {p('change_pct')} "
-            f"({p('change_abs')}) against the prior period{swing_txt}.")
+    lead = (f"{movement.label} in {_slice_phrase(movement)} moved "
+            f"{p('change_pct')} ({p('change_abs')}) against the prior "
+            f"period{swing_txt}.")
 
     if assessment.abstain:
         return lead + " The evidence is not sufficient to name a cause."
 
     if depth == "operational":
         body = (f" The movement is concentrated in {p('top_account')}, which accounts "
-                f"for {p('top_account_effect')}. Volume explains "
+                f"for {p('top_account_effect')} of it, and volume explains "
                 f"{p('volume_share')} of the total. Upstream, {p('root_cause')} has "
                 f"been running at {p('root_cause_strength')} its previous rate since "
-                f"{p('root_cause_from')}, before the movement began on {p('onset')}.")
+                f"{p('root_cause_from')} — before the movement began on "
+                f"{p('onset')}.")
     elif depth == "financial":
         body = (f" Volume accounts for {p('volume_share')} of the movement and price "
                 f"for {p('price_share')}, with the price effect worth "
-                f"{p('price_effect')}. The upstream cause is {p('root_cause')}, "
-                f"running at {p('root_cause_strength')} its previous rate since "
+                f"{p('price_effect')}. The upstream cause is {p('root_cause')}, which "
+                f"has run at {p('root_cause_strength')} its previous rate since "
                 f"{p('root_cause_from')}.")
     else:
-        body = (f" Decomposition attributes {p('volume_share')} to volume, "
+        body = (f" The decomposition attributes {p('volume_share')} to volume, "
                 f"{p('price_share')} to price and {p('mix_share')} to mix, "
                 f"reconciling exactly to {p('change_abs')}. The largest single "
-                f"account is {p('top_account')} at {p('top_account_effect')}. "
-                f"Detection fired at {p('z_score')} sigma. The upstream cause is "
-                f"{p('root_cause')} at {p('root_cause_strength')} its pre change "
+                f"account is {p('top_account')}, at {p('top_account_effect')}, and "
+                f"detection fired at {p('z_score')} sigma. The upstream cause is "
+                f"{p('root_cause')}, at {p('root_cause_strength')} its pre-change "
                 f"rate from {p('root_cause_from')}.")
 
-    return lead + body + f" Confidence: {p('confidence')}."
+    return lead + body + f" Confidence is {p('confidence')}."
 
 
 def build_insight(wh: Warehouse, principal: Principal, movement: Movement,

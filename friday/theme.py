@@ -488,6 +488,28 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   margin-bottom: 0;
 }}
 
+/* ---- narrative -------------------------------------------------------
+   The explanation is the one paragraph a reader actually reads, and it was
+   set at body size across the full page width. A line that long is hard to
+   track back from at the wrap, so the measure is capped near 75 characters,
+   which is the range typography research settles on. Size and leading go up
+   because this is prose, not a data label. */
+.fr-narrative {{
+  font-family: {FONT_SANS};
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--c-ink);
+  max-width: 76ch;
+  margin: var(--space-2) 0 var(--space-3) 0;
+}}
+/* Figures carry the argument, so they get weight and the brand colour. The
+   surrounding words stay at normal weight or nothing stands out. */
+.fr-narrative strong {{
+  font-weight: 700;
+  color: var(--c-primary-deep);
+  white-space: nowrap;      /* never break "-1,556,566" across two lines */
+}}
+
 .fr-chain {{
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
   /* deep brand purple rather than black: black was the only pure-black

@@ -9,7 +9,9 @@ Run:  streamlit run app.py
 """
 from __future__ import annotations
 
+import html
 import json
+import re
 from datetime import date
 
 import altair as alt
@@ -174,6 +176,55 @@ def fmt(v: float) -> str:
     return f"{v:,.2f}" if abs(v) < 1000 else f"{v:,.0f}"
 
 
+# ISO dates first, so 2026-06-16 is emphasised whole rather than shattered into
+# three separate numbers.
+_FIGURE = re.compile(r"(\d{4}-\d{2}-\d{2}|-?\d[\d,]*(?:\.\d+)?%?)")
+
+
+def emphasise(text: str) -> str:
+    """
+    Bold the figures in a narrative, for display only.
+
+    Done here rather than in the engine on purpose. The narrative string is also
+    served by the REST layer and rendered by the React console, and markup baked
+    into it there would reach those callers as literal characters. Presentation
+    belongs in the presentation layer.
+    """
+    return _FIGURE.sub(r"<strong>\1</strong>", html.escape(str(text)))
+
+
+# Full names for the fact pack. Underscored keys are how the engine addresses
+# these internally; a reader should not have to decode them.
+FACT_LABELS = {
+    "kpi": "KPI",
+    "slice": "Slice",
+    "period": "Period compared",
+    "current_value": "Current value",
+    "prior_value": "Prior period value",
+    "change_abs": "Change, absolute",
+    "change_pct": "Change, percent",
+    "z_score": "Signal strength (robust z score)",
+    "normal_swing": "Normal swing for this slice",
+    "top_account": "Largest contributing account",
+    "top_account_effect": "That account's contribution",
+    "root_cause": "Upstream root cause",
+    "root_cause_strength": "Root cause rate against its own baseline",
+    "root_cause_from": "Root cause began",
+    "onset": "Movement onset",
+    "confidence": "Confidence",
+}
+
+
+def fact_label(key: str) -> str:
+    """Human readable name for a fact key: volume_effect -> Volume effect."""
+    if key in FACT_LABELS:
+        return FACT_LABELS[key]
+    # driver derived keys are generated from the contract, so they are handled
+    # by shape rather than enumerated: volume_share -> Volume share
+    head, *rest = key.split("_")
+    return " ".join([head.capitalize(), *rest])
+
+
 head_col, metrics_col = st.columns([1, 2], gap="medium")
 
 with head_col:
@@ -219,7 +270,8 @@ tabs = st.tabs(["Explanation", "Attribution", "Causal gates", "Evidence",
 # ------------------------------------------------------------------ narrative
 with tabs[0]:
     st.markdown(f"#### {ins.persona}")
-    st.write(ins.narrative.text)
+    st.markdown(f'<div class="fr-narrative">{emphasise(ins.narrative.text)}</div>',
+                unsafe_allow_html=True)
 
     if ins.narrative.violations:
         st.error(f"**Numeric guard fired.** The model wrote "
@@ -238,8 +290,26 @@ with tabs[0]:
             st.info(f"Check that would settle it: {ins.next_check}")
 
     with st.expander("The fact pack: every number this narrative was allowed to use"):
-        st.dataframe(pd.DataFrame(ins.facts.lineage()), hide_index=True,
-                     width="stretch")
+        _facts = pd.DataFrame(ins.facts.lineage())
+        _facts["fact"] = _facts["fact"].map(fact_label)
+        st.dataframe(
+            _facts, hide_index=True, width="stretch",
+            column_config={
+                "fact": st.column_config.TextColumn(
+                    "Fact",
+                    help="One quantity the narrative was permitted to state. If a "
+                         "number is not on this list, the guard rejects the text "
+                         "rather than letting it reach you."),
+                "value": st.column_config.TextColumn(
+                    "Value",
+                    help="The figure as computed, in the unit the contract declares "
+                         "for it. This is what the prose must match."),
+                "produced_by": st.column_config.TextColumn(
+                    "Produced by",
+                    help="The stage that computed it, and by which method. Every "
+                         "entry here is deterministic; no number in this table was "
+                         "produced by a model."),
+            })
 
 # ----------------------------------------------------------------- attribution
 with tabs[1]:
