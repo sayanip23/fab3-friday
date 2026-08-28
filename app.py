@@ -71,6 +71,12 @@ use_llm = st.sidebar.toggle(
 engine = get_engine(use_llm)
 principal = Principal(name, role, engine.contract)
 
+# Price/volume/mix decomposes revenue whatever KPI is selected, so its figures
+# are in revenue's unit, not the selected movement's. Labelling them with the
+# movement's unit read as "contribution (ratio)" against values in lakhs on any
+# KPI that is not revenue. Taken from the contract rather than written in.
+PVM_UNIT = engine.contract.kpis["net_revenue"].unit
+
 st.sidebar.divider()
 
 visible = engine.contract.visible_kpis(role)
@@ -330,7 +336,7 @@ with tabs[1]:
     # bands collapse to ~25px each and the bars touch, reading as one solid shape.
     chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=2).encode(
         y=alt.Y("effect:N", title=None, sort="-x"),
-        x=alt.X("value:Q", title=f"contribution ({movement.unit})", stack=False),
+        x=alt.X("value:Q", title=f"contribution ({PVM_UNIT})", stack=False),
         color=alt.condition(alt.datum.value < 0, alt.value(DOWN), alt.value(UP)),
         tooltip=[alt.Tooltip("effect:N"),
                  alt.Tooltip("value:Q", format=",.0f"),
@@ -342,8 +348,27 @@ with tabs[1]:
     shown = df[["effect", "value", "share_of_movement"]].copy()
     shown["value"] = shown.value.map(lambda v: f"{v:,.0f}")
     shown["share_of_movement"] = shown.share_of_movement.map(lambda v: f"{v:+.1%}")
-    shown.columns = ["effect", f"contribution ({movement.unit})", "share of movement"]
-    a.dataframe(shown, hide_index=True, width="stretch")
+    a.dataframe(
+        shown, hide_index=True, width="stretch",
+        column_config={
+            "effect": st.column_config.TextColumn(
+                "Effect", width="small",
+                help="The lever the movement is being restated in. Volume is the "
+                     "change in units at last period's prices, price is the change "
+                     "in realised price on this period's units, and mix is what "
+                     "moved because demand shifted between product lines."),
+            "value": st.column_config.TextColumn(
+                f"Contribution ({PVM_UNIT})", width="small",
+                help=f"How much of the movement this lever accounts for, in "
+                     f"{PVM_UNIT}. This decomposition always splits revenue, so it "
+                     f"is stated in {PVM_UNIT} even when the selected KPI is "
+                     f"measured in something else."),
+            "share_of_movement": st.column_config.TextColumn(
+                "Share of movement", width="small",
+                help="This lever as a proportion of the total movement. The three "
+                     "shares sum to 100% because the decomposition is an identity, "
+                     "not an estimate."),
+        })
     b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
              help="Contributions are an identity, not an approximation. This is "
                   "zero or the decomposition is not published.")
@@ -357,9 +382,28 @@ with tabs[1]:
         acc = result.by_account.as_frame().head(6).copy()
         acc["value"] = acc.value.map(lambda v: f"{v:,.0f}")
         acc["share_of_movement"] = acc.share_of_movement.map(lambda v: f"{v:+.1%}")
-        acc.columns = ["account", "dimension", f"contribution ({movement.unit})",
-                       "share of movement"]
-        st.dataframe(acc, hide_index=True, width="stretch")
+        st.dataframe(
+            acc, hide_index=True, width="stretch",
+            column_config={
+                "effect": st.column_config.TextColumn(
+                    "Account", width="medium",
+                    help="The account this share of the movement sits with. Masked "
+                         "to a stable pseudonym for roles that may not see customer "
+                         "names, so the attribution still works without revealing "
+                         "who it is."),
+                "driver": st.column_config.TextColumn(
+                    "Split by", width="small",
+                    help="The dimension the movement was broken down across."),
+                "value": st.column_config.TextColumn(
+                    f"Contribution ({PVM_UNIT})", width="small",
+                    help="How much of the movement came from this account. Where it "
+                         "sits, which is a different question from why it happened."),
+                "share_of_movement": st.column_config.TextColumn(
+                    "Share of movement", width="small",
+                    help="This account as a proportion of the total movement. A "
+                         "large share names where to look; it is not on its own a "
+                         "cause, which is what the causal gates are for."),
+            })
 
 # ---------------------------------------------------------------- causal gates
 with tabs[2]:
@@ -377,7 +421,53 @@ with tabs[2]:
             "verdict": v.status.upper(),
             "why not": "; ".join(v.reasons) or "-",
         })
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    _gate_help = ("Deterministic rule over dates and numbers. No judgement, and "
+                  "nothing a model can talk its way past.")
+    st.dataframe(
+        pd.DataFrame(rows), hide_index=True, width="stretch",
+        column_config={
+            "driver": st.column_config.TextColumn(
+                "Driver", width="small",
+                help="The candidate explanation being tested. Every declared driver "
+                     "of this KPI is screened, not only the ones that look good."),
+            "kind": st.column_config.TextColumn(
+                "Kind", width="small",
+                help="Arithmetic drivers fall out of the decomposition: they are the "
+                     "movement restated, so the arithmetic is their mechanism. "
+                     "Evidential drivers are candidate root causes upstream of it, "
+                     "which never appear in the decomposition and must instead be "
+                     "dated and corroborated from text."),
+            "share of movement": st.column_config.TextColumn(
+                "Weight", width="small",
+                help="For an arithmetic driver, the share of the movement it "
+                     "accounts for. For an evidential driver, how much more often "
+                     "its events occur now than before its own change point."),
+            "sequence": st.column_config.TextColumn(
+                "Sequence", width="small",
+                help="Is the candidate cause observable BEFORE the movement began? "
+                     "A cause cannot follow its effect. " + _gate_help),
+            "magnitude": st.column_config.TextColumn(
+                "Magnitude", width="small",
+                help="Is it big enough to matter? Arithmetic drivers must clear the "
+                     "contribution share the contract sets; evidential drivers must "
+                     "clear a rate multiple against their own baseline. "
+                     + _gate_help),
+            "mechanism": st.column_config.TextColumn(
+                "Mechanism", width="small",
+                help="Is there a route from cause to effect? It must be a declared "
+                     "driver of this KPI, and something has to corroborate it. "
+                     + _gate_help),
+            "verdict": st.column_config.TextColumn(
+                "Verdict", width="small",
+                help="CAUSE only when all three gates pass. Anything less is "
+                     "reported as an ASSOCIATION — a large contribution tells you "
+                     "where a movement sits, never why it happened."),
+            "why not": st.column_config.TextColumn(
+                "Why not", width="large",
+                help="Which gate failed, and by how much against which threshold. "
+                     "Stated so you can disagree with the call rather than having "
+                     "to take it on trust."),
+        })
     st.caption("Arithmetic drivers come from the decomposition and are the movement "
                "restated. Evidential drivers sit upstream and must be dated and "
                "corroborated. Screening them the same way would be a category error.")
