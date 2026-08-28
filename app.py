@@ -10,7 +10,7 @@ Run:  streamlit run app.py
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, timedelta
 
 import altair as alt
 import pandas as pd
@@ -212,6 +212,109 @@ elif assess.abstain:
     st.markdown(theme.chain("outcome", [
         f"{movement.label} {movement.pct:+.1f}%", "no cause established",
         "abstained"]), unsafe_allow_html=True)
+
+# ═════════════════════════════════════════════════════════ first screen charts
+# Everything below is additive: it reads state the engine already produced and
+# draws it. Deleting this whole block restores the previous page exactly.
+#
+# It exists because the landing tab was prose while every chart sat behind a
+# tab, so the first thing a visitor saw was four numbers and a paragraph. These
+# two charts carry the argument the prose makes: the movement is real and
+# dated, and it decomposes exactly.
+_tl, _attr = st.columns([3, 2], gap="medium")
+
+with _tl:
+    st.markdown("#### How it moved")
+    _hist = 120
+    _series, _grain = engine.wh.series(
+        movement.kpi, PERIOD.end - timedelta(days=_hist - 1), PERIOD.end,
+        movement.filters)
+    _obs = pd.DataFrame({"date": pd.to_datetime(list(_series.index)),
+                         "value": _series.to_numpy(dtype=float)}).dropna()
+
+    if _obs.empty:
+        st.info("No history to plot for this slice.")
+    else:
+        _prior = PERIOD.shifted(PERIOD.days)
+        # the two comparison windows, shaded. Equal width is the point: it shows
+        # at a glance that the comparison is like for like, not a calendar artefact
+        _bands = pd.DataFrame([
+            {"from": pd.Timestamp(_prior.start), "to": pd.Timestamp(_prior.end),
+             "window": "prior period"},
+            {"from": pd.Timestamp(PERIOD.start), "to": pd.Timestamp(PERIOD.end),
+             "window": "current period"},
+        ])
+        _band = alt.Chart(_bands).mark_rect(opacity=0.16).encode(
+            x=alt.X("from:T", title=None), x2="to:T",
+            color=alt.Color("window:N", legend=alt.Legend(orient="top", title=None),
+                            scale=alt.Scale(domain=["prior period", "current period"],
+                                            range=[GREY, PURPLE])),
+            tooltip=["window:N"])
+
+        # Daily revenue swings by roughly a factor of two across the week, so the
+        # raw line is mostly weekday cycle and the level shift is invisible in it.
+        # causal.movement_onset smooths over a week before dating the onset for
+        # exactly this reason; the bold line here is the same view the engine used.
+        _win = 7 if _grain == "daily" else 3
+        _obs["trend"] = _obs["value"].rolling(_win, center=True,
+                                             min_periods=max(2, _win // 2)).mean()
+
+        _raw = alt.Chart(_obs).mark_line(strokeWidth=1, opacity=0.3,
+                                         color=theme.PURPLE_MID).encode(
+            x=alt.X("date:T", title=None),
+            y=alt.Y("value:Q", title=f"{movement.label} ({movement.unit})",
+                    scale=alt.Scale(zero=False)),
+            tooltip=[alt.Tooltip("date:T", title="date"),
+                     alt.Tooltip("value:Q", format=",.2f", title=movement.label)])
+        _line = _raw + alt.Chart(_obs).mark_line(
+            strokeWidth=2.5, color=theme.PURPLE_DEEP).encode(
+            x="date:T", y=alt.Y("trend:Q", scale=alt.Scale(zero=False)))
+
+        # dated events the causal screen established, drawn where they happened
+        _events = []
+        _onset = next((v.onset for v in assess.verdicts if v.onset), None)
+        if _onset:
+            _events.append({"date": pd.Timestamp(_onset), "event": "movement onset"})
+        _cp = next((v.first_evidence for v in assess.causes
+                    if v.kind == "evidential" and v.first_evidence), None)
+        if _cp:
+            _events.append({"date": pd.Timestamp(_cp), "event": "root cause begins"})
+
+        _chart = _band + _line
+        if _events:
+            _ev = pd.DataFrame(_events)
+            _chart += alt.Chart(_ev).mark_rule(
+                strokeDash=[5, 3], strokeWidth=2, color=theme.CHART_DOWN).encode(
+                x="date:T", tooltip=["event:N", alt.Tooltip("date:T", title="on")])
+
+        st.altair_chart(_chart.properties(height=260), width="stretch")
+        st.caption(
+            f"Faint line is {_grain} values, bold is the {_win} period mean the "
+            f"engine itself uses to date an onset. Shaded blocks are the two "
+            f"{PERIOD.days} day windows being compared"
+            + ("; dashed lines are dates the causal screen established, not "
+               "annotations typed in by hand." if _events else "."))
+
+with _attr:
+    st.markdown("#### What explains it")
+    _pvm = pvm.as_frame()
+    st.altair_chart(
+        alt.Chart(_pvm).mark_bar(size=26, cornerRadiusEnd=2).encode(
+            y=alt.Y("effect:N", title=None, sort="-x"),
+            x=alt.X("value:Q", title=f"contribution ({movement.unit})", stack=False),
+            color=alt.condition(alt.datum.value < 0, alt.value(DOWN), alt.value(UP)),
+            tooltip=[alt.Tooltip("effect:N"),
+                     alt.Tooltip("value:Q", format=",.0f"),
+                     alt.Tooltip("share_of_movement:Q", format="+.1%")],
+        ).properties(height=260), width="stretch")
+    st.caption(
+        f"Residual {abs(pvm.residual):.6f}. Contributions are an identity, not an "
+        f"estimate, so they sum to the movement exactly or the engine withholds them."
+        if pvm.reconciled else
+        "Does not reconcile, so this decomposition is withheld.")
+
+st.divider()
+# ═══════════════════════════════════════════════════ end first screen charts
 
 tabs = st.tabs(["Explanation", "Attribution", "Causal gates", "Evidence",
                 "Actions", "Method and cost", "Contract", "Audit"])
