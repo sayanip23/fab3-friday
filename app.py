@@ -129,15 +129,22 @@ if not alerts:
     st.info("No material movements for this role in the current period.")
     st.stop()
 
-def option_label(m) -> str:
-    """KPI=Net Revenue | Region=West | Net Output=-19.2%"""
+def movement_facts(m, suffix: str = "") -> list[str]:
+    """
+    The three facts of a movement, each labelled: which KPI, which slice, how
+    far it moved.
+
+    One function for both surfaces on purpose. The sidebar joins these into a
+    single line and the header stacks them into three boxes, so the row you pick
+    and the header you land on say the same thing in the same words.
+    """
     # a movement with no filters is the national total, not a missing region
     scope = " | ".join(f"{k.replace('_', ' ').title()}={v}"
                        for k, v in m.filters.items()) or "Region=All"
-    return f"KPI={m.label} | {scope} | Net Output={m.pct:+.1f}%"
+    return [f"KPI={m.label}", scope, f"Net Output={m.pct:+.1f}%{suffix}"]
 
 
-options = {option_label(m): m for m in alerts}
+options = {" | ".join(movement_facts(m)): m for m in alerts}
 st.sidebar.divider()
 choice = st.sidebar.selectbox(
     f"Material movements ({len(alerts)})", list(options),
@@ -154,9 +161,10 @@ except EntitlementError as e:
 ins, run, pvm, assess = result.insight, result.run, result.pvm, result.assessment
 
 # ------------------------------------------------------------------- headline
-# The engine hands back "<kpi> · <slice> · <change> against the prior period".
-# Split it back into its three facts so each gets its own box.
-_parts = [x.strip() for x in ins.headline.split(" · ") if x.strip()]
+# Built from the movement rather than by splitting the engine's headline string:
+# the labels then match the sidebar exactly, and a change to the engine's
+# phrasing cannot quietly desync the two.
+_parts = movement_facts(movement, " against the prior period")
 
 
 def fmt(v: float) -> str:
@@ -169,8 +177,7 @@ def fmt(v: float) -> str:
 head_col, metrics_col = st.columns([1, 2], gap="medium")
 
 with head_col:
-    st.markdown(theme.headline(_parts or [ins.headline], stacked=True),
-                unsafe_allow_html=True)
+    st.markdown(theme.headline(_parts, stacked=True), unsafe_allow_html=True)
 
 with metrics_col:
     # Two rows of two, not one row of four. Beside a stacked headline each card
