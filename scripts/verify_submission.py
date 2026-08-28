@@ -139,7 +139,7 @@ req(G, "9. Clear breakdown of LLM versus non LLM processing",
 req(G, "10. Runtime telemetry: latency, model calls, tokens, estimated cost",
     r_cfo.run.total_ms > 0 and "estimated_cost_inr" in r_cfo.run.to_dict(),
     r_cfo.run.footer(),
-    "Method and cost tab, and the footer on every page")
+    "Method and cost tab")
 
 # ==================================== ROUND 2 OBJECTIVES (8) =================
 O = "ROUND 2 OBJECTIVE"

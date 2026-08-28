@@ -409,7 +409,3 @@ with tabs[7]:
                        file_name=f"{result.insight_id}_audit.json",
                        mime="application/json")
     st.json(result.audit_record(), expanded=False)
-
-st.divider()
-st.markdown(f'<div class="fr-foot">{result.insight_id} &nbsp;·&nbsp; '
-            f'{run.footer()}</div>', unsafe_allow_html=True)
