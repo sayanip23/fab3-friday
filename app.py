@@ -55,7 +55,7 @@ def get_engine(use_llm: bool) -> Engine:
 
 
 st.sidebar.title("FRIDAY")
-st.sidebar.caption("KPI intelligence to action engine · Team Fab3")
+st.sidebar.caption("KPI intelligence to action engine")
 
 role = st.sidebar.selectbox(
     "Signed in as", list(USERS), format_func=lambda r: USERS[r][1])
@@ -70,9 +70,38 @@ engine = get_engine(use_llm)
 principal = Principal(name, role, engine.contract)
 
 st.sidebar.divider()
-st.sidebar.caption(f"**Scope** · {principal.region_scope}")
-st.sidebar.caption(f"**KPIs** · {len(engine.contract.visible_kpis(role))} of "
-                   f"{len(engine.contract.kpis)} visible")
+
+visible = engine.contract.visible_kpis(role)
+withheld = [n for n in engine.contract.kpis if n not in visible]
+
+
+def kpi_labels(names: list[str]) -> str:
+    return ", ".join(engine.contract.kpis[n].label for n in names)
+
+
+st.sidebar.caption(
+    f"**Scope** · {principal.region_scope}",
+    help=(
+        f"Row level security. This role is scoped to {principal.region_scope}, so "
+        f"every figure on the page is computed from {principal.region_scope} rows "
+        f"only. The filter is applied to the data before anything is calculated, "
+        f"not stripped out of the answer afterwards, and a request for another "
+        f"region is refused."
+        if principal.region_scope != "all" else
+        "This role sees every region. The contract sets no row level filter for it, "
+        "so figures are computed across all four regions."
+    ))
+
+st.sidebar.caption(
+    f"**KPIs** · {len(visible)} of {len(engine.contract.kpis)} visible",
+    help=(
+        f"Visible to this role: {kpi_labels(visible)}."
+        + (f"\n\nWithheld: {kpi_labels(withheld)}. The contract does not grant "
+           f"these to this role, and asking for one raises an entitlement error "
+           f"rather than returning a blanked out number." if withheld else
+           " This role is granted every KPI in the contract.")
+    ))
+
 rights = principal.decision_rights
 st.sidebar.caption(f"**Decision rights** · {', '.join(rights) if rights else 'none'}")
 
@@ -88,12 +117,6 @@ choice = st.sidebar.radio(f"Material movements ({len(alerts)})", list(options),
                           help="Ranked by business impact weighted by certainty. "
                                "Movements inside normal variance never appear here.")
 movement = options[choice]
-
-# Streamlit's automatic page nav is hidden in theme.py (it labels this file
-# "app"). One explicit link keeps the second page reachable. Delete these two
-# lines if the demo should be single-page.
-st.sidebar.divider()
-st.sidebar.page_link("pages/1_Bring_your_own_data.py", label="Bring your own data")
 
 try:
     result = engine.explain(principal, movement.kpi, PERIOD, movement.filters)
