@@ -17,6 +17,7 @@ Everything enforced here is declared in contracts/kpis.yaml. No rule is hardcode
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -164,6 +165,33 @@ class Principal:
     # ------------------------------------------------------------------ audit
     def audit_trail(self) -> list[str]:
         return [d.line() for d in self.log]
+
+
+_NAME_PAIR = re.compile(r"\b[A-Z][a-z]+\s+[A-Z][a-z]+\b")
+
+
+def redact_person_names(text: str, protected: set[str]) -> str:
+    """
+    Strip person names from free text without being given the names first.
+
+    `redact_free_text` below can only remove names it is handed, which is no use
+    on ingest: real tickets name people nobody has enumerated. This works from
+    shape instead. A two word capitalised phrase is what a person's name looks
+    like in a ticket body.
+
+    Company and place names have exactly that shape too, and unlike a person's
+    name they are load bearing: attribution has to be able to say Acme Corp
+    stopped ordering. That is what `protected` is for. It carries every account
+    name in the data and every dimension value in the contract, so the business
+    entities survive and only the unrecognised pairs are removed.
+
+    The tradeoff is stated rather than hidden: this over-redacts an unknown
+    company that never appears as an account, and misses a mononym. It is a
+    shape heuristic, not entity resolution, and ASSUMPTIONS.md says so.
+    """
+    return _NAME_PAIR.sub(
+        lambda m: m.group(0) if m.group(0) in protected else "[redacted]",
+        str(text))
 
 
 def redact_free_text(text: str, names: list[str]) -> str:

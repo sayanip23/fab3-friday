@@ -60,6 +60,10 @@ sources:
     keys: [event_id]
     contains_free_text: true
     pii_handling: redact_person_names_on_ingest
+    # which columns that policy applies to. Declared here rather than guessed at
+    # load time, so redaction can never silently miss a column or damage one it
+    # was not meant to touch.
+    free_text_columns: [text]
     # Used as evidence only. Never used to compute a quantitative KPI value.
     role: evidence_only
 

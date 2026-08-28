@@ -102,8 +102,26 @@ st.sidebar.caption(
            " This role is granted every KPI in the contract.")
     ))
 
+# joining words stay lowercase, so escalate_to_logistics reads as a phrase
+# rather than as a header: "Escalate to Logistics", not "Escalate To Logistics".
+SMALL_WORDS = {"to", "of", "for", "and", "the", "a", "an", "in", "on"}
+
+
+def humanise(right: str) -> str:
+    """contact_customer -> Contact Customer."""
+    return " ".join(w if i and w in SMALL_WORDS else w.capitalize()
+                    for i, w in enumerate(right.split("_")))
+
+
 rights = principal.decision_rights
-st.sidebar.caption(f"**Decision rights** · {', '.join(rights) if rights else 'none'}")
+if rights:
+    # two trailing spaces before the newline is a markdown hard break, so each
+    # right lands on its own line instead of reflowing into one paragraph
+    st.sidebar.caption(
+        "**Decision rights**  \n"
+        + "  \n".join(f"{i}) {humanise(r)}" for i, r in enumerate(rights, 1)))
+else:
+    st.sidebar.caption("**Decision rights** · none")
 
 # --------------------------------------------------------------------- alerts
 alerts = engine.alerts(principal, PERIOD)
@@ -111,11 +129,20 @@ if not alerts:
     st.info("No material movements for this role in the current period.")
     st.stop()
 
-options = {f"{m.label} · {m.slice_label} · {m.pct:+.1f}%": m for m in alerts}
+def option_label(m) -> str:
+    """KPI=Net Revenue | Region=West | Net Output=-19.2%"""
+    # a movement with no filters is the national total, not a missing region
+    scope = " | ".join(f"{k.replace('_', ' ').title()}={v}"
+                       for k, v in m.filters.items()) or "Region=All"
+    return f"KPI={m.label} | {scope} | Net Output={m.pct:+.1f}%"
+
+
+options = {option_label(m): m for m in alerts}
 st.sidebar.divider()
-choice = st.sidebar.radio(f"Material movements ({len(alerts)})", list(options),
-                          help="Ranked by business impact weighted by certainty. "
-                               "Movements inside normal variance never appear here.")
+choice = st.sidebar.selectbox(
+    f"Material movements ({len(alerts)})", list(options),
+    help="Ranked by business impact weighted by certainty. "
+         "Movements inside normal variance never appear here.")
 movement = options[choice]
 
 try:
@@ -130,8 +157,8 @@ ins, run, pvm, assess = result.insight, result.run, result.pvm, result.assessmen
 # The engine hands back "<kpi> · <slice> · <change> against the prior period".
 # Split it back into its three facts so each gets its own box.
 _parts = [x.strip() for x in ins.headline.split(" · ") if x.strip()]
-st.markdown(theme.headline(_parts or [ins.headline]), unsafe_allow_html=True)
-c1, c2, c3, c4 = st.columns(4)
+
+
 def fmt(v: float) -> str:
     """Ratios and percentages need decimals; a ratio of 2.46 shown as '2' is wrong."""
     if v != v:
@@ -139,13 +166,27 @@ def fmt(v: float) -> str:
     return f"{v:,.2f}" if abs(v) < 1000 else f"{v:,.0f}"
 
 
-c1.metric("Current", fmt(movement.current), f"{movement.pct:+.1f}%")
-c2.metric("Prior period", fmt(movement.prior))
-c3.metric("Signal strength", f"{movement.z_score:.2f} sigma",
-          help="Robust z against this slice's own history. Threshold from the contract.")
-c4.metric("Confidence", assess.confidence.upper(),
-          delta="abstained" if assess.abstain else "cause established",
-          delta_color="inverse" if assess.abstain else "normal")
+head_col, metrics_col = st.columns([1, 2], gap="medium")
+
+with head_col:
+    st.markdown(theme.headline(_parts or [ins.headline], stacked=True),
+                unsafe_allow_html=True)
+
+with metrics_col:
+    # Two rows of two, not one row of four. Beside a stacked headline each card
+    # would otherwise get about a third of its readable width, and the metric
+    # values are the one thing on this page that must survive a glance.
+    c1, c2 = st.columns(2)
+    c3, c4 = st.columns(2)
+
+    c1.metric("Current", fmt(movement.current), f"{movement.pct:+.1f}%")
+    c2.metric("Prior period", fmt(movement.prior))
+    c3.metric("Signal strength", f"{movement.z_score:.2f} sigma",
+              help="Robust z against this slice's own history. "
+                   "Threshold from the contract.")
+    c4.metric("Confidence", assess.confidence.upper(),
+              delta="abstained" if assess.abstain else "cause established",
+              delta_color="inverse" if assess.abstain else "normal")
 
 if ins.masked:
     st.caption("Account names are masked for this role. Pseudonyms are stable, so "

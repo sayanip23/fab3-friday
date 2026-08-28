@@ -24,6 +24,13 @@ dist/
 .DS_Store
 Thumbs.db
 
+# ── Runtime state ─────────────────────────────────────────────────────────
+# The feedback log is written by the app as analysts correct insights. It is
+# per-deployment state, not source, and committing it would ship one machine's
+# corrections as everyone's starting priors.
+data/feedback.jsonl
+data/feedback_*.jsonl
+
 # ── Generated output ──────────────────────────────────────────────────────
 # Knowledge-graph output, regenerated on demand; large and not a source file.
 graphify-out/

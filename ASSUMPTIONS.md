@@ -88,7 +88,17 @@ actions. The third persona also serves the role based security requirement.
 - Jurisdiction assumed: India, Digital Personal Data Protection Act 2023.
 - Account names and buyer contact details are treated as commercially sensitive rather than
   personal data, but are masked by entitlement anyway.
-- Free text in `service_events` may contain named individuals. It is redacted on ingest.
+- Free text in `service_events` may contain named individuals. It is redacted on ingest, in
+  `Warehouse._redact`, before retrieval, the fact pack or the audit record can see it — a name
+  removed from the narrative but left in the audit log has not been protected at all. The policy
+  and the columns it applies to are declared in `contracts/kpis.yaml`, not hardcoded.
+- That redaction is a **shape heuristic, not entity resolution**, and we do not claim otherwise.
+  It removes two-word capitalised phrases that are not known business entities; account names and
+  contract dimension values are protected so attribution can still name the account that moved.
+  It therefore over-redacts an unfamiliar company that never appears as an account, and misses a
+  mononym. On the generated corpus it alters 0 of 895 events while still removing a planted
+  person name, which is the behaviour we want: the control runs, and it does not eat the evidence.
+  Production would put a trained NER model behind the same interface.
 - Every insight writes an audit record: who asked, what they were entitled to see, which
   sources and rows were used, which method ran, and what was returned.
 

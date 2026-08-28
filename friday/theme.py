@@ -439,6 +439,55 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
 }}
 .fr-head-part:first-child {{ border-left: 5px solid var(--c-primary); }}
 
+/* Stacked variant: the three facts run down the page instead of across it, so
+   the metric grid can sit beside them. height:100% lets the three blocks share
+   the column's full height, which is what keeps the stack level with the 2x2
+   grid on the right rather than ending short of it. Text goes left aligned:
+   centred text reads fine in a wide chip and badly in a tall narrow one. */
+.fr-head-col {{
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  margin-bottom: 0;
+}}
+/* flex-basis 0 with grow 1 is what makes the three boxes equal height rather
+   than each sizing to its own text: "Net Revenue" and "-19.2% against the
+   prior period" are very different lengths and would otherwise differ. */
+.fr-head-col .fr-head-part {{
+  flex: 1 1 0;
+  min-height: 0;
+  border-left: 5px solid var(--c-primary);
+  justify-content: flex-start;
+  text-align: left;
+}}
+
+/* Make the stack reach the full height of the metric grid beside it.
+   height:100% cannot do this: it only resolves when EVERY ancestor has a
+   definite height, and Streamlit inserts several wrappers between the column
+   and the markdown, some with no test id to target. Naming them individually
+   is guesswork that breaks whenever Streamlit changes its DOM.
+   So: select every div that CONTAINS the headline — that is exactly its
+   ancestor chain, whatever Streamlit calls them — and make each a flex column
+   that grows. flex:1 propagates through auto-height parents, which is the
+   thing height:100% cannot do.
+   The [data-testid="stColumn"]:has(...) prefix is load bearing. Without it
+   "div:has(.fr-head-col)" would match every ancestor up to the page root and
+   turn the whole app into a flex column. */
+[data-testid="stColumn"]:has(.fr-head-col) div:has(.fr-head-col) {{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  /* Streamlit puts margin-bottom:-16px on stMarkdownContainer to swallow the
+     trailing margin of a markdown paragraph. On a flex item that is not
+     cosmetic: the line is filled by OUTER size, so the box grows to 268px for
+     its outer size to reach the column's 252px, and the stack inside inherits
+     the 268 and hangs 16px below the metric grid. Zeroing it is what actually
+     levels the two columns. */
+  margin-bottom: 0;
+}}
+
 .fr-chain {{
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
   /* deep brand purple rather than black: black was the only pure-black
@@ -490,11 +539,15 @@ def chain(label: str, nodes: list[str]) -> str:
             f'{inner}</div>')
 
 
-def headline(parts: list[str]) -> str:
+def headline(parts: list[str], stacked: bool = False) -> str:
     """
     The headline as separate boxes rather than one middot-joined sentence:
     KPI, slice, movement. Callers pass the parts, so this never has to guess
     where the boundaries are.
+
+    `stacked` runs the boxes down a column instead of across a row, for the
+    layout where the metric cards sit beside them rather than beneath.
     """
+    cls = "fr-head fr-head-col" if stacked else "fr-head"
     inner = "".join(f'<span class="fr-head-part">{p}</span>' for p in parts)
-    return f'<div class="fr-head">{inner}</div>'
+    return f'<div class="{cls}">{inner}</div>'

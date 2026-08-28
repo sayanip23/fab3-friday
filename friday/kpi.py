@@ -75,7 +75,38 @@ class Warehouse:
             date_col = ("date" if "date" in df else
                         "week_start" if "week_start" in df else "event_ts")
             df["_d"] = pd.to_datetime(df[date_col]).dt.date
-            self._frames[name] = df
+            self._frames[name] = self._redact(df, spec)
+
+    # --------------------------------------------------------------- privacy
+    def _redact(self, df: pd.DataFrame, spec: dict) -> pd.DataFrame:
+        """
+        Apply the source's declared PII policy before anything else sees the rows.
+
+        Ingest is the only correct place for this. Redacting later would mean the
+        raw text had already reached retrieval, the fact pack and the audit
+        record, and a name removed from the narrative but sitting in the audit
+        log has not been protected at all.
+        """
+        from .access import redact_person_names          # local: avoids a cycle
+
+        if spec.get("pii_handling") != "redact_person_names_on_ingest":
+            return df
+        columns = [c for c in spec.get("free_text_columns", []) if c in df.columns]
+        if not columns:
+            return df
+
+        # Business entities must survive: attribution has to be able to name the
+        # account that drove a movement.
+        protected: set[str] = set()
+        for dim in self.c.dimensions.values():
+            protected.update(str(v) for v in dim.get("values", []))
+        if "account_name" in df.columns:
+            protected.update(df["account_name"].dropna().astype(str).unique())
+
+        df = df.copy()
+        for col in columns:
+            df[col] = df[col].map(lambda t: redact_person_names(t, protected))
+        return df
 
     # ------------------------------------------------------------------ util
     def frame(self, source: str) -> pd.DataFrame:
