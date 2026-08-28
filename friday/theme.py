@@ -488,6 +488,69 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   margin-bottom: 0;
 }}
 
+/* ---- summary card ----------------------------------------------------
+   Replaces three equally weighted boxes. They gave a title, a filter and the
+   headline number identical visual weight, which is exactly backwards: those
+   three facts are not peers. Hierarchy now comes from type size and colour,
+   and the filter sits in a chip that stays out of the title's way. */
+.fr-sum {{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1 1 auto;
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--c-wash);
+  border: 1px solid var(--c-border);
+  border-top: 3px solid var(--c-primary);   /* matches the metric cards */
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}}
+.fr-sum-eyebrow {{
+  font-family: {FONT_SANS};
+  font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--c-muted);
+}}
+.fr-sum-title {{
+  font-family: {FONT_SANS};
+  font-size: 1.55rem; font-weight: 700; line-height: 1.15;
+  letter-spacing: -.015em; color: var(--c-primary-deep);
+  margin-top: 2px;
+}}
+.fr-sum-chips {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-2); }}
+.fr-sum-chip {{
+  font-family: {FONT_SANS}; font-size: .72rem; font-weight: 600;
+  color: var(--c-primary-mid); background: var(--c-white);
+  border: 1px solid {HEAD_BORDER}; border-radius: 999px;
+  padding: 3px 10px; white-space: nowrap;
+}}
+.fr-sum-chip b {{ color: var(--c-muted); font-weight: 700; }}
+/* The movement is the one number this card exists to deliver, so it gets the
+   largest type on the page and the only colour that carries meaning here. */
+.fr-sum-delta {{
+  font-family: {FONT_MONO};
+  font-size: 2.5rem; font-weight: 700; line-height: 1;
+  margin-top: var(--space-3);
+}}
+.fr-sum-down {{ color: {CAUTION}; }}
+.fr-sum-up {{ color: {OK}; }}
+.fr-sum-sub {{
+  font-family: {FONT_SANS}; font-size: .74rem; color: var(--c-muted);
+  margin-top: 3px;
+}}
+
+/* Same height-propagation trick the stacked headline needed: Streamlit's
+   wrappers have no definite height, and stMarkdownContainer carries a -16px
+   bottom margin that inflates a flex item by exactly that much. */
+[data-testid="stColumn"]:has(.fr-sum) div:has(.fr-sum) {{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  margin-bottom: 0;
+}}
+
 .fr-chain {{
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
   /* deep brand purple rather than black: black was the only pure-black
@@ -537,6 +600,31 @@ def chain(label: str, nodes: list[str]) -> str:
         f'<span class="fr-chain-node">{n}</span>' for n in nodes)
     return (f'<div class="fr-chain"><span class="fr-chain-label">{label}</span>'
             f'{inner}</div>')
+
+
+def summary(kpi: str, chips: list[tuple[str, str]], delta: str, sub: str,
+            down: bool, eyebrow: str = "Material movement") -> str:
+    """
+    The header block: what moved, on which slice, by how much.
+
+    Takes the three facts separately rather than as a list of equals, because
+    they are not equals. The KPI is the title, the slice is context, and the
+    movement is the number the reader came for.
+    """
+    pills = "".join(f'<span class="fr-sum-chip"><b>{k}</b> {v}</span>'
+                    for k, v in chips)
+    tone = "fr-sum-down" if down else "fr-sum-up"
+    return (f'<div class="fr-sum">'
+            f'<div>'
+            f'<div class="fr-sum-eyebrow">{eyebrow}</div>'
+            f'<div class="fr-sum-title">{kpi}</div>'
+            f'<div class="fr-sum-chips">{pills}</div>'
+            f'</div>'
+            f'<div>'
+            f'<div class="fr-sum-delta {tone}">{delta}</div>'
+            f'<div class="fr-sum-sub">{sub}</div>'
+            f'</div>'
+            f'</div>')
 
 
 def headline(parts: list[str], stacked: bool = False) -> str:

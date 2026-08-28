@@ -161,10 +161,13 @@ except EntitlementError as e:
 ins, run, pvm, assess = result.insight, result.run, result.pvm, result.assessment
 
 # ------------------------------------------------------------------- headline
-# Built from the movement rather than by splitting the engine's headline string:
-# the labels then match the sidebar exactly, and a change to the engine's
-# phrasing cannot quietly desync the two.
-_parts = movement_facts(movement, " against the prior period")
+# Built from the movement rather than by splitting the engine's headline string,
+# so a change to the engine's phrasing cannot quietly desync the two surfaces.
+# The slice keeps its labels ("Region West"), so the card and the sidebar row
+# still read as the same movement without the card looking like a debug dump.
+_chips = [(k.replace("_", " ").title(), str(v))
+          for k, v in movement.filters.items()] or [("Region", "All")]
+_chips.append(("Window", f"{PERIOD.days} days to {PERIOD.end:%d %b %Y}"))
 
 
 def fmt(v: float) -> str:
@@ -177,7 +180,14 @@ def fmt(v: float) -> str:
 head_col, metrics_col = st.columns([1, 2], gap="medium")
 
 with head_col:
-    st.markdown(theme.headline(_parts, stacked=True), unsafe_allow_html=True)
+    st.markdown(
+        theme.summary(
+            kpi=movement.label,
+            chips=_chips,
+            delta=f"{movement.pct:+.1f}%",
+            sub=f"Net output against the prior {PERIOD.days} days",
+            down=movement.delta < 0),
+        unsafe_allow_html=True)
 
 with metrics_col:
     # Two rows of two, not one row of four. Beside a stacked headline each card
