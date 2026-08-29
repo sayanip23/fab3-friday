@@ -453,71 +453,81 @@ with tabs[1]:
     # offsets, which renders three separate contributions as one merged staircase
     # Step() sizes the band, not the whole plot. With a fixed total height the three
     # bands collapse to ~25px each and the bars touch, reading as one solid shape.
-    chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=4).encode(
-        y=alt.Y("effect:N", title=None, sort="-x"),
-        x=alt.X("value:Q", title=f"contribution ({PVM_UNIT})", stack=False),
-        # colour identifies the lever, not the sign: all three effects are
-        # negative here, so a diverging encoding would paint them identically
-        # and carry no information. Direction is already in the bar's geometry.
-        color=alt.Color("effect:N", legend=None, scale=alt.Scale(
-            domain=list(theme.LEVER_COLORS), range=list(theme.LEVER_COLORS.values()))),
-        tooltip=[alt.Tooltip("effect:N"),
-                 alt.Tooltip("value:Q", format=",.0f"),
-                 alt.Tooltip("share_of_movement:Q", format="+.1%")],
-    ).properties(height=alt.Step(46))
-    st.altair_chart(chart, width="stretch")
-
-    a, b = st.columns([2, 1])
-    shown = df[["effect", "value", "share_of_movement"]].copy()
-    shown["value"] = shown.value.map(lambda v: f"{v:,.0f}")
-    shown["share_of_movement"] = shown.share_of_movement.map(lambda v: f"{v:+.1%}")
-    a.dataframe(
-        shown, hide_index=True, width="stretch",
-        column_config={
-            "effect": st.column_config.TextColumn(
-                "Effect", width="small",
-                help="The lever the movement is being restated in. Volume is the "
-                     "change in units at last period's prices, price is the change "
-                     "in realised price on this period's units, and mix is what "
-                     "moved because demand shifted between product lines."),
-            "value": st.column_config.TextColumn(
-                f"Contribution ({PVM_UNIT})", width="small",
-                help=f"How much of the movement this lever accounts for, in "
-                     f"{PVM_UNIT}. This decomposition always splits revenue, so it "
-                     f"is stated in {PVM_UNIT} even when the selected KPI is "
-                     f"measured in something else."),
-            "share_of_movement": st.column_config.TextColumn(
-                "Share of movement", width="small",
-                help="This lever as a proportion of the total movement, signed by "
-                     "the direction it pushed. A negative share pushed the KPI "
-                     "down; a lever that offset the movement would show positive. "
-                     "The narrative quotes the same figures without the sign, "
-                     "because that is how they are said aloud: volume at -72.8% "
-                     "here is 'volume explains 73% of the drop' there. The three "
-                     "shares sum to 100% because the decomposition is an identity, "
-                     "not an estimate."),
-        })
-    a.caption("Shares are signed by direction: negative pushed the KPI down. The "
-              "narrative states the same shares without the sign.")
-    if UNASSESSABLE:
-        # A decomposition needs two comparable periods. This slice does not have
-        # a prior period, so the split is arithmetic against a partial base and
-        # its residual is meaningless -- publishing it as a failed
-        # reconciliation would report a defect where there is only missing
-        # history, and would undercut the identity that holds everywhere else.
-        b.metric("Reconciliation residual", "n/a",
-                 help="A decomposition compares two periods. This slice does "
-                      "not have a full prior period yet, so there is nothing "
-                      "to reconcile against.")
-        b.warning("Not decomposed: no comparable prior period")
+    if df.empty:
+        # No comparable prior period means no decomposition exists -- not an
+        # empty one. Drawing a chart and a table off an empty frame raises a
+        # KeyError, and drawing them off zeros would assert a split that was
+        # never computed.
+        st.info(
+            "No decomposition for this slice. Price, volume and mix compare "
+            "two periods, and this slice does not have a full prior period "
+            "yet, so there is nothing to split.")
     else:
-        b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
-                 help="Contributions are an identity, not an approximation. "
-                      "This is zero or the decomposition is not published.")
-        if pvm.reconciled:
-            b.success("Sums exactly to the movement")
+        chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=4).encode(
+            y=alt.Y("effect:N", title=None, sort="-x"),
+            x=alt.X("value:Q", title=f"contribution ({PVM_UNIT})", stack=False),
+            # colour identifies the lever, not the sign: all three effects are
+            # negative here, so a diverging encoding would paint them identically
+            # and carry no information. Direction is already in the bar's geometry.
+            color=alt.Color("effect:N", legend=None, scale=alt.Scale(
+                domain=list(theme.LEVER_COLORS), range=list(theme.LEVER_COLORS.values()))),
+            tooltip=[alt.Tooltip("effect:N"),
+                     alt.Tooltip("value:Q", format=",.0f"),
+                     alt.Tooltip("share_of_movement:Q", format="+.1%")],
+        ).properties(height=alt.Step(46))
+        st.altair_chart(chart, width="stretch")
+
+        a, b = st.columns([2, 1])
+        shown = df[["effect", "value", "share_of_movement"]].copy()
+        shown["value"] = shown.value.map(lambda v: f"{v:,.0f}")
+        shown["share_of_movement"] = shown.share_of_movement.map(lambda v: f"{v:+.1%}")
+        a.dataframe(
+            shown, hide_index=True, width="stretch",
+            column_config={
+                "effect": st.column_config.TextColumn(
+                    "Effect", width="small",
+                    help="The lever the movement is being restated in. Volume is the "
+                         "change in units at last period's prices, price is the change "
+                         "in realised price on this period's units, and mix is what "
+                         "moved because demand shifted between product lines."),
+                "value": st.column_config.TextColumn(
+                    f"Contribution ({PVM_UNIT})", width="small",
+                    help=f"How much of the movement this lever accounts for, in "
+                         f"{PVM_UNIT}. This decomposition always splits revenue, so it "
+                         f"is stated in {PVM_UNIT} even when the selected KPI is "
+                         f"measured in something else."),
+                "share_of_movement": st.column_config.TextColumn(
+                    "Share of movement", width="small",
+                    help="This lever as a proportion of the total movement, signed by "
+                         "the direction it pushed. A negative share pushed the KPI "
+                         "down; a lever that offset the movement would show positive. "
+                         "The narrative quotes the same figures without the sign, "
+                         "because that is how they are said aloud: volume at -72.8% "
+                         "here is 'volume explains 73% of the drop' there. The three "
+                         "shares sum to 100% because the decomposition is an identity, "
+                         "not an estimate."),
+            })
+        a.caption("Shares are signed by direction: negative pushed the KPI down. The "
+                  "narrative states the same shares without the sign.")
+        if UNASSESSABLE:
+            # A decomposition needs two comparable periods. This slice does not have
+            # a prior period, so the split is arithmetic against a partial base and
+            # its residual is meaningless -- publishing it as a failed
+            # reconciliation would report a defect where there is only missing
+            # history, and would undercut the identity that holds everywhere else.
+            b.metric("Reconciliation residual", "n/a",
+                     help="A decomposition compares two periods. This slice does "
+                          "not have a full prior period yet, so there is nothing "
+                          "to reconcile against.")
+            b.warning("Not decomposed: no comparable prior period")
         else:
-            b.error("Does not reconcile, withheld")
+            b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
+                     help="Contributions are an identity, not an approximation. "
+                          "This is zero or the decomposition is not published.")
+            if pvm.reconciled:
+                b.success("Sums exactly to the movement")
+            else:
+                b.error("Does not reconcile, withheld")
 
     if result.by_account is not pvm:
         st.markdown("#### Largest contributors by account")
