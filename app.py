@@ -548,7 +548,10 @@ with tabs[2]:
     rows = []
     for v in assess.verdicts:
         rows.append({
-            "driver": v.driver,
+            # Same drivers appear as "Volume" in Attribution and the causal
+            # chain card renders "delivery reliability" with a space. Printing
+            # the raw contract key here made one concept look like three.
+            "driver": v.driver.replace("_", " ").title(),
             "kind": v.kind,
             "share of movement": f"{v.share:.0%}" if v.kind == "arithmetic"
                                  else f"{v.strength:.1f}x rate",
