@@ -530,7 +530,18 @@ with tabs[1]:
                 b.error("Does not reconcile, withheld")
 
     if result.by_account is not pvm:
-        st.markdown("#### Largest contributors by account")
+        # With no prior period there is no movement, so these are not shares of
+        # one -- they are where this slice's revenue currently sits. Same
+        # numbers, honest heading: a "share of movement" column on a page that
+        # says the movement is not measurable contradicts itself.
+        st.markdown("#### Where this slice's revenue sits by account"
+                    if UNASSESSABLE else "#### Largest contributors by account")
+        if UNASSESSABLE:
+            st.caption(
+                "Not a decomposition of a movement, because there is no "
+                "movement to decompose yet. This is the current period's "
+                "revenue split across accounts, shown so a new line can still "
+                "be understood while it builds history.")
 
         # The table below says the same thing, but a reader has to compare nine
         # digit numbers across rows to see that one account carries most of the
@@ -575,14 +586,24 @@ with tabs[1]:
                     "Split by", width="small",
                     help="The dimension the movement was broken down across."),
                 "value": st.column_config.TextColumn(
-                    f"Contribution ({PVM_UNIT})", width="small",
-                    help="How much of the movement came from this account. Where it "
-                         "sits, which is a different question from why it happened."),
+                    f"{'Revenue' if UNASSESSABLE else 'Contribution'} "
+                    f"({PVM_UNIT})", width="small",
+                    help=("This account's revenue in the current period."
+                          if UNASSESSABLE else
+                          "How much of the movement came from this account. "
+                          "Where it sits, which is a different question from "
+                          "why it happened.")),
                 "share_of_movement": st.column_config.TextColumn(
-                    "Share of movement", width="small",
-                    help="This account as a proportion of the total movement. A "
-                         "large share names where to look; it is not on its own a "
-                         "cause, which is what the causal gates are for."),
+                    "Share of slice" if UNASSESSABLE else "Share of movement",
+                    width="small",
+                    help=("This account as a proportion of the slice's revenue "
+                          "this period. Not a share of a movement: there is no "
+                          "measurable movement for this slice yet."
+                          if UNASSESSABLE else
+                          "This account as a proportion of the total movement. "
+                          "A large share names where to look; it is not on its "
+                          "own a cause, which is what the causal gates are "
+                          "for.")),
             })
 
 # ---------------------------------------------------------------- causal gates
