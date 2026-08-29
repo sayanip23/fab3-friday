@@ -268,8 +268,13 @@ def build_actions(principal: Principal, assessment: Assessment,
             owner=c.roles[principal.role]["label"],
             confidence=conf,
             monitoring_plan=(
-                f"Track {movement.label} for {movement.slice_label} weekly. "
-                f"Re-alert if the {v.driver} effect has not reversed within "
+                # slice_label is "region=West" and driver is a contract key.
+                # Both are right in an audit record and wrong in a sentence a
+                # sales director is expected to act on.
+                f"Track {movement.label} in "
+                f"{movement.slice_label.split('=')[-1]} weekly. "
+                f"Re-alert if the {v.driver.replace('_', ' ')} effect has not "
+                f"reversed within "
                 f"three periods."),
         ))
 

@@ -688,9 +688,20 @@ with tabs[4]:
             # A transposed frame left the value column with a blank header and
             # raw schema keys down the side. Field/value carries the same content
             # and can be labelled.
+            # Values as well as field names: driver and lever are contract keys
+            # ("delivery_reliability", "account_management") and the rest of the
+            # app now renders them as words. Printing the raw key here made the
+            # same driver look like a different thing from tab to tab.
+            _KEYED = {"driver", "controllable_lever", "lever"}
+            # "action" is the bold heading directly above this table, so the
+            # row repeated it -- and being the longest value, it was the one
+            # Streamlit truncated mid-word. Dropping it removes the duplicate
+            # and the clipping in one go; the sentence is still shown in full.
             _rows = pd.DataFrame(
-                [{"field": ACTION_FIELD_LABELS.get(k, fact_label(k)), "value": v}
-                 for k, v in a.as_dict().items()])
+                [{"field": ACTION_FIELD_LABELS.get(k, fact_label(k)),
+                  "value": (str(v).replace("_", " ").title()
+                            if k in _KEYED else v)}
+                 for k, v in a.as_dict().items() if k != "action"])
             st.dataframe(
                 _rows, hide_index=True, width="stretch",
                 height=(len(_rows) + 1) * 35 + 3,
@@ -700,6 +711,9 @@ with tabs[4]:
                         help="The action schema the brief specifies. All seven "
                              "fields must be filled: the engine raises rather than "
                              "publish a recommendation missing any of them."),
+                    # the action and monitoring plan are full sentences and were
+                    # being truncated mid-word at the column edge
+                    "value": st.column_config.TextColumn("Value", width="large"),
                     "value": st.column_config.TextColumn(
                         "Value", width="large",
                         help="Filled from the contract and the computed facts, "
@@ -724,11 +738,22 @@ with tabs[4]:
         fb = "not_material"
     if fb:
         engine.record_feedback(result, fb, principal)
-        st.success(f"Recorded '{fb}'. Priors now: "
-                   f"{engine.store.driver_priors(movement.kpi) or 'neutral'} · "
-                   f"threshold multiplier for this slice: "
-                   f"{engine.store.materiality_nudge(movement.kpi, movement.slice_label)}")
-        st.caption(engine.store.summary(movement.kpi))
+        # driver_priors() returns a dict, and printing it put Python syntax on
+        # screen. Same content, said in words.
+        _priors = engine.store.driver_priors(movement.kpi)
+        _priors_txt = (", ".join(f"{k.replace('_', ' ')} {v:.2f}"
+                                 for k, v in _priors.items())
+                       if _priors else "neutral")
+        st.success(
+            f"Recorded '{fb.replace('_', ' ')}'. Driver priors are now "
+            f"{_priors_txt}, and the materiality threshold for this slice is "
+            f"multiplied by "
+            f"{engine.store.materiality_nudge(movement.kpi, movement.slice_label):.4g}.")
+        # summary() counts corrections by their stored kind, which are the
+        # enum names ("not_material"). The success line above already says
+        # "not material"; two spellings of one word three lines apart reads
+        # as two different things.
+        st.caption(engine.store.summary(movement.kpi).replace("_", " "))
 
 # -------------------------------------------------------------- method & cost
 with tabs[5]:
