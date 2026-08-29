@@ -272,14 +272,14 @@ _stats = [
      "note_color": theme.CAUTION if _down else theme.OK},
     {"value": fmt(movement.prior), "label": "Prior period",
      "color": theme.LILAC,
-     "note": "the comparison baseline", "note_color": theme.MUTED},
-    # the unit moves into the label so the number itself stays short enough to
-    # sit beside three others without wrapping
-    {"value": f"{movement.z_score:.2f}", "label": "Signal strength, sigma",
+     "note": "the baseline", "note_color": theme.MUTED},
+    # the unit lives in the note, not the label: a label long enough to wrap
+    # strands the help marker alone on a second line
+    {"value": f"{movement.z_score:.2f}", "label": "Signal strength",
      "color": theme.CHART_DOWN if movement.z_score < 0 else theme.CHART_UP,
-     # read off the contract, never typed here, so a recalibration moves this
-     # line without anyone remembering to
-     "note": f"alerts beyond {_z_gate:.2f}" if _z_gate else None,
+     # the threshold is read off the contract, never typed here, so a
+     # recalibration moves this line without anyone remembering to
+     "note": f"sigma, alerts beyond {_z_gate:.2f}" if _z_gate else "sigma",
      "note_color": theme.MUTED,
      "help": "Robust z against this slice's own history. "
              "Threshold from the contract."},
@@ -289,34 +289,46 @@ _stats = [
      "note_color": theme.NEUTRAL if assess.abstain else theme.OK},
 ]
 
-head_col, metrics_col = st.columns([1, 2], gap="medium")
-
-with head_col:
-    st.markdown(theme.fact_card("Movement", "vs prior period", _parts),
-                unsafe_allow_html=True)
-
-with metrics_col:
-    # One row of four, not two rows of two: the numbers read as a set that way,
-    # and the accent bars give the row a baseline the eye can run along.
-    st.markdown(theme.stat_card("Summary", _span, _stats), unsafe_allow_html=True)
-
-if ins.masked:
-    st.caption("Account names are masked for this role. Pseudonyms are stable, so "
-               "attribution still works without revealing the customer.")
-
-# the whole finding as one scannable strip, so the chain reads before the prose
+# The chain is worked out before the row is drawn, because whether there is one
+# decides how wide the other two cards get.
 _root = next((v.driver.replace("_", " ") for v in assess.causes
               if v.kind == "evidential"), None)
 _lever = next((v.driver for v in assess.causes if v.kind == "arithmetic"), None)
 if _root and _lever:
     _share = next(v.share for v in assess.verdicts if v.driver == _lever)
-    st.markdown(theme.chain("causal chain", [
-        _root, f"{_lever} ({_share:.0%})", f"{movement.label} {movement.pct:+.1f}%"
-    ]), unsafe_allow_html=True)
+    _chain = ("Causal chain", "root cause to outcome",
+              [_root, f"{_lever} ({_share:.0%})",
+               f"{movement.label} {movement.pct:+.1f}%"])
 elif assess.abstain:
-    st.markdown(theme.chain("outcome", [
-        f"{movement.label} {movement.pct:+.1f}%", "no cause established",
-        "abstained"]), unsafe_allow_html=True)
+    # an abstention is a finding too, and it gets the same box rather than
+    # being quietly dropped: the reader should see that the engine stopped
+    _chain = ("Outcome", "no cause established",
+              [f"{movement.label} {movement.pct:+.1f}%", "no cause established",
+               "abstained"])
+else:
+    _chain = None
+
+# Three cards, not two and a banner: what moved, the numbers, and the chain that
+# explains them are three parts of one finding and belong on one line. The
+# chain used to run full width underneath, where it read as a footer.
+_cols = st.columns(3 if _chain else [1, 2], gap="medium")
+
+with _cols[0]:
+    st.markdown(theme.fact_card("Movement", "vs prior period", _parts),
+                unsafe_allow_html=True)
+
+with _cols[1]:
+    # two by two once the card is a third of the page rather than two thirds
+    st.markdown(theme.stat_card("Summary", _span, _stats, grid=bool(_chain)),
+                unsafe_allow_html=True)
+
+if _chain:
+    with _cols[2]:
+        st.markdown(theme.chain_card(*_chain), unsafe_allow_html=True)
+
+if ins.masked:
+    st.caption("Account names are masked for this role. Pseudonyms are stable, so "
+               "attribution still works without revealing the customer.")
 
 tabs = st.tabs(["Explanation", "Attribution", "Causal gates", "Evidence",
                 "Actions", "Method and cost", "Contract", "Audit"])

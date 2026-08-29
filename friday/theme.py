@@ -61,6 +61,13 @@ RED = CAUTION
 INK = "#141414"
 MUTED = "#5A5A5A"
 BORDER = "#E4D9F7"
+# The page the cards sit on. White cards on a white page separate only by a
+# hairline, which is why the app read as flat next to the dashboards it is
+# modelled on: those tint the page and leave the cards near-white, so every
+# card lifts. Lighter and less saturated than the sidebar, so the rail still
+# reads as a different surface, and light enough that muted ink on it stays
+# above 4.5:1.
+PAGE = "#F4F1FA"
 HEAD_BG = "#E3D0FA"        # headline chips: a step darker than the page wash
 HEAD_BORDER = "#C39BF0"    # so the three facts read as objects, not as text
 
@@ -129,6 +136,7 @@ CSS = f"""
   --c-muted: {MUTED};
   --c-border: {BORDER};
   --c-wash: {WASH};
+  --c-page: {PAGE};
   --c-side-bg: {SIDE_BG};
   --c-side-hover: {SIDE_HOVER};
 
@@ -195,6 +203,12 @@ code, pre, [data-testid="stJson"] {{ font-family: {FONT_MONO}; }}
 [data-testid="stIconMaterial"], .material-icons, .material-symbols-rounded {{
   font-family: 'Material Symbols Rounded' !important;
 }}
+
+/* ---- page surface ----------------------------------------------------
+   Main only. The sidebar keeps its own, deeper wash, and the tint stops at
+   the content area so a dataframe's own white ground still reads as a
+   surface laid on the page rather than as the page itself. */
+[data-testid="stMain"] {{ background: var(--c-page); }}
 
 /* ---- headings ------------------------------------------------------- */
 h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
@@ -633,6 +647,41 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   font-size: .72rem; font-weight: 600; color: var(--c-muted); line-height: 1.35;
 }}
 .fr-stat-d {{ font-size: .72rem; font-weight: 700; margin-top: 5px; }}
+/* Two-by-two rather than one row of four, for when the card is a third of the
+   page instead of two thirds. Four numbers across 360px would each get about
+   80px, and these are the figures on the page that must survive a glance. */
+.fr-strip.fr-grid {{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  align-items: start;
+}}
+
+/* ---- causal chain, as a card -----------------------------------------
+   Three equal boxes running down the card, root cause at the top and the
+   movement it produced at the bottom, with the arrow between them saying
+   which way the claim runs. Vertical because the card is a column: the
+   horizontal banner this replaces spanned the page and made the chain look
+   like a footer rather than a third of the finding. */
+.fr-nodes {{
+  display: flex; flex-direction: column; justify-content: center;
+  flex: 1 1 auto; margin-top: var(--space-2);
+}}
+.fr-node {{
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-family: {FONT_MONO}; font-size: .8rem; font-weight: 600;
+  color: var(--c-primary-deep);
+  background: var(--c-wash);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--c-primary);
+  border-radius: 6px;
+  padding: 9px 10px; min-height: 38px; box-sizing: border-box;
+}}
+.fr-node-arrow {{
+  color: var(--c-primary); font-weight: 900; font-size: .95rem;
+  text-align: center; line-height: 1; padding: 4px 0;
+}}
 /* The help marker, as a "?" the reader can hover. st.metric's own help bubble
    is not available to hand-built markup, and a native title attribute is the
    one tooltip that needs no script. */
@@ -739,7 +788,22 @@ def fact_card(title: str, note: str, rows: list[tuple[str, str]]) -> str:
             f'<div class="fr-rows">{body}</div></div>')
 
 
-def stat_card(title: str, note: str, stats: list[dict]) -> str:
+def chain_card(title: str, note: str, nodes: list[str]) -> str:
+    """
+    The finding as a chain: each node its own box, an arrow between them.
+
+    The arrow is a real character rather than a rotated glyph, so it survives a
+    font that has no vertical chevron and never overlaps the box below it.
+    """
+    inner = '<div class="fr-node-arrow">&darr;</div>'.join(
+        f'<div class="fr-node">{esc(n)}</div>' for n in nodes)
+    return (f'<div class="fr-card"><div class="fr-card-head">'
+            f'<span class="fr-card-title">{esc(title)}</span>'
+            f'<span class="fr-card-note">{esc(note)}</span></div>'
+            f'<div class="fr-nodes">{inner}</div></div>')
+
+
+def stat_card(title: str, note: str, stats: list[dict], grid: bool = False) -> str:
     """
     The headline numbers as one strip, each over a coloured accent bar.
 
@@ -747,6 +811,8 @@ def stat_card(title: str, note: str, stats: list[dict]) -> str:
     bar, `help` adds a hoverable "?", and `note` with `note_color` is the small
     line beneath. Colours are passed in, never chosen here, because what a
     number means - a direction, a status - is the caller's to know.
+
+    `grid` lays them two-by-two instead of in one row, for a narrower card.
     """
     cells = []
     for s in stats:
@@ -763,7 +829,8 @@ def stat_card(title: str, note: str, stats: list[dict]) -> str:
     return (f'<div class="fr-card"><div class="fr-card-head">'
             f'<span class="fr-card-title">{esc(title)}</span>'
             f'<span class="fr-card-note">{esc(note)}</span></div>'
-            f'<div class="fr-strip">{"".join(cells)}</div></div>')
+            f'<div class="fr-strip{" fr-grid" if grid else ""}">'
+            f'{"".join(cells)}</div></div>')
 
 
 def pill(text: str, kind: str) -> str:
