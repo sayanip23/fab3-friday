@@ -150,15 +150,19 @@ def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
     # a movement with no filters is the national total, not a missing region
     scope = [(k.replace("_", " ").title(), v) for k, v in m.filters.items()]
     return [("KPI", m.label), *(scope or [("Region", "All")]),
-            ("Net Output", f"{m.pct:+.1f}%{suffix}")]
+            ("Movement", f"{m.pct:+.1f}%{suffix}")]
 
 
 def movement_facts(m, suffix: str = "") -> list[str]:
-    """The same facts joined as `Label=value`, for one-line surfaces."""
-    return [f"{k}={v}" for k, v in movement_pairs(m, suffix)]
+    """The same facts, values only, for one-line surfaces."""
+    return [v for _, v in movement_pairs(m, suffix)]
 
 
-options = {" | ".join(movement_facts(m)): m for m in alerts}
+# Values only, joined with a middot. The labelled form is roughly twice the
+# width of the sidebar, so the selectbox clipped it mid-number and showed the
+# tail -- "| Region=West | Movement=-19.2" -- which reads as a broken control
+# rather than a choice. The header card still carries the labels.
+options = {" · ".join(movement_facts(m)): m for m in alerts}
 st.sidebar.divider()
 choice = st.sidebar.selectbox(
     f"Material movements ({len(alerts)})", list(options),
@@ -281,7 +285,7 @@ _stats = [
      "icon": "pulse",
      # the threshold is read off the contract, never typed here, so a
      # recalibration moves this line without anyone remembering to
-     "note": f"sigma, alerts beyond {_z_gate:.2f}" if _z_gate else "sigma",
+     "note": f"sigma · alerts beyond {_z_gate:.2f}" if _z_gate else "sigma",
      "note_color": theme.MUTED,
      "help": "Robust z against this slice's own history. "
              "Threshold from the contract."},
@@ -435,10 +439,17 @@ with tabs[1]:
                      f"measured in something else."),
             "share_of_movement": st.column_config.TextColumn(
                 "Share of movement", width="small",
-                help="This lever as a proportion of the total movement. The three "
+                help="This lever as a proportion of the total movement, signed by "
+                     "the direction it pushed. A negative share pushed the KPI "
+                     "down; a lever that offset the movement would show positive. "
+                     "The narrative quotes the same figures without the sign, "
+                     "because that is how they are said aloud: volume at -72.8% "
+                     "here is 'volume explains 73% of the drop' there. The three "
                      "shares sum to 100% because the decomposition is an identity, "
                      "not an estimate."),
         })
+    a.caption("Shares are signed by direction: negative pushed the KPI down. The "
+              "narrative states the same shares without the sign.")
     b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
              help="Contributions are an identity, not an approximation. This is "
                   "zero or the decomposition is not published.")
@@ -477,6 +488,7 @@ with tabs[1]:
                         width="stretch")
 
         acc = result.by_account.as_frame().head(6).copy()
+        acc["driver"] = acc.driver.map(lambda d: str(d).replace("_", " ").title())
         acc["value"] = acc.value.map(lambda v: f"{v:,.0f}")
         acc["share_of_movement"] = acc.share_of_movement.map(lambda v: f"{v:+.1%}")
         st.dataframe(
