@@ -466,8 +466,33 @@ def _finalise(wh: Warehouse, movement: Movement, verdicts: list[Verdict],
         check = (f"Split the movement by {competing[0]} and {competing[1]} over the "
                  f"prior two periods. Whichever retains its share is the driver.")
     elif abstain and not causes:
-        check = ("Re-run once the stale source lands, or widen the comparison window "
-                 "so the slice clears its minimum history.")
+        # Name the check that would actually settle THIS abstention. The old
+        # behaviour emitted the stale/sparse remedy unconditionally, so a
+        # movement that failed the mechanism gate was told to wait for fresher
+        # data -- advice that would never resolve it. An engine whose stated
+        # remedy does not match its stated reason is worse than one that
+        # simply says nothing.
+        stale_or_sparse = any(("stale" in r or "history" in r or "sparse" in r)
+                              for r in reasons)
+        undeclared = [v.driver for v in verdicts
+                      if any("not a declared driver" in r for r in v.reasons)]
+        if stale_or_sparse:
+            check = ("Re-run once the stale source lands, or widen the comparison "
+                     "window so the slice clears its minimum history.")
+        elif undeclared:
+            try:
+                names = ", ".join(d["name"] for d in
+                                  wh.c.kpis[movement.kpi].spec["drivers"])
+            except Exception:
+                names = "the drivers named in contracts/kpis.yaml"
+            check = (f"The decomposition produced '{undeclared[0]}', which the "
+                     f"contract does not declare as a driver of {movement.kpi}. "
+                     f"Decompose against a declared driver ({names}), or add the "
+                     f"tested one to the contract if it genuinely belongs there.")
+        else:
+            check = ("No single driver clears the contribution threshold. Split the "
+                     "movement over the prior two periods and see which share "
+                     "persists; a real driver holds its share, noise does not.")
 
     return Assessment(movement=movement, verdicts=verdicts, confidence=confidence,
                       abstain=abstain, abstain_reasons=reasons,
