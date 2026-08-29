@@ -12,11 +12,11 @@ are satisfied by construction rather than by a separate reporting pass.
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 
 from . import attribute, causal, detect, evidence, narrate, personas, telemetry
-from .access import Principal
+from .access import Principal, pseudonymise
 from .attribute import Decomposition
 from .causal import Assessment
 from .contracts import Contract, load as load_contract
@@ -116,6 +116,23 @@ class Engine:
             by_account = attribute.by_dimension(self.wh, "net_revenue", period,
                                                 "account_name", filters) \
                 if kpi in ("net_revenue", "units_sold") else pvm
+
+            # by_dimension() reads the warehouse directly, so it bypasses the
+            # entitlement layer that masks columns -- and account_name is the
+            # one column the contract masks. Without this, a role whose
+            # narrative correctly refuses to name the customer still saw the
+            # customer named in the attribution table, on a page that states
+            # the opposite. Pseudonymise here, at the boundary, so the split
+            # stays analysable while the identity does not leak.
+            if (by_account is not pvm
+                    and "account_name" in self.contract.masked_columns(
+                        kpi, principal.role)):
+                by_account.effects = [
+                    e if e.name.startswith("all other")
+                    else replace(e, name=pseudonymise(e.name))
+                    for e in by_account.effects
+                ]
+
             s.detail = f"residual={pvm.residual:.6f}, reconciled={pvm.reconciled}"
 
         with run.stage("causal_screen", "causal_inference",
