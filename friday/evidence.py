@@ -201,6 +201,45 @@ def for_driver(index: Index, driver: str, period: Period,
     return index.search(q, period, filters, top_k=top_k) if q else []
 
 
+def for_drivers(index: Index, drivers: list[str], period: Period,
+                filters: Filters = None, top_k: int = 4) -> list[Passage]:
+    """
+    Evidence across every established driver, not just one.
+
+    A movement usually has more than one driver, and they ask different
+    questions of the text. Delivery reliability asks "did shipments slip";
+    volume asks "is the account leaving". Retrieving for only one of them
+    means the strongest passage in the corpus can be unreachable: a CRM note
+    recording intent to switch supplier is far more probative than a third
+    late-delivery ticket, and no delivery query will ever return it.
+
+    Results are interleaved rather than concatenated, so a driver with many
+    loud matches cannot crowd out a driver with one decisive match.
+    """
+    per_driver = [index.search(DRIVER_QUERIES[d], period, filters, top_k=top_k)
+                  for d in drivers if d in DRIVER_QUERIES]
+    if not per_driver:
+        return []
+
+    out: list[Passage] = []
+    seen_ids: set = set()
+    seen_text: set[str] = set()
+    for rank in range(top_k):
+        for hits in per_driver:
+            if rank >= len(hits):
+                continue
+            p = hits[rank]
+            sig = " ".join(tokenize(p.text)[:8])
+            if p.event_id in seen_ids or sig in seen_text:
+                continue
+            out.append(p)
+            seen_ids.add(p.event_id)
+            seen_text.add(sig)
+            if len(out) >= top_k:
+                return out
+    return out
+
+
 def freshness_report(wh: Warehouse, sources: list[str]) -> list[dict]:
     """Per source freshness, so a narrative can disclose what it was working from."""
     out = []

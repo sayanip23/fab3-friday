@@ -126,9 +126,15 @@ class Engine:
                         f"abstain={assessment.abstain}")
 
         with run.stage("evidence_retrieval", "retrieval", "bm25 over service_events") as s:
-            driver = next((v.driver for v in assessment.causes if v.kind == "evidential"),
-                          "delivery_reliability")
-            passages = evidence.for_driver(self.index, driver, period, filters)
+            # Every established driver, not only the evidential one. The
+            # arithmetic drivers carry queries too, and 'volume' is the one
+            # that finds the churn signal -- the passage that actually
+            # explains why the units stopped arriving.
+            drivers = [v.driver for v in assessment.causes]
+            if not drivers:
+                drivers = ["delivery_reliability"]
+            passages = evidence.for_drivers(self.index, drivers, period, filters)
+            driver = ", ".join(drivers)
             fresh = evidence.freshness_report(
                 self.wh, list(self.contract.kpis[kpi].sources) + ["service_events"])
             s.detail = f"{len(passages)} passage(s) for '{driver}'"
