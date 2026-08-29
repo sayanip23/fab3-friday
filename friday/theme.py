@@ -459,7 +459,8 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }}
-  [data-testid="stMetric"]:hover, .stButton button:hover {{ transform: none; }}
+  [data-testid="stMetric"]:hover, .stButton button:hover,
+  .fr-card:hover {{ transform: none; }}
 }}
 
 /* ---- FRIDAY specific components -------------------------------------- */
@@ -628,6 +629,18 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   border-radius: 12px;
   padding: var(--space-3) var(--space-4) var(--space-4);
   box-shadow: 0 1px 2px rgba(20, 20, 20, .05), 0 10px 26px rgba(61, 0, 102, .06);
+  transition: border-color var(--t-base) var(--ease),
+              box-shadow var(--t-base) var(--ease),
+              transform var(--t-base) var(--ease);
+}}
+/* The same lift the metric cards already use, so a card answers the pointer
+   the way every other surface in the app does. Small on purpose: three cards
+   sitting side by side, one of them rising a long way would read as a state
+   change rather than as a response. */
+.fr-card:hover {{
+  border-color: var(--c-primary);
+  box-shadow: 0 2px 4px rgba(20, 20, 20, .06), 0 16px 34px rgba(61, 0, 102, .12);
+  transform: translateY(-2px);
 }}
 .fr-card-head {{
   display: flex; align-items: baseline; justify-content: space-between;
