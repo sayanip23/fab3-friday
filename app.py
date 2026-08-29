@@ -137,19 +137,25 @@ if not alerts:
     st.info("No material movements for this role in the current period.")
     st.stop()
 
-def movement_facts(m, suffix: str = "") -> list[str]:
+def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
     """
-    The three facts of a movement, each labelled: which KPI, which slice, how
+    The facts of a movement as label/value pairs: which KPI, which slice, how
     far it moved.
 
-    One function for both surfaces on purpose. The sidebar joins these into a
-    single line and the header stacks them into three boxes, so the row you pick
-    and the header you land on say the same thing in the same words.
+    One source for both surfaces on purpose. The sidebar joins them into a
+    single "Label=value" line and the header card sets each label over its
+    value, so the row you pick and the header you land on say the same thing in
+    the same words.
     """
     # a movement with no filters is the national total, not a missing region
-    scope = " | ".join(f"{k.replace('_', ' ').title()}={v}"
-                       for k, v in m.filters.items()) or "Region=All"
-    return [f"KPI={m.label}", scope, f"Net Output={m.pct:+.1f}%{suffix}"]
+    scope = [(k.replace("_", " ").title(), v) for k, v in m.filters.items()]
+    return [("KPI", m.label), *(scope or [("Region", "All")]),
+            ("Net Output", f"{m.pct:+.1f}%{suffix}")]
+
+
+def movement_facts(m, suffix: str = "") -> list[str]:
+    """The same facts joined as `Label=value`, for one-line surfaces."""
+    return [f"{k}={v}" for k, v in movement_pairs(m, suffix)]
 
 
 options = {" | ".join(movement_facts(m)): m for m in alerts}
@@ -172,7 +178,7 @@ ins, run, pvm, assess = result.insight, result.run, result.pvm, result.assessmen
 # Built from the movement rather than by splitting the engine's headline string:
 # the labels then match the sidebar exactly, and a change to the engine's
 # phrasing cannot quietly desync the two.
-_parts = movement_facts(movement, " against the prior period")
+_parts = movement_pairs(movement)
 
 
 def fmt(v: float) -> str:
@@ -243,26 +249,56 @@ def fact_label(key: str) -> str:
     return " ".join([head.capitalize(), *rest])
 
 
+_span = f"{PERIOD.start:%d %b} - {PERIOD.end:%d %b %Y}"
+st.markdown(theme.topbar(
+    "KPI overview",
+    f"{len(alerts)} material movement{'' if len(alerts) == 1 else 's'} "
+    f"for {label}", _span), unsafe_allow_html=True)
+
+# Direction, once, in one place. Down is amber and up is blue rather than the
+# usual red/green, for the reason set out in the theme: red-green is the most
+# common colour vision deficiency and this is the number the page turns on.
+_down = movement.pct < 0
+
+# the materiality gate this movement had to clear to be on the page at all
+_z_gate = engine.contract.kpis[movement.kpi].thresholds()[0].get("threshold")
+
+# The four numbers, each with the colour its own reading calls for. Bars may use
+# the brighter chart tokens because a 4px block only needs 3:1; the small text
+# beneath uses the darker status tokens, which clear 4.5:1.
+_stats = [
+    {"value": fmt(movement.current), "label": "Current", "color": theme.PURPLE,
+     "note": f"{movement.pct:+.1f}% vs prior",
+     "note_color": theme.CAUTION if _down else theme.OK},
+    {"value": fmt(movement.prior), "label": "Prior period",
+     "color": theme.LILAC,
+     "note": "the comparison baseline", "note_color": theme.MUTED},
+    # the unit moves into the label so the number itself stays short enough to
+    # sit beside three others without wrapping
+    {"value": f"{movement.z_score:.2f}", "label": "Signal strength, sigma",
+     "color": theme.CHART_DOWN if movement.z_score < 0 else theme.CHART_UP,
+     # read off the contract, never typed here, so a recalibration moves this
+     # line without anyone remembering to
+     "note": f"alerts beyond {_z_gate:.2f}" if _z_gate else None,
+     "note_color": theme.MUTED,
+     "help": "Robust z against this slice's own history. "
+             "Threshold from the contract."},
+    {"value": assess.confidence.upper(), "label": "Confidence",
+     "color": theme.NEUTRAL if assess.abstain else theme.OK,
+     "note": "abstained" if assess.abstain else "cause established",
+     "note_color": theme.NEUTRAL if assess.abstain else theme.OK},
+]
+
 head_col, metrics_col = st.columns([1, 2], gap="medium")
 
 with head_col:
-    st.markdown(theme.headline(_parts, stacked=True), unsafe_allow_html=True)
+    st.markdown(theme.fact_card("Movement", "vs prior period", _parts),
+                unsafe_allow_html=True)
 
 with metrics_col:
-    # Two rows of two, not one row of four. Beside a stacked headline each card
-    # would otherwise get about a third of its readable width, and the metric
-    # values are the one thing on this page that must survive a glance.
-    c1, c2 = st.columns(2)
-    c3, c4 = st.columns(2)
-
-    c1.metric("Current", fmt(movement.current), f"{movement.pct:+.1f}%")
-    c2.metric("Prior period", fmt(movement.prior))
-    c3.metric("Signal strength", f"{movement.z_score:.2f} sigma",
-              help="Robust z against this slice's own history. "
-                   "Threshold from the contract.")
-    c4.metric("Confidence", assess.confidence.upper(),
-              delta="abstained" if assess.abstain else "cause established",
-              delta_color="inverse" if assess.abstain else "normal")
+    # One row of four, not two rows of two: the numbers read as a set that way,
+    # and the accent bars give the row a baseline the eye can run along.
+    st.markdown(theme.stat_card("Summary", _span, _stats), unsafe_allow_html=True)
 
 if ins.masked:
     st.caption("Account names are masked for this role. Pseudonyms are stable, so "
@@ -346,10 +382,14 @@ with tabs[1]:
     # offsets, which renders three separate contributions as one merged staircase
     # Step() sizes the band, not the whole plot. With a fixed total height the three
     # bands collapse to ~25px each and the bars touch, reading as one solid shape.
-    chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=2).encode(
+    chart = alt.Chart(df).mark_bar(size=22, cornerRadiusEnd=4).encode(
         y=alt.Y("effect:N", title=None, sort="-x"),
         x=alt.X("value:Q", title=f"contribution ({PVM_UNIT})", stack=False),
-        color=alt.condition(alt.datum.value < 0, alt.value(DOWN), alt.value(UP)),
+        # colour identifies the lever, not the sign: all three effects are
+        # negative here, so a diverging encoding would paint them identically
+        # and carry no information. Direction is already in the bar's geometry.
+        color=alt.Color("effect:N", legend=None, scale=alt.Scale(
+            domain=list(theme.LEVER_COLORS), range=list(theme.LEVER_COLORS.values()))),
         tooltip=[alt.Tooltip("effect:N"),
                  alt.Tooltip("value:Q", format=",.0f"),
                  alt.Tooltip("share_of_movement:Q", format="+.1%")],
@@ -586,11 +626,13 @@ with tabs[5]:
         for k, v in run.method_split().items()
     ]).sort_values("ms", ascending=False)
 
-    ch = alt.Chart(split).mark_bar().encode(
+    ch = alt.Chart(split).mark_bar(cornerRadiusEnd=4).encode(
         y=alt.Y("method:N", sort="-x", title=None),
         x=alt.X("ms:Q", title="milliseconds"),
-        color=alt.condition(alt.datum.method == "llm",
-                            alt.value(PURPLE), alt.value(GREY)),
+        # keyed on the method name, so sorting the bars by latency can never
+        # repaint them: colour follows the entity, never its rank
+        color=alt.Color("method:N", legend=None, scale=alt.Scale(
+            domain=list(theme.METHOD_COLORS), range=list(theme.METHOD_COLORS.values()))),
         tooltip=list(split.columns),
     ).properties(height=alt.Step(34))
     st.altair_chart(ch, width="stretch")

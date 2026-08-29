@@ -20,6 +20,8 @@ hatch.
 """
 from __future__ import annotations
 
+import html
+
 import streamlit as st
 
 # ---------------------------------------------------------------- primitives
@@ -61,6 +63,51 @@ MUTED = "#5A5A5A"
 BORDER = "#E4D9F7"
 HEAD_BG = "#E3D0FA"        # headline chips: a step darker than the page wash
 HEAD_BORDER = "#C39BF0"    # so the three facts read as objects, not as text
+
+# ---------------------------------------------------------------- chart series
+# Categorical palette for charts where the bars are separate ENTITIES rather
+# than one measure — which lever, which method — so colour identifies rather
+# than decorates. Values are the data-viz reference palette's light-mode steps,
+# used unchanged and assigned in a fixed order per entity, never cycled and
+# never by rank: a chart sorted by value must not repaint its bars.
+#
+# Validated, not eyeballed (OKLab deltaE x100, all-pairs, white surface):
+#   the three lever hues    CVD 9.2, normal vision 24.0   -> clears both gates
+#   the six method hues     CVD 6.2, normal vision 16.3   -> CVD sits in the
+#     6-8 band, which is permitted only alongside a second, non-colour channel.
+#     Both charts name every bar on the category axis, so identity is never
+#     carried by colour alone and the condition holds.
+# Yellow and magenta fall under 3:1 against white; the same axis labels satisfy
+# the relief rule that obliges.
+SERIES_BLUE = "#2a78d6"
+SERIES_ORANGE = "#eb6834"
+SERIES_AQUA = "#1baf7a"
+SERIES_YELLOW = "#eda100"
+SERIES_MAGENTA = "#e87ba4"
+SERIES_GREEN = "#008300"
+SERIES_VIOLET = "#4a3aa7"
+
+# Price/volume/mix: three levers, three hues.
+LEVER_COLORS = {
+    "Volume": SERIES_BLUE,
+    "Price": SERIES_ORANGE,
+    "Mix": SERIES_AQUA,
+}
+
+# Every method in telemetry's taxonomy gets a fixed hue, so a stage added later
+# is coloured without anyone choosing. Generation keeps the brand purple: it is
+# a reserved slot, not a series, because "how much of this was the model" is the
+# question this chart exists to answer.
+METHOD_COLORS = {
+    "sql": SERIES_ORANGE,
+    "deterministic_logic": SERIES_BLUE,
+    "business_rules": SERIES_YELLOW,
+    "statistics": SERIES_MAGENTA,
+    "traditional_ml": SERIES_AQUA,
+    "causal_inference": SERIES_GREEN,
+    "retrieval": SERIES_VIOLET,
+    "llm": PURPLE,
+}
 
 FONT_SANS = "Arial, 'Helvetica Neue', Helvetica, sans-serif"
 FONT_MONO = "Consolas, 'Courier New', ui-monospace, monospace"
@@ -488,6 +535,122 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   margin-bottom: 0;
 }}
 
+/* ---- overview header -------------------------------------------------
+   The top of the page is a dashboard header, not a sentence: a title row that
+   names the page and fixes the period, then two cards - what moved, on the
+   left, and the numbers, on the right. The cards are white with a hairline and
+   a soft shadow so they read as raised surfaces. The tinted chips this
+   replaces made the whole band one flat colour, which is why it read as
+   crowded: seven boxes of the same purple, none of them ranked. */
+.fr-top {{
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: var(--space-3); flex-wrap: wrap;
+  margin: 0 0 var(--space-4) 0;
+}}
+.fr-top-title {{
+  font-family: {FONT_SANS};
+  font-size: 1.55rem; font-weight: 700; letter-spacing: -.02em;
+  color: var(--c-black); line-height: 1.2;
+}}
+.fr-top-sub {{ font-size: .82rem; color: var(--c-muted); margin-top: 3px; }}
+.fr-top-chip {{
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--c-white); border: 1px solid var(--c-border);
+  border-radius: 999px; padding: 7px 14px;
+  font-family: {FONT_MONO}; font-size: .76rem; color: var(--c-ink);
+  white-space: nowrap;
+}}
+.fr-top-chip b {{
+  font-size: .64rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--c-muted);
+}}
+
+.fr-card {{
+  display: flex; flex-direction: column;
+  height: 100%; box-sizing: border-box;
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  box-shadow: 0 1px 2px rgba(20, 20, 20, .05), 0 10px 26px rgba(61, 0, 102, .06);
+}}
+.fr-card-head {{
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--space-2);
+}}
+.fr-card-title {{
+  font-family: {FONT_SANS}; font-size: .95rem; font-weight: 700;
+  color: var(--c-black);
+}}
+.fr-card-note {{ font-size: .74rem; color: var(--c-muted); white-space: nowrap; }}
+
+/* Left card: one labelled row per fact, the label over its value. The rows
+   share the card's height (flex 1 1 0), so the card stays level with the
+   numbers beside it however long a region name runs. */
+.fr-rows {{
+  display: flex; flex-direction: column; flex: 1 1 auto;
+  margin-top: var(--space-2);
+}}
+/* grow but never shrink: flex-shrink on a row lets three labelled facts
+   compress until the value of one sits on the divider of the next, which is
+   what "1 1 0" did here. The card takes its height from its rows instead, and
+   the stat card beside it stretches to match. */
+.fr-row {{
+  flex: 1 0 auto;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--c-border);
+}}
+.fr-row:first-child {{ border-top: none; }}
+.fr-row-k {{
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--c-muted);
+}}
+.fr-row-v {{
+  font-size: 1.05rem; font-weight: 700; line-height: 1.3;
+  color: var(--c-primary-deep);
+}}
+
+/* Right card: the four numbers in one row, each over its own accent bar. The
+   bar is not decoration - its colour is the reading of the number above it, so
+   direction and confidence land before the words are read. Callers choose it,
+   because only the caller knows what its number means. */
+.fr-strip {{
+  display: flex; gap: var(--space-4); flex: 1 1 auto; margin-top: var(--space-3);
+  align-items: center;   /* the facts card is the taller of the two; centring
+                            keeps the numbers off the top edge when it is */
+}}
+.fr-stat {{
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; justify-content: flex-start;
+}}
+.fr-stat-v {{
+  font-family: {FONT_MONO}; font-size: 1.5rem; font-weight: 700;
+  color: var(--c-black); line-height: 1.15; letter-spacing: -.02em;
+}}
+.fr-stat-bar {{ height: 4px; border-radius: 999px; margin: 9px 0 7px; }}
+.fr-stat-k {{
+  font-size: .72rem; font-weight: 600; color: var(--c-muted); line-height: 1.35;
+}}
+.fr-stat-d {{ font-size: .72rem; font-weight: 700; margin-top: 5px; }}
+/* The help marker, as a "?" the reader can hover. st.metric's own help bubble
+   is not available to hand-built markup, and a native title attribute is the
+   one tooltip that needs no script. */
+.fr-q {{
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; margin-left: 5px; border-radius: 50%;
+  border: 1px solid var(--c-muted); color: var(--c-muted);
+  font-size: .58rem; font-weight: 700; cursor: help; vertical-align: 1px;
+}}
+/* Same trick, and the same reason, as the stacked headline above: hand a
+   definite height down the anonymous wrappers Streamlit puts between the
+   column and the markdown, and zero the -16px margin it sets on the markdown
+   container, or the two cards end at different heights. */
+[data-testid="stColumn"]:has(.fr-card) div:has(.fr-card) {{
+  display: flex; flex-direction: column; flex: 1 1 auto;
+  min-height: 0; height: 100%; margin-bottom: 0;
+}}
+
 /* ---- narrative -------------------------------------------------------
    The explanation is the one paragraph a reader actually reads, and it was
    set at body size across the full page width. A line that long is hard to
@@ -543,6 +706,64 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
 def apply() -> None:
     """Inject the stylesheet. Call once, immediately after set_page_config."""
     st.markdown(CSS, unsafe_allow_html=True)
+
+
+def esc(value: object) -> str:
+    """
+    HTML-escape a value bound for markup. Quotes included: some of these land
+    inside a title attribute.
+    """
+    return html.escape(str(value), quote=True)
+
+
+def topbar(title: str, subtitle: str, period: str) -> str:
+    """The page title row: what this page is, for whom, over which window."""
+    return (f'<div class="fr-top"><div>'
+            f'<div class="fr-top-title">{esc(title)}</div>'
+            f'<div class="fr-top-sub">{esc(subtitle)}</div></div>'
+            f'<span class="fr-top-chip"><b>period</b>{esc(period)}</span></div>')
+
+
+def fact_card(title: str, note: str, rows: list[tuple[str, str]]) -> str:
+    """
+    The facts of the movement as a card: each label set over its value.
+
+    Rows arrive as pairs rather than as "Label=value" strings, so the card can
+    set the label and the value in different type without parsing anything.
+    """
+    body = "".join(f'<div class="fr-row"><div class="fr-row-k">{esc(k)}</div>'
+                   f'<div class="fr-row-v">{esc(v)}</div></div>' for k, v in rows)
+    return (f'<div class="fr-card"><div class="fr-card-head">'
+            f'<span class="fr-card-title">{esc(title)}</span>'
+            f'<span class="fr-card-note">{esc(note)}</span></div>'
+            f'<div class="fr-rows">{body}</div></div>')
+
+
+def stat_card(title: str, note: str, stats: list[dict]) -> str:
+    """
+    The headline numbers as one strip, each over a coloured accent bar.
+
+    Each stat is a dict: `value` and `label` are required; `color` paints the
+    bar, `help` adds a hoverable "?", and `note` with `note_color` is the small
+    line beneath. Colours are passed in, never chosen here, because what a
+    number means - a direction, a status - is the caller's to know.
+    """
+    cells = []
+    for s in stats:
+        mark = (f'<span class="fr-q" title="{esc(s["help"])}">?</span>'
+                if s.get("help") else "")
+        foot = (f'<div class="fr-stat-d" style="color:{s.get("note_color", MUTED)}">'
+                f'{esc(s["note"])}</div>' if s.get("note") else "")
+        cells.append(
+            f'<div class="fr-stat">'
+            f'<div class="fr-stat-v">{esc(s["value"])}</div>'
+            f'<div class="fr-stat-bar" style="background:{s.get("color", PURPLE)}">'
+            f'</div>'
+            f'<div class="fr-stat-k">{esc(s["label"])}{mark}</div>{foot}</div>')
+    return (f'<div class="fr-card"><div class="fr-card-head">'
+            f'<span class="fr-card-title">{esc(title)}</span>'
+            f'<span class="fr-card-note">{esc(note)}</span></div>'
+            f'<div class="fr-strip">{"".join(cells)}</div></div>')
 
 
 def pill(text: str, kind: str) -> str:
