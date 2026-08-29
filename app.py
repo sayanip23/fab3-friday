@@ -758,8 +758,18 @@ with tabs[4]:
 # -------------------------------------------------------------- method & cost
 with tabs[5]:
     st.markdown("#### Where the work actually happened")
+    # Telemetry keys the taxonomy by method id ("deterministic_logic"). Those
+    # ids are the right thing to key colour and the audit record on, and the
+    # wrong thing to print: every other tab now says "Delivery Reliability"
+    # rather than the contract key. Keep the id for colour, show the label.
+    _METHOD_LABELS = {"llm": "LLM", "sql": "SQL", "traditional_ml": "Traditional ML"}
+
+    def method_label(m: str) -> str:
+        return _METHOD_LABELS.get(m, m.replace("_", " ").capitalize())
+
     split = pd.DataFrame([
-        {"method": k, "stages": v["stages"], "ms": v["ms"],
+        {"method": method_label(k), "method_id": k,
+         "stages": v["stages"], "ms": v["ms"],
          "model calls": v["calls"], "share of latency": v["share_of_latency"]}
         for k, v in run.method_split().items()
     ]).sort_values("ms", ascending=False)
@@ -767,14 +777,14 @@ with tabs[5]:
     ch = alt.Chart(split).mark_bar(cornerRadiusEnd=4).encode(
         y=alt.Y("method:N", sort="-x", title=None),
         x=alt.X("ms:Q", title="milliseconds"),
-        # keyed on the method name, so sorting the bars by latency can never
-        # repaint them: colour follows the entity, never its rank
-        color=alt.Color("method:N", legend=None, scale=alt.Scale(
+        # keyed on the method id, not the label, so sorting the bars by latency
+        # can never repaint them: colour follows the entity, never its rank
+        color=alt.Color("method_id:N", legend=None, scale=alt.Scale(
             domain=list(theme.METHOD_COLORS), range=list(theme.METHOD_COLORS.values()))),
-        tooltip=list(split.columns),
+        tooltip=[c for c in split.columns if c != "method_id"],
     ).properties(height=alt.Step(34))
     st.altair_chart(ch, width="stretch")
-    split_show = split.copy()
+    split_show = split.drop(columns=["method_id"]).copy()
     split_show["share of latency"] = split_show["share of latency"].map(
         lambda v: f"{v:.1%}")
     st.dataframe(

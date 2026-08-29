@@ -485,8 +485,9 @@ def _finalise(wh: Warehouse, movement: Movement, verdicts: list[Verdict],
                                   wh.c.kpis[movement.kpi].spec["drivers"])
             except Exception:
                 names = "the drivers named in contracts/kpis.yaml"
-            check = (f"The decomposition produced '{undeclared[0]}', which the "
-                     f"contract does not declare as a driver of {movement.kpi}. "
+            check = (f"The decomposition produced "
+                     f"'{undeclared[0].replace('_', ' ')}', which the contract "
+                     f"does not declare as a driver of {movement.label}. "
                      f"Decompose against a declared driver ({names}), or add the "
                      f"tested one to the contract if it genuinely belongs there.")
         else:

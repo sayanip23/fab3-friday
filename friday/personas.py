@@ -323,7 +323,23 @@ def _template(principal: Principal, movement: Movement, pack: narrate.FactPack,
             f"period{swing_txt}.")
 
     if assessment.abstain:
-        return lead + " The evidence is not sufficient to name a cause."
+        # Abstention has to be persona specific too. Without this every role
+        # gets identical text whenever the engine declines to name a cause --
+        # which is most movements -- so the persona layer looks absent on
+        # exactly the screens a reader is most likely to be checking it on.
+        # The phrase "not sufficient to name a cause" is asserted by
+        # verify_lane_b and must survive any edit here.
+        tail = " The evidence is not sufficient to name a cause."
+        if depth == "operational":
+            tail += (" Nothing here justifies contacting the account or opening "
+                     "a service recovery yet.")
+        elif depth == "financial":
+            tail += (" No pricing, discount or investment decision should rest "
+                     "on this movement as it stands.")
+        else:
+            tail += (" Report it as unexplained rather than attributing it, and "
+                     "note the blocking check alongside the figure.")
+        return lead + tail
 
     if depth == "operational":
         body = (f" The movement is concentrated in {p('top_account')}, which accounts "
