@@ -159,7 +159,11 @@ def by_dimension(wh: Warehouse, kpi: str, period: Period, dimension: str,
     tail = effects[top_n:]
     if tail:
         rest = sum(e.value for e in tail)
-        head.append(Effect(f"all other {dimension}s ({len(tail)})", dimension,
+        # `dimension` is the contract column name, so the naive f-string reads
+        # "all other account_names (3)". Say it the way the rest of the app
+        # does: this label sits in a table beside real account names.
+        _plural = dimension.replace("_", " ").removesuffix(" name")
+        head.append(Effect(f"all other {_plural}s ({len(tail)})", dimension,
                            rest, rest / denom))
 
     residual = total - sum(e.value for e in head)
