@@ -153,8 +153,13 @@ def build_facts(wh: Warehouse, principal: Principal, movement: Movement,
              unit, P["sql"])
     pack.add("change_abs", movement.delta, f"{q(movement.delta)} {unit}",
              unit, P["sql"])
-    pack.add("change_pct", movement.pct, f"{movement.pct:+.1f}%", "percent",
-             P["sql"])
+    # A slice with no baseline has pct = nan. "+nan%" is not a number anyone can
+    # act on, and printing it makes a considered abstention look like a crash.
+    # q() already handles this for the absolute change; keep the two consistent.
+    pack.add("change_pct", movement.pct,
+             "not measurable" if movement.pct != movement.pct
+             else f"{movement.pct:+.1f}%",
+             "percent", P["sql"])
     pack.add("z_score", movement.z_score, f"{movement.z_score:.2f}", "sigma",
              P["z_score"])
     pack.add("normal_swing", movement.baseline_median_pct,
@@ -318,9 +323,19 @@ def _template(principal: Principal, movement: Movement, pack: narrate.FactPack,
     swing_txt = (f", where the usual swing is about {p('normal_swing')}"
                  if swing is not None and math.isfinite(swing) else
                  ", against a baseline too short to characterise")
-    lead = (f"{movement.label} in {_slice_phrase(movement)} moved "
-            f"{p('change_pct')} ({p('change_abs')}) against the prior "
-            f"period{swing_txt}.")
+    if movement.pct != movement.pct:
+        # No baseline, so there is no movement to report -- only the reason
+        # there is none. "moved not measurable (n/a INR)" is worse than saying
+        # plainly that the slice is too young to have a comparison.
+        lead = (f"{movement.label} in {_slice_phrase(movement)} cannot be "
+                f"assessed for this period: the slice has "
+                f"{movement.history_days} days of history against the "
+                f"{movement.min_history_days} the contract requires, so there "
+                f"is no baseline to compare against.")
+    else:
+        lead = (f"{movement.label} in {_slice_phrase(movement)} moved "
+                f"{p('change_pct')} ({p('change_abs')}) against the prior "
+                f"period{swing_txt}.")
 
     if assessment.abstain:
         # Abstention has to be persona specific too. Without this every role

@@ -51,6 +51,13 @@ class Fact:
 def _variants(v: float) -> set[float]:
     """Every rounding of a value a writer might legitimately use."""
     out: set[float] = set()
+    # A slice with no baseline carries nan facts. round() raises on nan, and a
+    # nan is not a number a narrative could quote anyway, so it authorises
+    # nothing: return the empty set rather than letting the guard crash. The
+    # guard failing open here would be the wrong fix -- an empty set is strict,
+    # not permissive.
+    if v != v or v in (float("inf"), float("-inf")):
+        return out
     for x in (v, abs(v)):
         out.update({x, round(x), round(x, 1), round(x, 2)})
         # a share stored as 0.728 may legitimately be written as 72.8 or 73

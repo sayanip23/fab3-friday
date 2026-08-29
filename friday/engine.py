@@ -89,6 +89,18 @@ class Engine:
         found = detect.scan(self.wh, period, principal.role, dimension)
         return detect.dedupe_overlapping(found)
 
+    def unassessable(self, principal: Principal, period: Period,
+                     dimension: str = "category") -> list[Movement]:
+        """
+        Slices with too little history to judge, listed apart from the ranking.
+
+        Kept separate from alerts() on purpose. These are not movements the
+        engine ranked low; they are movements it declined to rank at all, and
+        collapsing the two would tell the reader nothing happened when the
+        truth is that nothing could be measured.
+        """
+        return detect.scan_unassessable(self.wh, period, principal.role, dimension)
+
     # ----------------------------------------------------------------- explain
     def explain(self, principal: Principal, kpi: str, period: Period,
                 filters: Filters = None) -> InsightResult:

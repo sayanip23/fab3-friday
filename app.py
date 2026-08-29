@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import html
 import json
+import math
 import re
 from datetime import date
 
@@ -149,8 +150,13 @@ def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
     """
     # a movement with no filters is the national total, not a missing region
     scope = [(k.replace("_", " ").title(), v) for k, v in m.filters.items()]
+    # A slice with too little history has no percentage to report -- the value
+    # is nan, not zero. Printing "+nan%" reads as a broken app; the honest
+    # words are that it could not be measured.
+    moved = ("not measurable" if not math.isfinite(m.pct)
+             else f"{m.pct:+.1f}%{suffix}")
     return [("KPI", m.label), *(scope or [("Region", "All")]),
-            ("Movement", f"{m.pct:+.1f}%{suffix}")]
+            ("Movement", moved)]
 
 
 def movement_facts(m, suffix: str = "") -> list[str]:
@@ -163,12 +169,24 @@ def movement_facts(m, suffix: str = "") -> list[str]:
 # tail -- "| Region=West | Movement=-19.2" -- which reads as a broken control
 # rather than a choice. The header card still carries the labels.
 options = {" · ".join(movement_facts(m)): m for m in alerts}
+
+# Slices the engine could not judge, listed after the ranked ones and marked as
+# such. A reader who sees only the ranked list cannot tell "nothing happened
+# in Nova" from "Nova is three weeks old and I have no baseline for it" -- and
+# that distinction is the product's whole argument.
+_unassessable = engine.unassessable(principal, PERIOD)
+for _m in _unassessable:
+    _slice = " · ".join(str(v) for v in _m.filters.values())
+    options[f"{_slice} · cannot assess yet"] = _m
+
 st.sidebar.divider()
 choice = st.sidebar.selectbox(
     f"Material movements ({len(alerts)})", list(options),
-    help="Ranked by business impact weighted by certainty. "
-         "Movements inside normal variance never appear here.")
+    help="Ranked by business impact weighted by certainty. Movements inside "
+         "normal variance never appear here. Slices with too little history to "
+         "judge are listed at the end, marked 'cannot assess yet'.")
 movement = options[choice]
+UNASSESSABLE = movement in _unassessable
 
 try:
     result = engine.explain(principal, movement.kpi, PERIOD, movement.filters)
@@ -398,6 +416,13 @@ with tabs[0]:
 
 # ----------------------------------------------------------------- attribution
 with tabs[1]:
+    if UNASSESSABLE:
+        st.warning(
+            f"This slice has {movement.history_days} days of history against "
+            f"the {movement.min_history_days} the contract requires. The "
+            f"figures below are computed against a partial prior period and "
+            f"are shown for inspection only; the engine does not treat them "
+            f"as an attribution.")
     st.markdown("#### Price, volume and mix")
     df = pvm.as_frame()
     # stack=False is load bearing: with one row per effect Vega still computes stack
@@ -450,13 +475,25 @@ with tabs[1]:
         })
     a.caption("Shares are signed by direction: negative pushed the KPI down. The "
               "narrative states the same shares without the sign.")
-    b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
-             help="Contributions are an identity, not an approximation. This is "
-                  "zero or the decomposition is not published.")
-    if pvm.reconciled:
-        b.success("Sums exactly to the movement")
+    if UNASSESSABLE:
+        # A decomposition needs two comparable periods. This slice does not have
+        # a prior period, so the split is arithmetic against a partial base and
+        # its residual is meaningless -- publishing it as a failed
+        # reconciliation would report a defect where there is only missing
+        # history, and would undercut the identity that holds everywhere else.
+        b.metric("Reconciliation residual", "n/a",
+                 help="A decomposition compares two periods. This slice does "
+                      "not have a full prior period yet, so there is nothing "
+                      "to reconcile against.")
+        b.warning("Not decomposed: no comparable prior period")
     else:
-        b.error("Does not reconcile, withheld")
+        b.metric("Reconciliation residual", f"{abs(pvm.residual):.6f}",
+                 help="Contributions are an identity, not an approximation. "
+                      "This is zero or the decomposition is not published.")
+        if pvm.reconciled:
+            b.success("Sums exactly to the movement")
+        else:
+            b.error("Does not reconcile, withheld")
 
     if result.by_account is not pvm:
         st.markdown("#### Largest contributors by account")

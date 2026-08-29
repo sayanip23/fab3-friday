@@ -238,3 +238,43 @@ def dedupe_overlapping(movements: list[Movement]) -> list[Movement]:
             continue
         keep.append(m)
     return keep
+
+
+def scan_unassessable(wh: Warehouse, period: Period, role: str,
+                      dimension: str = "category") -> list[Movement]:
+    """
+    Slices the engine cannot judge yet, as opposed to slices it judged immaterial.
+
+    A newly launched line has too little history to have a baseline, so its
+    z score is not small -- it does not exist. Leaving it out of the list
+    silently is the failure mode this whole product argues against: the reader
+    cannot tell "nothing happened here" from "I could not look". These are
+    returned separately from material movements so the UI can say which is
+    which, and never mixed into the priority ranking, because an unassessable
+    slice has no impact to rank.
+    """
+    c = wh.c
+    out: list[Movement] = []
+    values = c.dimensions.get(dimension, {}).get("values", [])
+
+    for kpi in c.visible_kpis(role):
+        for value in values:
+            m = evaluate(wh, kpi, period, {dimension: value})
+            if m.sparse and not m.material:
+                m.priority = 0.0
+                out.append(m)
+    # One entry per slice: the same young line is sparse for every KPI, and
+    # listing it five times says nothing five times. Keep whichever KPI the
+    # contract declares first among those this role can see, so the entry is
+    # stable across roles and lands on the headline metric rather than on
+    # whichever name happens to sort first.
+    order = {k: i for i, k in enumerate(c.visible_kpis(role))}
+    seen: set = set()
+    unique: list[Movement] = []
+    for m in sorted(out, key=lambda x: order.get(x.kpi, 99)):
+        key = tuple(sorted(m.filters.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(m)
+    return unique
