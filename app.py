@@ -280,7 +280,12 @@ st.markdown(theme.topbar(
 # Direction, once, in one place. Down is amber and up is blue rather than the
 # usual red/green, for the reason set out in the theme: red-green is the most
 # common colour vision deficiency and this is the number the page turns on.
-_down = movement.pct < 0
+_down = math.isfinite(movement.pct) and movement.pct < 0
+
+
+def pct_txt(v: float, suffix: str = "") -> str:
+    """A percentage, or the honest words when there is not one to print."""
+    return f"{v:+.1f}%{suffix}" if math.isfinite(v) else "not measurable"
 
 # the materiality gate this movement had to clear to be on the page at all
 _z_gate = engine.contract.kpis[movement.kpi].thresholds()[0].get("threshold")
@@ -291,19 +296,30 @@ _z_gate = engine.contract.kpis[movement.kpi].thresholds()[0].get("threshold")
 _stats = [
     {"value": fmt(movement.current), "label": "Current", "color": theme.PURPLE,
      "icon": "level",
-     "note": f"{movement.pct:+.1f}% vs prior",
-     "note_color": theme.CAUTION if _down else theme.OK},
+     "note": (f"{movement.pct:+.1f}% vs prior" if math.isfinite(movement.pct)
+              else "no prior period to compare"),
+     "note_color": (theme.MUTED if not math.isfinite(movement.pct)
+                    else theme.CAUTION if _down else theme.OK)},
     {"value": fmt(movement.prior), "label": "Prior period",
      "color": theme.LILAC, "icon": "clock",
      "note": "the baseline", "note_color": theme.MUTED},
     # the unit lives in the note, not the label: a label long enough to wrap
     # strands the help marker alone on a second line
-    {"value": f"{movement.z_score:.2f}", "label": "Signal strength",
-     "color": theme.CHART_DOWN if movement.z_score < 0 else theme.CHART_UP,
+    # No baseline means no z score exists -- not that it is zero. "nan" on a
+    # card reads as a crash; the dash reads as "not applicable", which is what
+    # it is, and the note underneath says why.
+    {"value": (f"{movement.z_score:.2f}" if math.isfinite(movement.z_score)
+               else "\u2014"),
+     "label": "Signal strength",
+     "color": (theme.MUTED if not math.isfinite(movement.z_score)
+               else theme.CHART_DOWN if movement.z_score < 0
+               else theme.CHART_UP),
      "icon": "pulse",
      # the threshold is read off the contract, never typed here, so a
      # recalibration moves this line without anyone remembering to
-     "note": f"sigma · alerts beyond {_z_gate:.2f}" if _z_gate else "sigma",
+     "note": (f"{movement.history_days}d history · {movement.min_history_days}d "
+              f"needed" if not math.isfinite(movement.z_score)
+              else f"sigma · alerts beyond {_z_gate:.2f}" if _z_gate else "sigma"),
      "note_color": theme.MUTED,
      "help": "Robust z against this slice's own history. "
              "Threshold from the contract."},
@@ -323,13 +339,21 @@ if _root and _lever:
     _share = next(v.share for v in assess.verdicts if v.driver == _lever)
     _chain = ("Causal chain", "root cause to outcome",
               [_root, f"{_lever} ({_share:.0%})",
-               f"{movement.label} {movement.pct:+.1f}%"])
+               f"{movement.label} {pct_txt(movement.pct)}"])
+elif UNASSESSABLE:
+    # Not the same as abstaining on evidence. The engine did not weigh this and
+    # find it wanting; it never had a baseline to weigh it against, and saying
+    # so is the point.
+    _chain = ("Outcome", "not enough history to judge",
+              [f"{movement.label}",
+               f"{movement.history_days}d of {movement.min_history_days}d needed",
+               "cannot assess yet"])
 elif assess.abstain:
     # an abstention is a finding too, and it gets the same box rather than
     # being quietly dropped: the reader should see that the engine stopped
     _chain = ("Outcome", "no cause established",
-              [f"{movement.label} {movement.pct:+.1f}%", "no cause established",
-               "abstained"])
+              [f"{movement.label} {pct_txt(movement.pct)}",
+               "no cause established", "abstained"])
 else:
     _chain = None
 
