@@ -116,47 +116,6 @@ METHOD_COLORS = {
     "llm": PURPLE,
 }
 
-# ---------------------------------------------------------------- stat icons
-# Inline SVG rather than an icon font: a font is a second network request the
-# demo cannot afford to have fail, and an emoji would be rendered by whatever
-# the viewer's OS happens to ship. 24x24 viewBox, drawn in currentColor, so the
-# chip inherits the colour of the number it belongs to.
-ICONS = {
-    # a level, for a current reading
-    "level": '<rect x="4" y="12" width="3.5" height="8" rx="1"/>'
-             '<rect x="10.2" y="8" width="3.5" height="12" rx="1"/>'
-             '<rect x="16.4" y="4" width="3.5" height="16" rx="1"/>',
-    # a clock, for the period before this one
-    "clock": '<circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" '
-             'stroke-width="2"/><path d="M12 7.2V12l3.2 2.1" fill="none" '
-             'stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-    # a trace, for how far outside normal variance this sits
-    "pulse": '<path d="M3 12.5h3.2L9 6l3.6 12 2.8-8 1.8 2.5H21" fill="none" '
-             'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
-             'stroke-linejoin="round"/>',
-    # a shield, for a claim that has passed its gates
-    "shield": '<path d="M12 3.2l7 2.9v5c0 4.4-3 8-7 9.7-4-1.7-7-5.3-7-9.7v-5z" '
-              'fill="none" stroke="currentColor" stroke-width="2" '
-              'stroke-linejoin="round"/>'
-              '<path d="M8.9 11.9l2.2 2.2 4.1-4.4" fill="none" '
-              'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
-              'stroke-linejoin="round"/>',
-}
-
-
-def icon(name: str, colour: str) -> str:
-    """One icon chip: the glyph in its stat's colour on a wash of the same."""
-    body = ICONS.get(name)
-    if not body:
-        return ""
-    # eight digit hex is an alpha channel: the chip is a 12% wash of its own
-    # colour, so it never needs a second token per stat
-    return (f'<span class="fr-stat-icon" style="color:{colour};'
-            f'background:{colour}1F">'
-            f'<svg viewBox="0 0 24 24" width="14" height="14" '
-            f'fill="currentColor" aria-hidden="true">{body}</svg></span>')
-
-
 FONT_SANS = "Arial, 'Helvetica Neue', Helvetica, sans-serif"
 FONT_MONO = "Consolas, 'Courier New', ui-monospace, monospace"
 
@@ -459,8 +418,7 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }}
-  [data-testid="stMetric"]:hover, .stButton button:hover,
-  .fr-card:hover {{ transform: none; }}
+  [data-testid="stMetric"]:hover, .stButton button:hover {{ transform: none; }}
 }}
 
 /* ---- FRIDAY specific components -------------------------------------- */
@@ -629,18 +587,6 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   border-radius: 12px;
   padding: var(--space-3) var(--space-4) var(--space-4);
   box-shadow: 0 1px 2px rgba(20, 20, 20, .05), 0 10px 26px rgba(61, 0, 102, .06);
-  transition: border-color var(--t-base) var(--ease),
-              box-shadow var(--t-base) var(--ease),
-              transform var(--t-base) var(--ease);
-}}
-/* The same lift the metric cards already use, so a card answers the pointer
-   the way every other surface in the app does. Small on purpose: three cards
-   sitting side by side, one of them rising a long way would read as a state
-   change rather than as a response. */
-.fr-card:hover {{
-  border-color: var(--c-primary);
-  box-shadow: 0 2px 4px rgba(20, 20, 20, .06), 0 16px 34px rgba(61, 0, 102, .12);
-  transform: translateY(-2px);
 }}
 .fr-card-head {{
   display: flex; align-items: baseline; justify-content: space-between;
@@ -692,21 +638,23 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   flex: 1 1 0; min-width: 0;
   display: flex; flex-direction: column; justify-content: flex-start;
 }}
-.fr-stat-head {{ display: flex; align-items: center; gap: 7px; min-width: 0; }}
-.fr-stat-icon {{
-  flex: 0 0 auto;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; border-radius: 7px;
-}}
 .fr-stat-v {{
-  font-family: {FONT_MONO}; font-size: 1.5rem; font-weight: 700;
+  font-family: {FONT_MONO};
+  /* clamp, not a fixed size: at three cards across, a seven figure rupee
+     value in a monospace face is wider than its column, and the browser
+     breaks it mid-digit -- "6,570,98" over "9". A wrapped number is worse
+     than a small one, so the type shrinks with the viewport instead. */
+  font-size: clamp(1.05rem, 1.35vw, 1.5rem);
+  white-space: nowrap;                 /* never split a figure across lines */
+  overflow-wrap: normal;
+  font-weight: 700;
   color: var(--c-black); line-height: 1.15; letter-spacing: -.02em;
-  min-width: 0;
 }}
-/* Two by two, so each number has about 175px rather than 411. The chip takes
-   29 of them, which "6,570,989" at the full size would not survive. */
-.fr-grid .fr-stat-v {{ font-size: 1.35rem; }}
 .fr-stat-bar {{ height: 4px; border-radius: 999px; margin: 9px 0 7px; }}
+
+/* Card headings are two or three words and read as a label, not a sentence.
+   "Causal chain" breaking after "Causal" makes the card look broken. */
+.fr-card-title {{ white-space: nowrap; }}
 .fr-stat-k {{
   font-size: .72rem; font-weight: 600; color: var(--c-muted); line-height: 1.35;
 }}
@@ -877,7 +825,6 @@ def stat_card(title: str, note: str, stats: list[dict], grid: bool = False) -> s
     number means - a direction, a status - is the caller's to know.
 
     `grid` lays them two-by-two instead of in one row, for a narrower card.
-    `icon` names one of ICONS, drawn in the stat's own colour.
     """
     cells = []
     for s in stats:
@@ -887,9 +834,7 @@ def stat_card(title: str, note: str, stats: list[dict], grid: bool = False) -> s
                 f'{esc(s["note"])}</div>' if s.get("note") else "")
         cells.append(
             f'<div class="fr-stat">'
-            f'<div class="fr-stat-head">'
-            f'{icon(s.get("icon", ""), s.get("color", PURPLE))}'
-            f'<div class="fr-stat-v">{esc(s["value"])}</div></div>'
+            f'<div class="fr-stat-v">{esc(s["value"])}</div>'
             f'<div class="fr-stat-bar" style="background:{s.get("color", PURPLE)}">'
             f'</div>'
             f'<div class="fr-stat-k">{esc(s["label"])}{mark}</div>{foot}</div>')
