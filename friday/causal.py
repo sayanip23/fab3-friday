@@ -322,7 +322,10 @@ def screen(wh: Warehouse, movement: Movement, effects: list,
 
         if decl is None:
             mechanism_ok = False
-            reasons.append(f"'{driver}' is not a declared driver of {movement.kpi}")
+            # movement.kpi is the contract key ("units_sold"); this string is
+            # rendered in the causal gates table beside "Volume" and "Price".
+            reasons.append(f"'{driver.replace('_', ' ')}' is not a declared "
+                           f"driver of {movement.label}")
         else:
             mechanism_ok = True          # the decomposition is the mechanism
 
@@ -481,7 +484,7 @@ def _finalise(wh: Warehouse, movement: Movement, verdicts: list[Verdict],
                      "window so the slice clears its minimum history.")
         elif undeclared:
             try:
-                names = ", ".join(d["name"] for d in
+                names = ", ".join(d["name"].replace("_", " ") for d in
                                   wh.c.kpis[movement.kpi].spec["drivers"])
             except Exception:
                 names = "the drivers named in contracts/kpis.yaml"
