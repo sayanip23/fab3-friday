@@ -268,15 +268,17 @@ _z_gate = engine.contract.kpis[movement.kpi].thresholds()[0].get("threshold")
 # beneath uses the darker status tokens, which clear 4.5:1.
 _stats = [
     {"value": fmt(movement.current), "label": "Current", "color": theme.PURPLE,
+     "icon": "level",
      "note": f"{movement.pct:+.1f}% vs prior",
      "note_color": theme.CAUTION if _down else theme.OK},
     {"value": fmt(movement.prior), "label": "Prior period",
-     "color": theme.LILAC,
+     "color": theme.LILAC, "icon": "clock",
      "note": "the baseline", "note_color": theme.MUTED},
     # the unit lives in the note, not the label: a label long enough to wrap
     # strands the help marker alone on a second line
     {"value": f"{movement.z_score:.2f}", "label": "Signal strength",
      "color": theme.CHART_DOWN if movement.z_score < 0 else theme.CHART_UP,
+     "icon": "pulse",
      # the threshold is read off the contract, never typed here, so a
      # recalibration moves this line without anyone remembering to
      "note": f"sigma, alerts beyond {_z_gate:.2f}" if _z_gate else "sigma",
@@ -285,6 +287,7 @@ _stats = [
              "Threshold from the contract."},
     {"value": assess.confidence.upper(), "label": "Confidence",
      "color": theme.NEUTRAL if assess.abstain else theme.OK,
+     "icon": "shield",
      "note": "abstained" if assess.abstain else "cause established",
      "note_color": theme.NEUTRAL if assess.abstain else theme.OK},
 ]
@@ -446,6 +449,33 @@ with tabs[1]:
 
     if result.by_account is not pvm:
         st.markdown("#### Largest contributors by account")
+
+        # The table below says the same thing, but a reader has to compare nine
+        # digit numbers across rows to see that one account carries most of the
+        # movement. Length is the one encoding that needs no arithmetic.
+        top = result.by_account.as_frame().head(5)
+        # Contributions to a fall are negative, so the bars run left and their
+        # labels have to sit on the left end. Decided here from the data rather
+        # than in a Vega expression, because the whole frame shares a sign.
+        _neg = bool((top.value <= 0).all())
+        _bars = alt.Chart(top).mark_bar(size=18, cornerRadiusEnd=4).encode(
+            y=alt.Y("effect:N", title=None, sort="x" if _neg else "-x"),
+            x=alt.X("value:Q", title=f"contribution ({PVM_UNIT})"),
+            # one measure, not several entities: magnitude is the whole job here,
+            # so it is one hue. Colouring the biggest bar differently would tie
+            # colour to rank, and the ranking already has the y axis.
+            color=alt.value(theme.PURPLE_MID),
+            tooltip=[alt.Tooltip("effect:N", title="account"),
+                     alt.Tooltip("value:Q", format=",.0f"),
+                     alt.Tooltip("share_of_movement:Q", format="+.1%")],
+        )
+        _labels = _bars.mark_text(
+            align="right" if _neg else "left", dx=-6 if _neg else 6,
+            fontWeight=600, color=theme.INK,
+        ).encode(text=alt.Text("value:Q", format=",.0f"), color=alt.value(theme.INK))
+        st.altair_chart((_bars + _labels).properties(height=alt.Step(34)),
+                        width="stretch")
+
         acc = result.by_account.as_frame().head(6).copy()
         acc["value"] = acc.value.map(lambda v: f"{v:,.0f}")
         acc["share_of_movement"] = acc.share_of_movement.map(lambda v: f"{v:+.1%}")
@@ -475,6 +505,34 @@ with tabs[1]:
 # ---------------------------------------------------------------- causal gates
 with tabs[2]:
     st.markdown("#### Three gates, all must pass before anything is called a cause")
+
+    # Three gates times every declared driver is a wall of the words "pass" and
+    # "fail", and this is the table a reader spends longest on. A dot in front
+    # of each gives the column a shape, so a row that failed is visible before
+    # it is read. The word stays beside it: the dot is a second channel, never
+    # the only one.
+    #
+    # The dots are characters that carry their own colour rather than a pandas
+    # Styler, because st.dataframe drops a Styler's font colour: measured in
+    # 1.62 on a two-row frame, with and without column_config, every cell came
+    # back at the default ink. CSS would not have reached them either, since
+    # the grid is drawn on a canvas and has no cell to select.
+    #
+    # Blue for a gate that held, amber for one that did not. Same axis the theme
+    # uses everywhere and for the same reason: red-green is the most common
+    # colour vision deficiency, and this is the table where a reader must not
+    # lose the answer.
+    #
+    # The three gate columns get dots and the verdict does not. The dots earn
+    # their place where every cell reads "pass" or "fail" and the eye has
+    # nothing to catch on; CAUSE and ASSOCIATION are already distinct words,
+    # and a dot in front of them only costs the "why not" column the width it
+    # needs to finish its sentence.
+    _PASS, _FAIL = "\U0001F535", "\U0001F7E0"
+
+    def _gate(ok: bool) -> str:
+        return f"{_PASS} pass" if ok else f"{_FAIL} fail"
+
     rows = []
     for v in assess.verdicts:
         rows.append({
@@ -482,9 +540,9 @@ with tabs[2]:
             "kind": v.kind,
             "share of movement": f"{v.share:.0%}" if v.kind == "arithmetic"
                                  else f"{v.strength:.1f}x rate",
-            "sequence": "pass" if v.sequence_ok else "fail",
-            "magnitude": "pass" if v.magnitude_ok else "fail",
-            "mechanism": "pass" if v.mechanism_ok else "fail",
+            "sequence": _gate(v.sequence_ok),
+            "magnitude": _gate(v.magnitude_ok),
+            "mechanism": _gate(v.mechanism_ok),
             "verdict": v.status.upper(),
             "why not": "; ".join(v.reasons) or "-",
         })
@@ -494,7 +552,11 @@ with tabs[2]:
         pd.DataFrame(rows), hide_index=True, width="stretch",
         column_config={
             "driver": st.column_config.TextColumn(
-                "Driver", width="small",
+                # no width hint: a fixed small column cut "delivery_reliability"
+                # and a medium one stole the width "why not" needs to finish its
+                # sentence. Letting the grid size this column to its own content
+                # is the only setting that fits both.
+                "Driver",
                 help="The candidate explanation being tested. Every declared driver "
                      "of this KPI is screened, not only the ones that look good."),
             "kind": st.column_config.TextColumn(
@@ -525,7 +587,9 @@ with tabs[2]:
                      "driver of this KPI, and something has to corroborate it. "
                      + _gate_help),
             "verdict": st.column_config.TextColumn(
-                "Verdict", width="small",
+                # auto-sized for the same reason as Driver: "ASSOCIATION" is one
+                # character wider than a small column
+                "Verdict",
                 help="CAUSE only when all three gates pass. Anything less is "
                      "reported as an ASSOCIATION — a large contribution tells you "
                      "where a movement sits, never why it happened."),
