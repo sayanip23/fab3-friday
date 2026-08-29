@@ -311,7 +311,10 @@ else:
 # Three cards, not two and a banner: what moved, the numbers, and the chain that
 # explains them are three parts of one finding and belong on one line. The
 # chain used to run full width underneath, where it read as a footer.
-_cols = st.columns(3 if _chain else [1, 2], gap="medium")
+# Not equal thirds. The facts card holds three short strings and had width to
+# spare; the summary holds four numbers two-by-two and was the one that felt
+# tight, so the width moves from the first card to the middle one.
+_cols = st.columns([0.85, 1.35, 1.05] if _chain else [1, 2], gap="medium")
 
 with _cols[0]:
     st.markdown(theme.fact_card("Movement", "vs prior period", _parts),
