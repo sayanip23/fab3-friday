@@ -236,8 +236,18 @@ def for_drivers(index: Index, drivers: list[str], period: Period,
             seen_ids.add(p.event_id)
             seen_text.add(sig)
             if len(out) >= top_k:
-                return out
-    return out
+                return _by_score(out)
+    return _by_score(out)
+
+
+def _by_score(hits: list[Passage]) -> list[Passage]:
+    """
+    Interleaving decides WHICH passages are shown; score decides the order they
+    are shown in. Without this the list alternates drivers and so alternates
+    scores -- 19.5, 4.3, 8.9, 4.2 -- which reads as a broken ranking even
+    though the selection is deliberate.
+    """
+    return sorted(hits, key=lambda p: (-p.score, p.when))
 
 
 def freshness_report(wh: Warehouse, sources: list[str]) -> list[dict]:

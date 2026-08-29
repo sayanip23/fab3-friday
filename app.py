@@ -624,11 +624,30 @@ with tabs[3]:
         st.info("No supporting passages retrieved for this slice.")
     for p in result.evidence:
         st.markdown(f"> {p.text}")
-        st.caption(" · ".join(f"{k}: {v}" for k, v in p.provenance().items()))
+        # provenance() returns the contract's own field names, which is right
+        # for the audit record and wrong on screen: this tab is read by a sales
+        # director, not by whoever wrote the schema. Relabel at the display
+        # layer only, so the audit JSON keeps its stable keys.
+        _PROV_LABELS = {
+            "event_id": "Event", "source": "Source", "date": "Dated",
+            "age_days": "Age (days)", "source_lag_hours": "Source lag (hours)",
+            "retrieval_method": "Retrieved by", "relevance_score": "Relevance",
+        }
+        _prov = p.provenance()
+        st.caption(" · ".join(
+            f"{_PROV_LABELS.get(k, k.replace('_', ' ').capitalize())}: "
+            f"{v.upper() if k == 'retrieval_method' else v}"
+            for k, v in _prov.items()))
         st.divider()
     st.markdown("#### Source freshness at the moment this ran")
+    # A CheckboxColumn renders False as an empty, clickable-looking box, which
+    # reads as "no data" rather than "not stale" -- the wrong answer to the
+    # only question this column is asked. Say it in words instead.
+    _fresh = pd.DataFrame(result.freshness)
+    if "stale" in _fresh.columns:
+        _fresh["stale"] = _fresh.stale.map(lambda v: "Stale" if v else "Fresh")
     st.dataframe(
-        pd.DataFrame(result.freshness), hide_index=True, width="stretch",
+        _fresh, hide_index=True, width="stretch",
         column_config={
             "source": st.column_config.TextColumn(
                 "Source", width="medium",
@@ -644,8 +663,8 @@ with tabs[3]:
                 help="How far behind reality this source is expected to run. "
                      "Marketing spend lags sales by up to three days, which is why "
                      "a movement cannot be attributed to spend that has not landed."),
-            "stale": st.column_config.CheckboxColumn(
-                "Stale?", width="small",
+            "stale": st.column_config.TextColumn(
+                "Freshness", width="small",
                 help="True when the lag exceeds the staleness warning the contract "
                      "sets for this source. A stale source is a stated reason to "
                      "abstain rather than something the engine works around."),
