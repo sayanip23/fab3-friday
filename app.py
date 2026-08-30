@@ -212,7 +212,17 @@ def fmt(v: float) -> str:
 
 # ISO dates first, so 2026-06-16 is emphasised whole rather than shattered into
 # three separate numbers.
-_FIGURE = re.compile(r"(\d{4}-\d{2}-\d{2}|-?\d[\d,]*(?:\.\d+)?%?)")
+#
+# (?<![A-Za-z0-9_]) and the trailing (?![A-Za-z_]) keep the match off digits that
+# are part of an identifier. A masked account reads "acct_1affc6bb", and without
+# the guards the 1 and the 6 were bolded as though they were figures the reader
+# should attend to -- which is the opposite of the point, since a pseudonym is
+# the one string on the page that carries no quantity at all.
+_FIGURE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(\d{4}-\d{2}-\d{2}|-?\d[\d,]*(?:\.\d+)?%?)"
+    r"(?![A-Za-z_])"
+)
 
 
 def emphasise(text: str) -> str:
@@ -954,6 +964,49 @@ with tabs[6]:
     a.json(spec.spec["materiality"], expanded=True)
     b.markdown("**Access**")
     b.json(spec.spec["access"], expanded=True)
+    # Requirement 2 names six things the contract must carry: definitions,
+    # calculations, drivers, thresholds, lineage and access. Everything but the
+    # drivers was already on this tab, and the drivers are the half that makes
+    # the causal screen possible -- the mechanism gate is exactly "is this a
+    # declared driver of this KPI", and a reader cannot check that against a
+    # list they cannot see.
+    st.markdown("**Drivers**")
+    _drivers = spec.spec.get("drivers", [])
+    if _drivers:
+        _dr = pd.DataFrame([{
+            "driver": d["name"].replace("_", " ").title(),
+            "type": str(d.get("type", "")).title(),
+            "controllable": "Yes" if d.get("controllable") else "No",
+            "lever": str(d.get("lever", "none")).replace("_", " ").title(),
+        } for d in _drivers])
+        st.dataframe(
+            _dr, hide_index=True, width="stretch",
+            height=(len(_dr) + 1) * 35 + 3,
+            column_config={
+                "driver": st.column_config.TextColumn(
+                    "Driver", width="medium",
+                    help="Every driver this KPI is allowed to be attributed to. "
+                         "The mechanism gate refuses anything not on this list, "
+                         "which is why a decomposition effect the contract does "
+                         "not declare is reported as an association rather than "
+                         "a cause."),
+                "type": st.column_config.TextColumn(
+                    "Type", width="small",
+                    help="Internal drivers sit inside the business. External "
+                         "ones do not, so no lever exists to pull."),
+                "controllable": st.column_config.TextColumn(
+                    "Controllable", width="small",
+                    help="Whether the business can act on it at all. An "
+                         "uncontrollable driver can still explain a movement; "
+                         "it just cannot be actioned."),
+                "lever": st.column_config.TextColumn(
+                    "Lever", width="medium",
+                    help="The lever an action would pull. Actions are only "
+                         "offered to roles holding the matching decision right."),
+            })
+    else:
+        st.caption("No drivers declared for this KPI.")
+
     st.markdown("**Lineage**")
     for step in spec.spec.get("lineage", []):
         st.markdown(f"- {step}")
