@@ -71,8 +71,8 @@ The engine is told none of this and recovers all of it:
 | Planted | Recovered | 
 |---|---|
 | Acme stops ordering 2026-07-28 | onset detected 2026-07-27, Acme named top account at 71.4% |
-| Logistics provider changed 2026-06-14 | change point found 2026-06-16, 5.5x its pre change rate |
-| CRM warning 2026-07-22 | cited as evidence, precedes onset |
+| Logistics provider changed 2026-06-14 | change point found 2026-06-16, 5.5x its pre change rate. This, not the CRM note, is what precedes onset and carries the sequence gate |
+| CRM warning, weekly from 2026-07-22 | cited as evidence; the note recurs, so the copy retrieved is the latest one inside the window |
 | Nova launched 2026-07-31 | 21 days against a 60 day minimum, sparse policy trips, abstains |
 | Nothing planted in North | no change point, no alert, ratio 0.00x |
 
