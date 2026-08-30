@@ -759,6 +759,12 @@ with tabs[3]:
         _labels = {k: v.get("label", k)
                    for k, v in engine.contract.sources.items()}
         _fresh["source"] = _fresh.source.map(lambda v: _labels.get(v, v))
+    # The contract declares no label for grain, so humanise it here.
+    # freshness_report() keeps returning the raw value: verify_lane_b asserts
+    # the set {order_line, campaign_week, event} and must keep passing.
+    if "grain" in _fresh.columns:
+        _fresh["grain"] = _fresh.grain.map(
+            lambda v: str(v).replace("_", " ").capitalize())
     st.dataframe(
         _fresh, hide_index=True, width="stretch",
         column_config={
