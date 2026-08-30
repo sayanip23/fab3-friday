@@ -138,6 +138,17 @@ if not alerts:
     st.info("No material movements for this role in the current period.")
     st.stop()
 
+def slice_name(m) -> str:
+    """
+    The slice a movement sits in, named by its dimension values: Nova, West.
+
+    Used where a row needs a name rather than a description. A movement with no
+    filters is the whole business, which has no slice name of its own, so the
+    KPI is the only thing left to call it.
+    """
+    return " · ".join(str(v) for v in m.filters.values()) or m.label
+
+
 def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
     """
     The facts of a movement as label/value pairs: which KPI, which slice, how
@@ -176,10 +187,16 @@ def option_label(m) -> str:
     The KPI, and nothing else. The slice and the movement used to ride along
     here, which made every row a sentence to read rather than a name to pick;
     the header card states both the moment a row is chosen, so the sidebar was
-    saying them twice. The unassessable slices keep their marker, because
-    without it they are indistinguishable from the ranked row of the same KPI.
+    saying them twice.
+
+    An unassessable row is named by its slice instead. "Net Revenue · cannot
+    assess yet" reads as a verdict on the KPI, when the KPI is fine everywhere
+    else on the page and it is Nova specifically that has no history; the slice
+    is also what makes the row distinguishable from the ranked Net Revenue
+    above it.
     """
-    return f"{m.label} · cannot assess yet" if m in _unassessable else m.label
+    return (f"{slice_name(m)} · cannot assess yet" if m in _unassessable
+            else m.label)
 
 
 st.sidebar.divider()
@@ -358,8 +375,11 @@ elif UNASSESSABLE:
     # Not the same as abstaining on evidence. The engine did not weigh this and
     # find it wanting; it never had a baseline to weigh it against, and saying
     # so is the point.
+    # named by the slice, for the same reason as the sidebar: it is Nova that
+    # cannot be judged, not Net Revenue. The card beside this one states the
+    # KPI on its own row, so nothing is lost by leaving it out here.
     _chain = ("Outcome", "not enough history to judge",
-              [f"{movement.label}",
+              [slice_name(movement),
                f"{movement.history_days}d of {movement.min_history_days}d needed",
                "cannot assess yet"])
 elif assess.abstain:
