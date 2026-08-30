@@ -143,10 +143,9 @@ def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
     The facts of a movement as label/value pairs: which KPI, which slice, how
     far it moved.
 
-    One source for both surfaces on purpose. The sidebar joins them into a
-    single "Label=value" line and the header card sets each label over its
-    value, so the row you pick and the header you land on say the same thing in
-    the same words.
+    The header card sets each label over its value. The sidebar names only the
+    KPI, so this is the one place the slice and the size of the movement are
+    stated, and they are stated in the contract's own words.
     """
     # a movement with no filters is the national total, not a missing region
     scope = [(k.replace("_", " ").title(), v) for k, v in m.filters.items()]
@@ -159,33 +158,38 @@ def movement_pairs(m, suffix: str = "") -> list[tuple[str, str]]:
             ("Movement", moved)]
 
 
-def movement_facts(m, suffix: str = "") -> list[str]:
-    """The same facts, values only, for one-line surfaces."""
-    return [v for _, v in movement_pairs(m, suffix)]
-
-
-# Values only, joined with a middot. The labelled form is roughly twice the
-# width of the sidebar, so the selectbox clipped it mid-number and showed the
-# tail -- "| Region=West | Movement=-19.2" -- which reads as a broken control
-# rather than a choice. The header card still carries the labels.
-options = {" · ".join(movement_facts(m)): m for m in alerts}
-
 # Slices the engine could not judge, listed after the ranked ones and marked as
 # such. A reader who sees only the ranked list cannot tell "nothing happened
 # in Nova" from "Nova is three weeks old and I have no baseline for it" -- and
 # that distinction is the product's whole argument.
 _unassessable = engine.unassessable(principal, PERIOD)
-for _m in _unassessable:
-    _slice = " · ".join(str(v) for v in _m.filters.values())
-    options[f"{_slice} · cannot assess yet"] = _m
+
+# Options are positions, not label strings. Two movements can legitimately
+# share a KPI name -- the unassessable Nova slice is Net Revenue, and so is the
+# first ranked movement -- and a dict keyed on what is printed would silently
+# drop one of them the moment the printed form stopped being unique.
+_options = [*alerts, *_unassessable]
+
+
+def option_label(m) -> str:
+    """
+    The KPI, and nothing else. The slice and the movement used to ride along
+    here, which made every row a sentence to read rather than a name to pick;
+    the header card states both the moment a row is chosen, so the sidebar was
+    saying them twice. The unassessable slices keep their marker, because
+    without it they are indistinguishable from the ranked row of the same KPI.
+    """
+    return f"{m.label} · cannot assess yet" if m in _unassessable else m.label
+
 
 st.sidebar.divider()
 choice = st.sidebar.selectbox(
-    f"Material movements ({len(alerts)})", list(options),
+    f"Material movements ({len(alerts)})", range(len(_options)),
+    format_func=lambda i: option_label(_options[i]),
     help="Ranked by business impact weighted by certainty. Movements inside "
          "normal variance never appear here. Slices with too little history to "
          "judge are listed at the end, marked 'cannot assess yet'.")
-movement = options[choice]
+movement = _options[choice]
 UNASSESSABLE = movement in _unassessable
 
 try:
