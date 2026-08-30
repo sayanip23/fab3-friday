@@ -61,7 +61,7 @@ West net revenue, 28 days to 2026-08-20 against the prior 28 days:
 ```
 movement    -19.2%  (-1,556,566 INR)   z = -5.34 against threshold 2.0
 volume      -1,132,495  (72.8%)  Acme Corp stopped ordering
-price         -286,059  (18.4%)  Aurora discounted 14% in West
+price         -286,059  (18.4%)  Aurora discounted in West
 mix           -138,011   (8.9%)  demand drifted to the cheaper Vertex line
 residual            0.000000     reconciles exactly
 ```
@@ -71,7 +71,7 @@ The engine is told none of this and recovers all of it:
 | Planted | Recovered | 
 |---|---|
 | Acme stops ordering 2026-07-28 | onset detected 2026-07-27, Acme named top account at 71.4% |
-| Logistics provider changed 2026-06-14 | change point found 2026-06-14, 13.4x its pre change rate |
+| Logistics provider changed 2026-06-14 | change point found 2026-06-16, 5.5x its pre change rate |
 | CRM warning 2026-07-22 | cited as evidence, precedes onset |
 | Nova launched 2026-07-31 | 21 days against a 60 day minimum, sparse policy trips, abstains |
 | Nothing planted in North | no change point, no alert, ratio 0.00x |
@@ -88,11 +88,11 @@ Three people, three lanes, one integration day.
 |---|---|---|---|
 | Owns | detection, attribution, causal screen | retrieval, narrative, personas, abstention | entitlements, telemetry, feedback, UI |
 | Modules | `detect.py` `attribute.py` `causal.py` **done** | `evidence.py` `narrate.py` `personas.py` **done** | `access.py` `telemetry.py` `feedback.py` `app.py` **done** |
+| Must never | call an LLM for a number | invent a number not passed in | let an unentitled row reach a narrative |
 
 `engine.py` is the integration point. The UI, the gates and any future caller drive
 the identical instrumented pipeline, so a demo cannot work by wiring stages in a
 special order.
-| Must never | call an LLM for a number | invent a number not passed in | let an unentitled row reach a narrative |
 
 ## Schedule
 
@@ -139,6 +139,6 @@ The brief says the LLM must not be the source of quantitative truth. This is the
 | Attribution | price volume mix, deterministic arithmetic | must sum exactly to the movement |
 | Driver ranking | contribution share plus lag correlation | auditable and stable across runs |
 | Causal screen | sequence, magnitude, mechanism tests | rules must be inspectable |
-| Evidence retrieval | embedding search over text | retrieval, no generation |
+| Evidence retrieval | BM25 over the free text source | retrieval, no generation |
 | Narrative | **LLM**, every number injected | language is the only safe place for it |
 | Abstention | deterministic rule on evidence sufficiency | must not be persuadable |
