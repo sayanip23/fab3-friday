@@ -712,6 +712,84 @@ h1, h2, h3 {{ font-family: {FONT_SANS}; letter-spacing: -.01em; }}
   min-height: 0; height: 100%; margin-bottom: 0;
 }}
 
+/* ---- evidence ---------------------------------------------------------
+   A retrieved passage is two different things: a sentence a person wrote, and
+   the record of where it came from. Running them down the page one after the
+   other set them in the same column at nearly the same size, so the quote -
+   the only part anyone reads - was buried under seven labelled fields.
+   They now sit side by side, the quote given the width and the type, its
+   provenance in a narrow rail beside it that can be scanned or ignored. */
+.fr-ev {{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(255px, 330px);
+  gap: var(--space-4);
+  align-items: start;
+  background: var(--c-white);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-2) 0;
+  /* the rail is six rows and the quote is often one: without this the
+     card takes the rail's height and the quote floats in the middle of
+     it, which is what made the tab read as mostly empty */
+  align-items: start;
+  box-shadow: 0 1px 2px rgba(20, 20, 20, .04);
+  transition: border-color var(--t-base) var(--ease),
+              box-shadow var(--t-base) var(--ease);
+}}
+.fr-ev:hover {{
+  border-color: var(--c-primary);
+  box-shadow: 0 2px 4px rgba(20, 20, 20, .06), 0 10px 24px rgba(61, 0, 102, .10);
+}}
+/* one column under a narrow viewport: a 210px rail beside a 200px quote is
+   two things too cramped to read rather than one thing laid out well */
+@media (max-width: 900px) {{
+  .fr-ev {{ grid-template-columns: minmax(0, 1fr); }}
+  .fr-ev-meta {{ border-left: none; padding-left: 0; padding-top: var(--space-2);
+                border-top: 1px solid var(--c-border); }}
+}}
+.fr-ev-quote {{
+  font-family: {FONT_SANS};
+  font-size: 1.06rem; line-height: 1.55; color: var(--c-ink);
+  border-left: 4px solid var(--c-primary);
+  padding: 1px 0 1px var(--space-3);
+}}
+.fr-ev-meta {{
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px var(--space-3);
+  align-content: start;
+  border-left: 1px solid var(--c-border);
+  padding-left: var(--space-4);
+}}
+.fr-ev-k {{
+  font-size: .66rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--c-muted); white-space: nowrap;
+  line-height: 1.3;
+}}
+.fr-ev-v {{
+  font-family: {FONT_MONO}; font-size: .72rem; color: var(--c-ink);
+  overflow-wrap: anywhere; line-height: 1.3;
+}}
+/* Relevance is the reason this passage is on the page at all and the order it
+   sits in, so it leads the rail as a chip rather than queueing seventh in a
+   list of fields. */
+.fr-ev-score {{
+  grid-column: 1 / -1;
+  display: inline-flex; align-items: baseline; gap: 6px;
+  width: fit-content;
+  background: var(--c-wash); border: 1px solid var(--c-border);
+  border-radius: 999px; padding: 3px 10px; margin-bottom: 4px;
+}}
+.fr-ev-score b {{
+  font-family: {FONT_MONO}; font-size: .8rem; font-weight: 700;
+  color: var(--c-primary-deep);
+}}
+.fr-ev-score span {{
+  font-size: .62rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--c-muted);
+}}
+
 /* ---- narrative -------------------------------------------------------
    The explanation is the one paragraph a reader actually reads, and it was
    set at body size across the full page width. A line that long is hard to
@@ -813,6 +891,24 @@ def chain_card(title: str, note: str, nodes: list[str]) -> str:
             f'<span class="fr-card-title">{esc(title)}</span>'
             f'<span class="fr-card-note">{esc(note)}</span></div>'
             f'<div class="fr-nodes">{inner}</div></div>')
+
+
+def evidence_card(quote: str, fields: list[tuple[str, str]],
+                  score: tuple[str, str] | None = None) -> str:
+    """
+    One retrieved passage: the quote on the left, its provenance on the right.
+
+    `fields` are already-labelled pairs, so the contract's own source labels and
+    the display names for the provenance keys stay where they are decided, in
+    the caller. `score` is the one field promoted out of the list into a chip.
+    """
+    rows = "".join(f'<div class="fr-ev-k">{esc(k)}</div>'
+                   f'<div class="fr-ev-v">{esc(v)}</div>' for k, v in fields)
+    chip = (f'<div class="fr-ev-score"><span>{esc(score[0])}</span>'
+            f'<b>{esc(score[1])}</b></div>') if score else ""
+    return (f'<div class="fr-ev">'
+            f'<div class="fr-ev-quote">{esc(quote)}</div>'
+            f'<div class="fr-ev-meta">{chip}{rows}</div></div>')
 
 
 def stat_card(title: str, note: str, stats: list[dict], grid: bool = False) -> str:

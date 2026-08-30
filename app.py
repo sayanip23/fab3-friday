@@ -724,38 +724,57 @@ with tabs[2]:
 with tabs[3]:
     if not result.evidence:
         st.info("No supporting passages retrieved for this slice.")
+    # provenance() returns the contract's own field names, which is right for
+    # the audit record and wrong on screen: this tab is read by a sales
+    # director, not by whoever wrote the schema. Relabel at the display layer
+    # only, so the audit JSON keeps its stable keys.
+    _PROV_LABELS = {
+        "event_id": "Event", "source": "Source", "date": "Dated",
+        "age_days": "Age (days)", "source_lag_hours": "Source lag (hours)",
+        "retrieval_method": "Retrieved by", "relevance_score": "Relevance",
+    }
+    # The contract already names each source in words -- "service_events" is
+    # declared as "Service and CRM events". Printing the key ignored a label the
+    # contract went to the trouble of declaring, and told the reader less: the
+    # label says what is in the source, the key does not. provenance() still
+    # returns the key, so the audit record is unchanged.
+    _src_label = {k: v.get("label", k)
+                  for k, v in engine.contract.sources.items()}
+
+    def _prov_value(k, v):
+        if k == "retrieval_method":
+            return str(v).upper()
+        if k == "source":
+            return _src_label.get(v, v)
+        return v
+
     for p in result.evidence:
-        st.markdown(f"> {p.text}")
-        # provenance() returns the contract's own field names, which is right
-        # for the audit record and wrong on screen: this tab is read by a sales
-        # director, not by whoever wrote the schema. Relabel at the display
-        # layer only, so the audit JSON keeps its stable keys.
-        _PROV_LABELS = {
-            "event_id": "Event", "source": "Source", "date": "Dated",
-            "age_days": "Age (days)", "source_lag_hours": "Source lag (hours)",
-            "retrieval_method": "Retrieved by", "relevance_score": "Relevance",
-        }
-        # The contract already names each source in words -- "service_events"
-        # is declared as "Service and CRM events". Printing the key ignored a
-        # label the contract went to the trouble of declaring, and told the
-        # reader less: the label says what is in the source, the key does not.
-        # provenance() still returns the key, so the audit record is unchanged.
-        _src_label = {k: v.get("label", k)
-                      for k, v in engine.contract.sources.items()}
         _prov = p.provenance()
-
-        def _prov_value(k, v):
-            if k == "retrieval_method":
-                return str(v).upper()
-            if k == "source":
-                return _src_label.get(v, v)
-            return v
-
-        st.caption(" · ".join(
-            f"{_PROV_LABELS.get(k, k.replace('_', ' ').capitalize())}: "
-            f"{_prov_value(k, v)}"
-            for k, v in _prov.items()))
-        st.divider()
+        # relevance is why this passage is here and the order it sits in, so it
+        # is promoted out of the field list into the chip that heads the rail
+        _score = _prov.get("relevance_score")
+        # Age is the date restated, so it rides on the date's row instead of
+        # taking one of its own. Six stacked fields beside a one-line quote set
+        # the card's height and left the quote sitting in white space.
+        _fields = []
+        for k, v in _prov.items():
+            if k in ("relevance_score", "age_days"):
+                continue
+            _val = _prov_value(k, v)
+            if k == "date" and "age_days" in _prov:
+                _age = _prov["age_days"]
+                _n = int(_age) if float(_age) == int(_age) else _age
+                # "0 days old" is a clumsy way to say the event landed in
+                # the period the engine is reporting on
+                _val += (" · today" if _n == 0
+                         else f" · {_n} day{'' if _n == 1 else 's'} old")
+            _fields.append(
+                (_PROV_LABELS.get(k, k.replace("_", " ").capitalize()), _val))
+        st.markdown(
+            theme.evidence_card(
+                p.text, _fields,
+                ("relevance", f"{_score}") if _score is not None else None),
+            unsafe_allow_html=True)
     st.markdown("#### Source freshness at the moment this ran")
     # A CheckboxColumn renders False as an empty, clickable-looking box, which
     # reads as "no data" rather than "not stale" -- the wrong answer to the
