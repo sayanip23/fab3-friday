@@ -11,8 +11,9 @@ Everything the prototype does is traceable back to a decision recorded here.
 ## 1. The business we are modelling
 
 A mid size B2B distributor selling four product lines through three channels across four
-Indian regions. Roughly 12 named corporate accounts plus a long tail of smaller buyers.
-Annual revenue of approximately INR 32 crore, measured from the generated data
+Indian regions. Ten named corporate accounts, all of them large enough to move a regional
+number on their own, which is what makes single account attribution meaningful.
+Twelve month revenue of INR 30.9 crore, measured from the generated data
 rather than assumed. Materiality thresholds in the contract are calibrated to this scale.
 
 This shape was chosen because it produces genuine price, volume and mix interaction, which
@@ -63,7 +64,7 @@ told any of this; it has to recover it from the data.
 |---|---|---|
 | West warehouse changes logistics provider | 2026-06-14 | Root cause, upstream |
 | Acme Corp delivery complaints rise sharply | from 2026-06-20 | Text evidence trail |
-| CRM note: "evaluating alternative suppliers" | 2026-07-22 | Text evidence, leading indicator |
+| CRM note: "evaluating alternative suppliers" | weekly from 2026-07-22 | Text evidence. Account review notes recur weekly, so the retrieved copy is the most recent one inside the analysis window, not the first. The precedence claim rests on the delivery reliability change point of 2026-06-14, not on this note |
 | Acme Corp stops ordering | from 2026-07-28 | **Volume** effect, large |
 | Aurora line discounted in West | from 2026-08-01 | **Price** effect |
 | Demand shifts toward lower priced Vertex | through August | **Mix** effect |
@@ -114,7 +115,19 @@ actions. The third persona also serves the role based security requirement.
 
 ## 9. Stack
 
-Python. pandas and numpy for deterministic computation, PyYAML for the contract,
-scikit-learn for anomaly baselines, sentence-transformers or a hosted embedding endpoint for
-evidence retrieval, and a single LLM call for narrative synthesis only. Simple UI to follow;
-the engine is importable and UI independent by design.
+Python, with no machine learning dependency at all.
+
+| Concern | What we use | Why |
+|---|---|---|
+| Deterministic computation | pandas, numpy | the quantitative path must be checkable by hand |
+| The semantic contract | PyYAML | a definition a non-engineer can read and change |
+| Anomaly baseline | robust z score, implemented in `friday/detect.py` | median and MAD against the slice's own 90 day history. A library estimator would add a dependency and remove the ability to explain the threshold |
+| Evidence retrieval | BM25, implemented in `friday/evidence.py` | reproducible run to run, needs no model download and no embedding service, and is inspectable term by term. Swapping in embeddings later means replacing `_score` and nothing else |
+| Narrative | one optional LLM call | the only stage a model touches. Off by default |
+| Demo UI | Streamlit | `app.py` |
+| REST layer | FastAPI | used only by `friday-web/` |
+
+There is no scikit-learn, no sentence-transformers and no vector store in
+`requirements.txt`, and this is deliberate rather than unfinished: a judge should be able to
+clone the repository, install four packages and reproduce every number without network access
+to a model. The engine is importable and UI independent by design.

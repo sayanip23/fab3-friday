@@ -63,6 +63,9 @@ class AccessDecision:
         return f"ALLOW {self.role} -> {self.kpi}: " + "; ".join(bits)
 
 
+_MASKED = re.compile(rf"{MASK_PREFIX}[0-9a-f]{{8}}")
+
+
 def pseudonymise(value: str, salt: str = "friday") -> str:
     """
     Stable pseudonym, not deletion.
@@ -72,6 +75,14 @@ def pseudonymise(value: str, salt: str = "friday") -> str:
     across two periods, without learning who it is. Dropping the column would break
     attribution; a stable hash preserves it.
     """
+    # Idempotent. Masking is applied at more than one boundary -- the attribution
+    # table is pseudonymised in the engine, and the narrative fact pack masks the
+    # top account again on its way in. Hashing a hash yields a second, different
+    # identifier for the same account, so the table and the prose disagree on the
+    # same screen. Returning an already-masked value unchanged keeps every surface
+    # naming the account identically, which is the whole point of a stable pseudonym.
+    if _MASKED.fullmatch(value or ""):
+        return value
     digest = hashlib.sha256(f"{salt}:{value}".encode()).hexdigest()
     return f"{MASK_PREFIX}{digest[:8]}"
 
