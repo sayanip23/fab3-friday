@@ -2,6 +2,7 @@
 
 KPI intelligence to action engine. Team Fab3, Accenture Innovation Challenge 2026,
 Track 3 BusinessIntelligence.ai. Submission 30 August 2026.
+Live Link: https://fab3-friday.streamlit.app/
 
 ```bash
 pip install -r requirements.txt
